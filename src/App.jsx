@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import Layout from "./components/Layout";
 import Inventarios from "./pages/Inventarios";
 import Login from "./pages/Login";
 
@@ -8,7 +9,14 @@ function App() {
             <Routes>
                 <Route path="/" element={<Navigate to="/login" />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/inventarios" element={<Inventarios />} />
+                <Route
+                    path="/inventarios"
+                    element={
+                        <Layout>
+                            <Inventarios />
+                        </Layout>
+                    }
+                />
             </Routes>
         </BrowserRouter>
     );
