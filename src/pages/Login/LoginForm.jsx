@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, Lock, Eye, EyeOff, Globe } from 'lucide-react';
-import logocixoil from '../../assets/logocixoil.jpeg'; 
+import logocixoil from '../../assets/logocixoil.jpeg';
+import { authService } from '../../services/authService'; 
 
 export default function LoginForm() {
     const [showPassword, setShowPassword] = useState(false);
@@ -10,10 +11,23 @@ export default function LoginForm() {
         recordar: false
     });
 
+    const [loading, setLoading] = useState(false);
+    const [errorText, setErrorText] = useState('');
 
-    const handleSubmit = (e) => {
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Datos enviados: ', formData);
+        setLoading(true);
+        setErrorText('');
+
+        try {
+            const data = await authService.login(formData.usuario, formData.constrasena);
+            console.log('¡Login exitoso!', data);
+        } catch (err) {
+            setErrorText(err);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
