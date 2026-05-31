@@ -36,24 +36,12 @@ export default function Sidebar() {
 
     return (
         <div className="flex flex-col h-screen w-56 bg-cixoil-red text-white flex-shrink-0 relative overflow-hidden">
-            {/* Fondo decorativo */}
-            <div
-                className="absolute inset-0 opacity-10 pointer-events-none"
-                style={{
-                    backgroundImage: `url(${logocixoil})`,
-                    backgroundSize: "300px",
-                    backgroundPosition: "bottom -50px right -50px",
-                    backgroundRepeat: "no-repeat",
-                    filter: "grayscale(100%)",
-                }}
-            />
-
             {/* Logo */}
             <div className="flex items-center justify-center py-6 px-4 border-b border-white/10 z-10">
                 <img
                     src={logocixoil}
                     alt="CIXOIL"
-                    className="w-16 h-16 object-contain rounded-full"
+                    className="w-24 h-24 object-contain rounded-full"
                 />
             </div>
 
