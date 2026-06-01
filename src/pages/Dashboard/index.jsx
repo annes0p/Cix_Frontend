@@ -1,13 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
+
 import Navbar from './components/Navbar';
-import MetricsGrid from './components/MetricsGrid';
+import MatricsGrid from './components/MatricsGrid';
 import ChartsSection from './components/ChartsSection';
 import TopProducts from './components/TopProducts';
 import StockCritico from './components/StockCritico';
 import UltimasVentas from './components/UltimasVentas';
 import { Calendar, Download, RefreshCw, Loader2 } from 'lucide-react';
 import { dashboardService } from '../../services/dashboardService';
+
 
 export default function Dashboard() {
   const [fecha, setFecha] = useState('2026-06-01'); 
@@ -40,7 +43,6 @@ export default function Dashboard() {
 
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar currentCompany={empresa} onChangeCompany={setEmpresa} />
-
         <main className="p-6 space-y-6 overflow-y-auto w-full max-w-[1600px] mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
             <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -62,11 +64,16 @@ export default function Dashboard() {
             </button>
           </div>
 
+
           {error && (
             <div className="p-3.5 bg-red-50 border-l-4 border-cixoil-red text-cixoil-red rounded-r-xl text-xs font-semibold transition-all">
               ⚠️ Modo offline: {error}. Desplegando maquetación y datos optimizados del sistema.
             </div>
           )}
+
+          {/* KPI Cards */}
+          <MatricsGrid />
+
 
           {loading ? (
             <div className="h-96 w-full flex flex-col items-center justify-center gap-3 text-gray-400 font-medium bg-white rounded-2xl border border-gray-100 shadow-sm">
@@ -75,7 +82,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <>
-              <MetricsGrid data={dashboardData?.metrics} />
+              <MatricsGrid data={dashboardData?.metrics} />
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
