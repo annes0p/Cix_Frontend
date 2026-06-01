@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
 import { User, Lock, Eye, EyeOff, Globe } from 'lucide-react';
 import logocixoil from '../../assets/logocixoil.jpeg';
-import { authService } from '../../services/authService'; 
-import { useNavigate } from 'react-router-dom';
+import { authService } from '../../services/authService';
 
 export default function LoginForm() {
-    const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
         identifier: '',
         password: '',
         recordar: false
     });
-
+git 
     const [loading, setLoading] = useState(false);
     const [errorText, setErrorText] = useState('');
 
@@ -25,7 +23,6 @@ export default function LoginForm() {
         try {
             const data = await authService.login(formData.identifier, formData.password);
             console.log('¡Login exitoso!', data);
-            navigate('/dashboard');
         } catch (err) {
             setErrorText(err);
         } finally {
