@@ -1,12 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
-import Sidebar from './components/Sidebar';
-
+import Sidebar from '../../components/Sidebar';
 import Navbar from './components/Navbar';
 import MatricsGrid from './components/MatricsGrid';
 import ChartsSection from './components/ChartsSection';
 import TopProducts from './components/TopProducts';
-import StockCritico from './components/StockCritico';
+import StockCritico from './components/StockCrítico';
 import UltimasVentas from './components/UltimasVentas';
 import { Calendar, Download, RefreshCw, Loader2 } from 'lucide-react';
 import { dashboardService } from '../../services/dashboardService';
