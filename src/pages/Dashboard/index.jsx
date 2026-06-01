@@ -1,19 +1,15 @@
-import React from 'react';
-import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
-import MetricsGrid from './components/MetricsGrid';
+import MatricsGrid from './components/MatricsGrid';
 import ChartsSection from './components/ChartsSection';
 import TopProducts from './components/TopProducts';
-import StockCritico from './components/StockCritico'; 
-import UltimasVentas from './components/UltimasVentas'; 
+import StockCritico from './components/StockCrítico';
+import UltimasVentas from './components/UltimasVentas';
 import { Calendar, Download, RefreshCw } from 'lucide-react';
 
 export default function Dashboard() {
   return (
-    <div className="min-h-screen w-full flex bg-slate-50/50 font-sans antialiased">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col min-w-0">
+    <div className="min-h-screen w-full bg-slate-50/50 font-sans antialiased">
+      <div className="flex flex-col min-w-0">
         <Navbar />
 
         <main className="p-6 space-y-6 overflow-y-auto w-full max-w-[1600px] mx-auto">
@@ -38,7 +34,7 @@ export default function Dashboard() {
           </div>
 
           {/* KPI Cards */}
-          <MetricsGrid />
+          <MatricsGrid />
 
           {/* Gráficos Analíticos */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
