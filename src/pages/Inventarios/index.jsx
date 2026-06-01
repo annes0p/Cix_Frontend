@@ -1,9 +1,14 @@
 import { Download, Plus, SlidersHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getProductos } from "../../services/inventarioService";
+import {
+    eliminarProducto,
+    getProductos,
+} from "../../services/inventarioService";
 import InventarioFiltros from "./InventarioFiltros";
 import InventarioKPIs from "./InventarioKPIs";
 import InventarioTabla from "./InventarioTabla";
+import ModalEditarProducto from "./ModalEditarProducto";
+import ModalEliminarProducto from "./ModalEliminarProducto";
 import ModalNuevoProducto from "./ModalNuevoProducto";
 import ModalVerProducto from "./ModalVerProducto";
 
@@ -78,6 +83,9 @@ export default function Inventarios() {
     const [pagina, setPagina] = useState(1);
     const [showModal, setShowModal] = useState(false);
     const [productoSeleccionado, setProductoSeleccionado] = useState(null);
+    const [productoEditar, setProductoEditar] = useState(null);
+    const [productoEliminar, setProductoEliminar] = useState(null);
+    const [eliminando, setEliminando] = useState(false);
     const [filtros, setFiltros] = useState({
         busqueda: "",
         categoria: "",
@@ -102,6 +110,19 @@ export default function Inventarios() {
     const handleFiltroChange = (campo, valor) => {
         setFiltros((prev) => ({ ...prev, [campo]: valor }));
         setPagina(1);
+    };
+
+    const handleConfirmarEliminar = async (id) => {
+        try {
+            setEliminando(true);
+            await eliminarProducto(id);
+            setProductos((prev) => prev.filter((p) => p.id !== id));
+            setProductoEliminar(null);
+        } catch (error) {
+            console.error("Error al eliminar producto:", error);
+        } finally {
+            setEliminando(false);
+        }
     };
 
     const productosFiltrados = productos.filter((p) => {
@@ -231,6 +252,8 @@ export default function Inventarios() {
                         totalPaginas={totalPaginas || 1}
                         onPaginaChange={setPagina}
                         onVerProducto={setProductoSeleccionado}
+                        onEditarProducto={setProductoEditar}
+                        onEliminarProducto={setProductoEliminar}
                     />
                 )}
 
@@ -258,6 +281,30 @@ export default function Inventarios() {
                 <ModalVerProducto
                     producto={productoSeleccionado}
                     onClose={() => setProductoSeleccionado(null)}
+                />
+            )}
+
+            {productoEditar && (
+                <ModalEditarProducto
+                    producto={productoEditar}
+                    onClose={() => setProductoEditar(null)}
+                    onProductoActualizado={(actualizado) => {
+                        setProductos((prev) =>
+                            prev.map((p) =>
+                                p.id === actualizado.id ? actualizado : p,
+                            ),
+                        );
+                        setProductoEditar(null);
+                    }}
+                />
+            )}
+
+            {productoEliminar && (
+                <ModalEliminarProducto
+                    producto={productoEliminar}
+                    onConfirmar={handleConfirmarEliminar}
+                    onCancelar={() => setProductoEliminar(null)}
+                    loading={eliminando}
                 />
             )}
         </div>

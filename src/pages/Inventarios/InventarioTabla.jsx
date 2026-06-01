@@ -1,4 +1,5 @@
-import { Eye, MoreVertical } from "lucide-react";
+import { Eye, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 function EstadoBadge({ stockActual, stockMinimo }) {
     if (stockActual === 0) {
@@ -30,12 +31,66 @@ function StockValor({ stockActual, stockMinimo }) {
     return <span className="font-bold text-green-600">{stockActual}</span>;
 }
 
+function MenuAcciones({ producto, onEditar, onEliminar }) {
+    const [abierto, setAbierto] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        function handleClickFuera(e) {
+            if (ref.current && !ref.current.contains(e.target)) {
+                setAbierto(false);
+            }
+        }
+        if (abierto) document.addEventListener("mousedown", handleClickFuera);
+        return () =>
+            document.removeEventListener("mousedown", handleClickFuera);
+    }, [abierto]);
+
+    return (
+        <div ref={ref} className="relative">
+            <button
+                onClick={() => setAbierto((prev) => !prev)}
+                className="text-gray-400 hover:text-cixoil-red transition-colors p-1 rounded hover:bg-gray-100"
+            >
+                <MoreVertical size={16} />
+            </button>
+
+            {abierto && (
+                <div className="absolute right-0 top-8 z-30 w-36 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                    <button
+                        onClick={() => {
+                            setAbierto(false);
+                            onEditar(producto);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                        <Pencil size={14} className="text-gray-400" />
+                        Editar
+                    </button>
+                    <button
+                        onClick={() => {
+                            setAbierto(false);
+                            onEliminar(producto);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                        <Trash2 size={14} />
+                        Eliminar
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function InventarioTabla({
     productos,
     pagina,
     totalPaginas,
     onPaginaChange,
     onVerProducto,
+    onEditarProducto,
+    onEliminarProducto,
 }) {
     if (productos.length === 0) {
         return (
@@ -151,9 +206,11 @@ export default function InventarioTabla({
                                     >
                                         <Eye size={16} />
                                     </button>
-                                    <button className="text-gray-400 hover:text-cixoil-red transition-colors p-1 rounded hover:bg-gray-100">
-                                        <MoreVertical size={16} />
-                                    </button>
+                                    <MenuAcciones
+                                        producto={producto}
+                                        onEditar={onEditarProducto}
+                                        onEliminar={onEliminarProducto}
+                                    />
                                 </div>
                             </td>
                         </tr>
