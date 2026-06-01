@@ -4,6 +4,7 @@ import {
     getKpisMovimientos,
     getMovimientos,
 } from "../../services/movimientosService";
+import ModalEditarMovimiento from "./ModalEditarMovimiento";
 import ModalNuevoMovimiento from "./ModalNuevoMovimiento";
 import MovimientoPanelDetalle from "./MovimientoPanelDetalle";
 import MovimientosFiltros from "./MovimientosFiltros";
@@ -243,6 +244,7 @@ export default function Movimientos() {
     const [pagina, setPagina] = useState(1);
     const [seleccionado, setSeleccionado] = useState(null);
     const [modalNuevo, setModalNuevo] = useState(false);
+    const [movEditar, setMovEditar] = useState(null);
     const [filtros, setFiltros] = useState({
         busqueda: "",
         tipo: "Todos",
@@ -364,6 +366,31 @@ export default function Movimientos() {
                                             : mov,
                                     )
                                 }
+                                onEditar={(mov) => setMovEditar(mov)}
+                                onDuplicar={(mov) => {
+                                    const copia = {
+                                        ...mov,
+                                        id: `${mov.tipo === "Venta" ? "VTA" : "PED"}-${String(Date.now()).slice(-6)}`,
+                                        factura: null,
+                                        fecha: new Date().toISOString(),
+                                        estado: "Pendiente",
+                                    };
+                                    setMovimientos((prev) => [copia, ...prev]);
+                                }}
+                                onCancelar={(mov) => {
+                                    setMovimientos((prev) =>
+                                        prev.map((m) =>
+                                            m.id === mov.id
+                                                ? { ...m, estado: "Cancelado" }
+                                                : m,
+                                        ),
+                                    );
+                                    if (seleccionado?.id === mov.id)
+                                        setSeleccionado((prev) => ({
+                                            ...prev,
+                                            estado: "Cancelado",
+                                        }));
+                                }}
                             />
                         )}
                     </div>
@@ -391,6 +418,23 @@ export default function Movimientos() {
                     onMovimientoCreado={(nuevo) => {
                         setMovimientos((prev) => [nuevo, ...prev]);
                         setModalNuevo(false);
+                    }}
+                />
+            )}
+
+            {movEditar && (
+                <ModalEditarMovimiento
+                    mov={movEditar}
+                    onClose={() => setMovEditar(null)}
+                    onMovimientoActualizado={(actualizado) => {
+                        setMovimientos((prev) =>
+                            prev.map((m) =>
+                                m.id === actualizado.id ? actualizado : m,
+                            ),
+                        );
+                        if (seleccionado?.id === actualizado.id)
+                            setSeleccionado(actualizado);
+                        setMovEditar(null);
                     }}
                 />
             )}
