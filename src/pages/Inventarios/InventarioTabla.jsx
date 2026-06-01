@@ -36,6 +36,7 @@ export default function InventarioTabla({
     totalPaginas,
     onPaginaChange,
     onVerProducto,
+    onEditarProducto,
 }) {
     if (productos.length === 0) {
         return (
@@ -151,7 +152,12 @@ export default function InventarioTabla({
                                     >
                                         <Eye size={16} />
                                     </button>
-                                    <button className="text-gray-400 hover:text-cixoil-red transition-colors p-1 rounded hover:bg-gray-100">
+                                    <button
+                                        onClick={() =>
+                                            onEditarProducto(producto)
+                                        }
+                                        className="text-gray-400 hover:text-cixoil-red transition-colors p-1 rounded hover:bg-gray-100"
+                                    >
                                         <MoreVertical size={16} />
                                     </button>
                                 </div>

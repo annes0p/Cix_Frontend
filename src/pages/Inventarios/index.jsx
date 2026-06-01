@@ -4,6 +4,7 @@ import { getProductos } from "../../services/inventarioService";
 import InventarioFiltros from "./InventarioFiltros";
 import InventarioKPIs from "./InventarioKPIs";
 import InventarioTabla from "./InventarioTabla";
+import ModalEditarProducto from "./ModalEditarProducto";
 import ModalNuevoProducto from "./ModalNuevoProducto";
 import ModalVerProducto from "./ModalVerProducto";
 
@@ -78,6 +79,7 @@ export default function Inventarios() {
     const [pagina, setPagina] = useState(1);
     const [showModal, setShowModal] = useState(false);
     const [productoSeleccionado, setProductoSeleccionado] = useState(null);
+    const [productoEditar, setProductoEditar] = useState(null);
     const [filtros, setFiltros] = useState({
         busqueda: "",
         categoria: "",
@@ -231,6 +233,7 @@ export default function Inventarios() {
                         totalPaginas={totalPaginas || 1}
                         onPaginaChange={setPagina}
                         onVerProducto={setProductoSeleccionado}
+                        onEditarProducto={setProductoEditar}
                     />
                 )}
 
@@ -258,6 +261,21 @@ export default function Inventarios() {
                 <ModalVerProducto
                     producto={productoSeleccionado}
                     onClose={() => setProductoSeleccionado(null)}
+                />
+            )}
+
+            {productoEditar && (
+                <ModalEditarProducto
+                    producto={productoEditar}
+                    onClose={() => setProductoEditar(null)}
+                    onProductoActualizado={(actualizado) => {
+                        setProductos((prev) =>
+                            prev.map((p) =>
+                                p.id === actualizado.id ? actualizado : p,
+                            ),
+                        );
+                        setProductoEditar(null);
+                    }}
                 />
             )}
         </div>
