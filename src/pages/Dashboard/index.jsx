@@ -68,9 +68,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* KPI Cards */}
-          <MatricsGrid />
-
 
           {loading ? (
             <div className="h-96 w-full flex flex-col items-center justify-center gap-3 text-gray-400 font-medium bg-white rounded-2xl border border-gray-100 shadow-sm">
@@ -121,6 +118,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 

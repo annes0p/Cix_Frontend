@@ -3,7 +3,7 @@ import { Bell, Building2, ChevronDown, Menu } from 'lucide-react';
 
 export default function Navbar({ currentCompany, onChangeCompany }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const companies = ['CIXOIL S.A.C.', 'CIXOIL S.A.S.', 'Sucursal Chiclayo'];
+  const companies = ['CIXOIL S.A.C.'];
 
   return (
     <header className="bg-white h-16 border-b border-gray-100 px-6 flex items-center justify-between sticky top-0 z-30 shadow-sm">
