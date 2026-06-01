@@ -4,6 +4,8 @@ import { getProductos } from "../../services/inventarioService";
 import InventarioFiltros from "./InventarioFiltros";
 import InventarioKPIs from "./InventarioKPIs";
 import InventarioTabla from "./InventarioTabla";
+import ModalNuevoProducto from "./ModalNuevoProducto";
+import ModalVerProducto from "./ModalVerProducto";
 
 const PRODUCTOS_POR_PAGINA = 10;
 
@@ -74,6 +76,8 @@ export default function Inventarios() {
     const [productos, setProductos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [pagina, setPagina] = useState(1);
+    const [showModal, setShowModal] = useState(false);
+    const [productoSeleccionado, setProductoSeleccionado] = useState(null);
     const [filtros, setFiltros] = useState({
         busqueda: "",
         categoria: "",
@@ -105,9 +109,12 @@ export default function Inventarios() {
         const coincideBusqueda =
             !busqueda ||
             p.nombre?.toLowerCase().includes(busqueda) ||
+            p.name?.toLowerCase().includes(busqueda) ||
             p.codigo?.toLowerCase().includes(busqueda);
         const coincideCategoria =
-            !filtros.categoria || p.categoria === filtros.categoria;
+            !filtros.categoria ||
+            p.categoria === filtros.categoria ||
+            p.category?.name === filtros.categoria;
         const coincideAlmacen =
             !filtros.almacen || p.almacen === filtros.almacen;
         const coincideEstado =
@@ -157,7 +164,7 @@ export default function Inventarios() {
             </div>
 
             <div className="p-6">
-                {/* Banner inventario general */}
+                {/* Banner */}
                 <div className="bg-white rounded-xl border border-gray-200 px-6 py-4 mb-6 flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
@@ -191,7 +198,10 @@ export default function Inventarios() {
                             <SlidersHorizontal size={16} />
                             Ajustar inventario
                         </button>
-                        <button className="flex items-center gap-2 bg-cixoil-green text-white rounded-lg px-4 py-2 text-sm font-semibold hover:opacity-90 transition-opacity">
+                        <button
+                            onClick={() => setShowModal(true)}
+                            className="flex items-center gap-2 bg-cixoil-green text-white rounded-lg px-4 py-2 text-sm font-semibold hover:opacity-90 transition-opacity"
+                        >
                             <Plus size={16} />
                             Nuevo producto
                         </button>
@@ -220,6 +230,7 @@ export default function Inventarios() {
                         pagina={pagina}
                         totalPaginas={totalPaginas || 1}
                         onPaginaChange={setPagina}
+                        onVerProducto={setProductoSeleccionado}
                     />
                 )}
 
@@ -231,6 +242,24 @@ export default function Inventarios() {
                     Última actualización: {new Date().toLocaleString("es-PE")}
                 </div>
             </div>
+
+            {/* Modales */}
+            {showModal && (
+                <ModalNuevoProducto
+                    onClose={() => setShowModal(false)}
+                    onProductoCreado={(nuevo) => {
+                        setProductos((prev) => [...prev, nuevo]);
+                        setShowModal(false);
+                    }}
+                />
+            )}
+
+            {productoSeleccionado && (
+                <ModalVerProducto
+                    producto={productoSeleccionado}
+                    onClose={() => setProductoSeleccionado(null)}
+                />
+            )}
         </div>
     );
 }
