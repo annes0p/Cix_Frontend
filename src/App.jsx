@@ -3,6 +3,7 @@ import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Inventarios from "./pages/Inventarios";
 import Login from "./pages/Login";
+import Movimientos from "./pages/Movimientos";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/inventarios" element={<Inventarios />} />
+          <Route path="/movimientos" element={<Movimientos />} />
         </Route>
       </Routes>
     </BrowserRouter>
