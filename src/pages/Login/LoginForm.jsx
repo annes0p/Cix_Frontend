@@ -21,7 +21,7 @@ export default function LoginForm() {
         setErrorText('');
 
         try {
-            const data = await authService.login(formData.usuario, formData.constrasena);
+            const data = await authService.login(formData.identifier, formData.password);
             console.log('¡Login exitoso!', data);
         } catch (err) {
             setErrorText(err);
@@ -73,8 +73,8 @@ export default function LoginForm() {
                             type="text"
                             placeholder="Ingresa tu usuario"
                             className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red focus:border-transparent transition-all placeholder:text-gray-400"
-                            value={formData.usuario}
-                            onChange={(e) => setFormData({ ...formData, usuario: e.target.value })}
+                            value={formData.identifier}
+                            onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
                             required
                         />
                     </div>
@@ -94,8 +94,8 @@ export default function LoginForm() {
                             type={showPassword ? 'text' : 'password'}
                             placeholder="Ingresa tu contraseña"
                             className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red focus:border-transparent transition-all placeholder:text-gray-400"
-                            value={formData.contrasena}
-                            onChange={(e) => setFormData({ ...formData, contrasena: e.target.value })}
+                            value={formData.password}
+                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                             required
                         />
                         <button
@@ -114,8 +114,8 @@ export default function LoginForm() {
                         id="remember"
                         type="checkbox"
                         className="w-4 h-4 text-cixoil-green bg-gray-100 border-gray-300 rounded focus:ring-cixoil-green"
-                        checked={formData.recordar}
-                        onChange={(e) => setFormData({ ...formData, recordar: e.target.checked })}
+                        checked={formData.remember}
+                        onChange={(e) => setFormData({ ...formData, remember: e.target.checked })}
                     />
                     <label htmlFor="remember" className="ml-2 text-sm font-medium text-gray-700 select-none">
                         Recordarme
