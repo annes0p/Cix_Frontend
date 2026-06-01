@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import Sidebar from './components/Sidebar';
 
 import Navbar from './components/Navbar';
 import MatricsGrid from './components/MatricsGrid';
@@ -39,8 +38,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen w-full flex bg-slate-50/50 font-sans antialiased">
-      <Sidebar />
-
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar currentCompany={empresa} onChangeCompany={setEmpresa} />
         <main className="p-6 space-y-6 overflow-y-auto w-full max-w-[1600px] mx-auto">
@@ -70,9 +67,6 @@ export default function Dashboard() {
               ⚠️ Modo offline: {error}. Desplegando maquetación y datos optimizados del sistema.
             </div>
           )}
-
-          {/* KPI Cards */}
-          <MatricsGrid />
 
 
           {loading ? (
@@ -124,3 +118,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
+
+
+
