@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User, Lock, Eye, EyeOff, Globe } from 'lucide-react';
 import logocixoil from '../../assets/logocixoil.jpeg';
-import { authService } from '../../services/authService'; 
+import { authService } from '../../services/authService';
 
 export default function LoginForm() {
     const [showPassword, setShowPassword] = useState(false);
@@ -10,7 +10,7 @@ export default function LoginForm() {
         password: '',
         recordar: false
     });
-
+git 
     const [loading, setLoading] = useState(false);
     const [errorText, setErrorText] = useState('');
 
