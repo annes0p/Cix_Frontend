@@ -1,26 +1,21 @@
 import api from "./api";
 
-export const getMovimientos = async (params = {}) => {
-    const response = await api.get("/movimientos", { params });
+export const getSales = async () => {
+    const response = await api.get("/sales");
     return response.data.data || response.data;
 };
 
-export const getMovimientoById = async (id) => {
-    const response = await api.get(`/movimientos/${id}`);
+export const getSaleById = async (id) => {
+    const response = await api.get(`/sales/${id}`);
     return response.data.data || response.data;
 };
 
-export const getKpisMovimientos = async () => {
-    const response = await api.get("/movimientos/kpis");
-    return response.data.data || response.data;
-};
-
-export const crearMovimiento = async (data) => {
-    const response = await api.post("/movimientos", data);
+export const crearSale = async (data) => {
+    const response = await api.post("/sales", data);
     return response.data.data || response.data;
 };
 
 export const actualizarMovimiento = async (id, data) => {
-    const response = await api.put(`/movimientos/${id}`, data);
+    const response = await api.put(`/sales/${id}`, data);
     return response.data.data || response.data;
 };

@@ -1,6 +1,6 @@
 import { Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
-import { crearMovimiento } from "../../services/movimientosService";
+import { crearSale } from "../../services/movimientosService";
 
 const productoVacio = () => ({
     nombre: "",
@@ -55,7 +55,7 @@ export default function ModalNuevoMovimiento({ onClose, onMovimientoCreado }) {
                 total,
                 fecha: new Date().toISOString(),
             };
-            const nuevo = await crearMovimiento(data);
+            const nuevo = await crearSale(data);
             onMovimientoCreado(nuevo);
         } catch {
             const nuevo = {

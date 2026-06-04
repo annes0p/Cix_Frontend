@@ -1,9 +1,6 @@
 import { Download, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
-import {
-    getKpisMovimientos,
-    getMovimientos,
-} from "../../services/movimientosService";
+import { getSales } from "../../services/movimientosService";
 import ModalEditarMovimiento from "./ModalEditarMovimiento";
 import ModalNuevoMovimiento from "./ModalNuevoMovimiento";
 import MovimientoPanelDetalle from "./MovimientoPanelDetalle";
@@ -13,233 +10,79 @@ import MovimientosTabla from "./MovimientosTabla";
 
 const ITEMS_POR_PAGINA = 7;
 
-const movimientosDemo = [
-    {
-        id: "VTA-000125",
-        factura: "FAC-000145",
+const mapSaleToMov = (sale, index) => {
+    const clienteNombre = sale.client
+        ? `${sale.client.name || ""} ${sale.client.fatherLastName || ""} ${sale.client.motherLastName || ""}`.trim()
+        : "Cliente desconocido";
+
+    const estadoMap = {
+        PENDING: "Pendiente",
+        COMPLETED: "Completado",
+        CANCELED: "Cancelado",
+    };
+
+    const pagoMap = {
+        YAPE: "Yape",
+        CASH: "Efectivo",
+        CARD: "Tarjeta",
+        TRANSFER: "Transferencia",
+    };
+
+    const comprobanteMap = {
+        SALE_NOTE: "Nota de venta",
+        INVOICE: "Factura",
+        RECEIPT: "Boleta",
+    };
+
+    return {
+        id: sale.series
+            ? `${sale.series}-${sale.number || String(index + 1).padStart(6, "0")}`
+            : `VTA-${String(index + 1).padStart(6, "0")}`,
+        factura: sale.voucherType
+            ? `${comprobanteMap[sale.voucherType] || sale.voucherType}`
+            : null,
         tipo: "Venta",
-        cliente: "Transportes del Norte S.A.C.",
-        nit: "900.123.456-1",
-        telefono: "310 123 4567",
-        fecha: "2025-05-16T10:23:00",
-        estado: "Completado",
-        total: 6785000,
-        vendedor: "Jorge Cerna",
-        condicionPago: "Crédito 30 días",
-        direccionEntrega: "Carrera 15 # 45-30 Bucaramanga, Santander",
-        productos: [
-            {
-                nombre: "Aceite 15W40",
-                descripcion: "Galón",
-                cantidad: 20,
-                precio: 28500,
-                subtotal: 570000,
-            },
-            {
-                nombre: "Grasa Multiusos",
-                descripcion: "400g",
-                cantidad: 15,
-                precio: 18000,
-                subtotal: 270000,
-            },
-            {
-                nombre: "Filtro de Aceite",
-                descripcion: "Premium",
-                cantidad: 10,
-                precio: 15000,
-                subtotal: 150000,
-            },
-        ],
-        subtotal: 990000,
-        iva: 188100,
-    },
-    {
-        id: "PED-000087",
-        factura: null,
-        tipo: "Pedido",
-        cliente: "Constructora Andina S.A.C.",
-        nit: "900.987.654-3",
-        telefono: "315 234 5678",
-        fecha: "2025-05-16T09:45:00",
-        estado: "En proceso",
-        total: 3250000,
-        vendedor: "Jorge Cerna",
-        condicionPago: "Contado",
-        direccionEntrega: "Calle 80 # 20-15 Medellín, Antioquia",
-        productos: [
-            {
-                nombre: "Aceite Hidráulico",
-                descripcion: "20L",
-                cantidad: 10,
-                precio: 185000,
-                subtotal: 1850000,
-            },
-            {
-                nombre: "Grasa EP-2",
-                descripcion: "1kg",
-                cantidad: 20,
-                precio: 22000,
-                subtotal: 440000,
-            },
-        ],
-        subtotal: 2290000,
-        iva: 435100,
-    },
-    {
-        id: "VTA-000124",
-        factura: "FAC-000144",
-        tipo: "Venta",
-        cliente: "Mantenimiento Industrial S.A.C.",
-        nit: "901.234.567-8",
-        telefono: "317 345 6789",
-        fecha: "2025-05-15T16:30:00",
-        estado: "Completado",
-        total: 2980000,
-        vendedor: "Jorge Cerna",
-        condicionPago: "Contado",
-        direccionEntrega: "Av. 30 de Agosto # 55-20 Pereira, Risaralda",
-        productos: [
-            {
-                nombre: "Aceite Motor 5W30",
-                descripcion: "4L",
-                cantidad: 30,
-                precio: 68000,
-                subtotal: 2040000,
-            },
-        ],
-        subtotal: 2040000,
-        iva: 387600,
-    },
-    {
-        id: "PED-000086",
-        factura: null,
-        tipo: "Pedido",
-        cliente: "Inversiones Petroleras S.A.C.",
-        nit: "900.321.654-7",
-        telefono: "313 456 7890",
-        fecha: "2025-05-15T11:15:00",
-        estado: "Pendiente",
-        total: 8450000,
-        vendedor: "Jorge Cerna",
-        condicionPago: "Crédito 60 días",
-        direccionEntrega: "Zona Industrial, Cartagena, Bolívar",
-        productos: [
-            {
-                nombre: "Aceite Industrial",
-                descripcion: "Tambor 55gal",
-                cantidad: 5,
-                precio: 1200000,
-                subtotal: 6000000,
-            },
-            {
-                nombre: "Lubricante Especial",
-                descripcion: "20L",
-                cantidad: 8,
-                precio: 187500,
-                subtotal: 1500000,
-            },
-        ],
-        subtotal: 7500000,
-        iva: 1425000,
-    },
-    {
-        id: "VTA-000123",
-        factura: "FAC-000143",
-        tipo: "Venta",
-        cliente: "Agroservicios del Valle S.A.C.",
-        nit: "900.654.321-9",
-        telefono: "318 567 8901",
-        fecha: "2025-05-14T15:22:00",
-        estado: "Completado",
-        total: 1560000,
-        vendedor: "Jorge Cerna",
-        condicionPago: "Contado",
-        direccionEntrega: "Vereda El Jardín, Palmira, Valle del Cauca",
-        productos: [
-            {
-                nombre: "Aceite Agrícola",
-                descripcion: "4L",
-                cantidad: 15,
-                precio: 72000,
-                subtotal: 1080000,
-            },
-        ],
-        subtotal: 1080000,
-        iva: 205200,
-    },
-    {
-        id: "PED-000085",
-        factura: null,
-        tipo: "Pedido",
-        cliente: "Servicios Generales del Sur S.A.C.",
-        nit: "901.111.222-0",
-        telefono: "316 678 9012",
-        fecha: "2025-05-14T09:08:00",
-        estado: "Cancelado",
-        total: 4120000,
-        vendedor: "Jorge Cerna",
-        condicionPago: "Crédito 30 días",
-        direccionEntrega: "Calle 5 # 10-25 Pasto, Nariño",
-        productos: [
-            {
-                nombre: "Aceite Transmisión",
-                descripcion: "Cubeta 19L",
-                cantidad: 8,
-                precio: 380000,
-                subtotal: 3040000,
-            },
-        ],
-        subtotal: 3040000,
-        iva: 577600,
-    },
-    {
-        id: "VTA-000122",
-        factura: "FAC-000142",
-        tipo: "Venta",
-        cliente: "Comercializadora Omega S.A.C.",
-        nit: "900.789.456-2",
-        telefono: "312 789 0123",
-        fecha: "2025-05-13T14:14:00",
-        estado: "Completado",
-        total: 5230000,
-        vendedor: "Jorge Cerna",
-        condicionPago: "Crédito 30 días",
-        direccionEntrega: "Cra 7 # 32-15 Bogotá, Cundinamarca",
-        productos: [
-            {
-                nombre: "Aceite 15W40",
-                descripcion: "Galón",
-                cantidad: 50,
-                precio: 71400,
-                subtotal: 3570000,
-            },
-            {
-                nombre: "Filtro de Aire",
-                descripcion: "Universal",
-                cantidad: 20,
-                precio: 45000,
-                subtotal: 900000,
-            },
-        ],
-        subtotal: 4470000,
-        iva: 849300,
-    },
-];
+        cliente: clienteNombre,
+        nit: sale.client?.id ? `ID-${sale.client.id}` : "-",
+        telefono: "-",
+        fecha: sale.saleDate || new Date().toISOString(),
+        estado:
+            estadoMap[sale.transactionStatus] ||
+            sale.transactionStatus ||
+            "Pendiente",
+        total: Number(sale.total) || 0,
+        vendedor: sale.user
+            ? `${sale.user.name || ""} ${sale.user.lastName || ""}`.trim()
+            : "-",
+        condicionPago: pagoMap[sale.paymentMethod] || sale.paymentMethod || "-",
+        direccionEntrega: "-",
+        productos: (sale.details || []).map((d) => ({
+            nombre: d.product?.name || "Producto",
+            descripcion: "",
+            cantidad: d.quantity || 0,
+            precio: Number(d.unitPrice) || 0,
+            subtotal: Number(d.subtotal) || 0,
+        })),
+        subtotal: Number(sale.subtotal) || 0,
+        iva: Number(sale.taxAmount) || 0,
+        _raw: sale,
+    };
+};
 
 const kpisDemo = {
-    ventasMes: 245680000,
-    ventasMesDelta: 18.6,
-    pedidosMes: 56,
-    pedidosMesDelta: 12.5,
-    ticketPromedio: 4387143,
-    ticketPromedioDelta: 7.2,
-    clientesAtendidos: 24,
-    clientesAtendidosDelta: 14.3,
+    ventasMes: 0,
+    ventasMesDelta: 0,
+    pedidosMes: 0,
+    pedidosMesDelta: 0,
+    ticketPromedio: 0,
+    ticketPromedioDelta: 0,
+    clientesAtendidos: 0,
+    clientesAtendidosDelta: 0,
 };
 
 export default function Movimientos() {
     const [movimientos, setMovimientos] = useState([]);
-    const [kpis, setKpis] = useState(null);
+    const [kpis, setKpis] = useState(kpisDemo);
     const [loading, setLoading] = useState(true);
     const [pagina, setPagina] = useState(1);
     const [seleccionado, setSeleccionado] = useState(null);
@@ -256,15 +99,35 @@ export default function Movimientos() {
     useEffect(() => {
         const cargar = async () => {
             try {
-                const [dataMovimientos, dataKpis] = await Promise.all([
-                    getMovimientos(),
-                    getKpisMovimientos(),
-                ]);
-                setMovimientos(dataMovimientos);
-                setKpis(dataKpis);
-            } catch {
-                setMovimientos(movimientosDemo);
-                setKpis(kpisDemo);
+                const data = await getSales();
+                const mapped = Array.isArray(data)
+                    ? data.map((s, i) => mapSaleToMov(s, i))
+                    : [];
+                setMovimientos(mapped);
+
+                const completadas = mapped.filter(
+                    (m) => m.estado === "Completado",
+                );
+                const totalVentas = mapped.reduce((s, m) => s + m.total, 0);
+                const ticketProm =
+                    mapped.length > 0
+                        ? Math.round(totalVentas / mapped.length)
+                        : 0;
+                const clientesUnicos = new Set(mapped.map((m) => m.cliente))
+                    .size;
+
+                setKpis({
+                    ventasMes: totalVentas,
+                    ventasMesDelta: 0,
+                    pedidosMes: mapped.length,
+                    pedidosMesDelta: 0,
+                    ticketPromedio: ticketProm,
+                    ticketPromedioDelta: 0,
+                    clientesAtendidos: clientesUnicos,
+                    clientesAtendidosDelta: 0,
+                });
+            } catch (err) {
+                console.error("Error cargando ventas:", err);
             } finally {
                 setLoading(false);
             }
@@ -310,7 +173,6 @@ export default function Movimientos() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
             <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <h1 className="text-xl font-bold text-cixoil-red">
@@ -337,10 +199,8 @@ export default function Movimientos() {
             </div>
 
             <div className="p-6 flex flex-col gap-5">
-                {/* KPIs */}
                 {!loading && kpis && <MovimientosKPIs kpis={kpis} />}
 
-                {/* Filtros + Tabla + Panel */}
                 <div className="flex gap-4 items-start">
                     <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         <MovimientosFiltros
@@ -370,7 +230,7 @@ export default function Movimientos() {
                                 onDuplicar={(mov) => {
                                     const copia = {
                                         ...mov,
-                                        id: `${mov.tipo === "Venta" ? "VTA" : "PED"}-${String(Date.now()).slice(-6)}`,
+                                        id: `VTA-${String(Date.now()).slice(-6)}`,
                                         factura: null,
                                         fecha: new Date().toISOString(),
                                         estado: "Pendiente",
@@ -403,7 +263,6 @@ export default function Movimientos() {
                     )}
                 </div>
 
-                {/* Footer */}
                 <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
                     <span className="w-2 h-2 rounded-full bg-green-500 inline-block animate-pulse" />
                     Sincronización automática activada
