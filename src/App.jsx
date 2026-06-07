@@ -1,9 +1,10 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+﻿import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Inventarios from "./pages/Inventarios";
 import Login from "./pages/Login";
 import Movimientos from "./pages/Movimientos";
+import Clientes from "./pages/Clientes";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/inventarios" element={<Inventarios />} />
           <Route path="/movimientos" element={<Movimientos />} />
+          <Route path="/clientes" element={<Clientes />} />
         </Route>
       </Routes>
     </BrowserRouter>
