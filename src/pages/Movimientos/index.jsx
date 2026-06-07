@@ -43,7 +43,7 @@ const mapSaleToMov = (sale, index) => {
             : null,
         tipo: "Venta",
         cliente: clienteNombre,
-        nit: sale.client?.id ? `ID-${sale.client.id}` : "-",
+        nit: sale.client?.docNumber || "-",
         telefono: "-",
         fecha: sale.saleDate || new Date().toISOString(),
         estado:
