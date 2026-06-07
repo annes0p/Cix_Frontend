@@ -11,11 +11,7 @@ export default function Alertas() {
         try {
             setLoading(true);
             const data = await getAlertas();
-            const criticos = data.filter(
-                (item) =>
-                    item.stock <= item.minStock ||
-                    item.quantity <= item.minimumStock,
-            );
+            const criticos = data.filter((item) => item.stock <= item.minStock);
             setAlertas(criticos);
         } catch (error) {
             console.error("Error al cargar alertas:", error);
@@ -36,7 +32,7 @@ export default function Alertas() {
                         Alertas
                     </h1>
                     <p className="text-sm text-gray-500">
-                        Monitoreo de incidencias y stock crítico
+                        Monitoreo de incidencias y stock critico
                     </p>
                 </div>
                 <span className="text-sm font-medium text-gray-600">
@@ -55,7 +51,7 @@ export default function Alertas() {
                                 Alertas del sistema
                             </h2>
                             <p className="text-sm text-gray-500">
-                                Productos con stock crítico o agotados
+                                Productos con stock critico o agotados
                             </p>
                         </div>
                     </div>

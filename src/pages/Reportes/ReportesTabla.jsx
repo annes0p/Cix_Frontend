@@ -27,13 +27,13 @@ export default function ReportesTabla({ reportes, loading, tipo }) {
                                 Producto
                             </th>
                             <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                                Categoría
+                                Categoria
                             </th>
                             <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
                                 Stock
                             </th>
                             <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                                Precio
+                                Stock Minimo
                             </th>
                         </tr>
                     </thead>
@@ -44,16 +44,16 @@ export default function ReportesTabla({ reportes, loading, tipo }) {
                                 className="border-b hover:bg-gray-50"
                             >
                                 <td className="px-4 py-3 font-medium">
-                                    {item.name || item.nombre}
+                                    {item.product?.name}
                                 </td>
                                 <td className="px-4 py-3 text-gray-600">
-                                    {item.categoryName || item.categoria}
+                                    {item.product?.categoryName || "-"}
                                 </td>
                                 <td className="px-4 py-3 text-center">
-                                    {item.stock ?? item.quantity}
+                                    {item.stock}
                                 </td>
-                                <td className="px-4 py-3 text-center font-semibold text-cixoil-red">
-                                    S/. {item.price || item.precio}
+                                <td className="px-4 py-3 text-center text-gray-500">
+                                    {item.minStock}
                                 </td>
                             </tr>
                         ))}
@@ -95,7 +95,7 @@ export default function ReportesTabla({ reportes, loading, tipo }) {
                                 className="border-b hover:bg-gray-50"
                             >
                                 <td className="px-4 py-3 font-medium">
-                                    {item.productName || item.producto}
+                                    {item.productName || item.product?.name}
                                 </td>
                                 <td className="px-4 py-3 text-gray-600">
                                     {item.type || item.tipo}
@@ -126,7 +126,7 @@ export default function ReportesTabla({ reportes, loading, tipo }) {
                     <thead>
                         <tr className="bg-gray-50 border-b">
                             <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                                Código
+                                Codigo
                             </th>
                             <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
                                 Proveedor
@@ -149,7 +149,7 @@ export default function ReportesTabla({ reportes, loading, tipo }) {
                                     OC-{item.id.toString().padStart(4, "0")}
                                 </td>
                                 <td className="px-4 py-3 text-gray-600">
-                                    {item.supplierName || item.proveedor}
+                                    {item.supplierName || item.supplier?.name}
                                 </td>
                                 <td className="px-4 py-3 text-gray-500">
                                     {item.purchaseDate || item.fecha}
