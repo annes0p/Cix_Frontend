@@ -1,4 +1,4 @@
-import {
+﻿import {
     ArrowLeftRight,
     BarChart3,
     Bell,
@@ -8,7 +8,7 @@ import {
     Settings,
     ShoppingCart,
     Truck,
-    Warehouse,
+    Users,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import logocixoil from "../assets/logocixoil.jpeg";
@@ -17,9 +17,9 @@ const menuItems = [
     { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
     { label: "Inventarios", icon: Package, path: "/inventarios" },
     { label: "Movimientos", icon: ArrowLeftRight, path: "/movimientos" },
-    { label: "Ordenes de compra", icon: ShoppingCart, path: "/ordenes" },
+    { label: "Clientes", icon: Users, path: "/clientes" },
+    { label: "Órdenes de compra", icon: ShoppingCart, path: "/ordenes" },
     { label: "Proveedores", icon: Truck, path: "/proveedores" },
-    { label: "Almacenes", icon: Warehouse, path: "/almacenes" },
     { label: "Reportes", icon: BarChart3, path: "/reportes" },
     { label: "Alertas", icon: Bell, path: "/alertas" },
     { label: "Configuración", icon: Settings, path: "/configuracion" },
@@ -36,7 +36,6 @@ export default function Sidebar() {
 
     return (
         <div className="flex flex-col h-screen w-56 bg-cixoil-red text-white flex-shrink-0 relative overflow-hidden">
-            {/* Logo */}
             <div className="flex items-center justify-center py-6 px-4 border-b border-white/10 z-10">
                 <img
                     src={logocixoil}
@@ -45,7 +44,6 @@ export default function Sidebar() {
                 />
             </div>
 
-            {/* Menu */}
             <nav className="flex-1 px-3 py-4 space-y-1 z-10 overflow-y-auto">
                 {menuItems.map((item) => {
                     const Icon = item.icon;
@@ -67,7 +65,6 @@ export default function Sidebar() {
                 })}
             </nav>
 
-            {/* Usuario */}
             <div className="px-3 py-4 border-t border-white/10 z-10">
                 <button
                     onClick={handleLogout}
@@ -77,9 +74,7 @@ export default function Sidebar() {
                         JC
                     </div>
                     <div className="text-left flex-1">
-                        <p className="text-white text-xs font-semibold">
-                            Jorge Cerna
-                        </p>
+                        <p className="text-white text-xs font-semibold">Jorge Cerna</p>
                         <p className="text-white/50 text-xs">Administrador</p>
                     </div>
                     <ChevronDown size={14} className="text-white/50" />
