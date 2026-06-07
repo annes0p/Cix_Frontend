@@ -1,88 +1,118 @@
 import { Plus, Trash2, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import api from "../../services/api";
 import { crearSale } from "../../services/movimientosService";
 
-const productoVacio = () => ({
-    nombre: "",
-    descripcion: "",
-    cantidad: 1,
-    precio: 0,
-});
-
 export default function ModalNuevoMovimiento({ onClose, onMovimientoCreado }) {
-    const [tipo, setTipo] = useState("Venta");
     const [form, setForm] = useState({
-        cliente: "",
-        nit: "",
-        telefono: "",
-        estado: "Pendiente",
-        condicionPago: "Contado",
-        direccionEntrega: "",
-        vendedor: "",
+        voucherType: "SALE_NOTE",
+        series: "VTA",
+        paymentMethod: "CASH",
+        transactionStatus: "PENDING",
+        idClient: "",
+        saleDate: new Date().toISOString().slice(0, 16),
     });
-    const [productos, setProductos] = useState([productoVacio()]);
+    const [detalles, setDetalles] = useState([{ idProduct: "", quantity: 1 }]);
+    const [clientes, setClientes] = useState([]);
+    const [productos, setProductos] = useState([]);
     const [guardando, setGuardando] = useState(false);
+    const [error, setError] = useState(null);
 
-    const subtotal = productos.reduce((s, p) => s + p.cantidad * p.precio, 0);
-    const iva = Math.round(subtotal * 0.19);
-    const total = subtotal + iva;
+    useEffect(() => {
+        const cargar = async () => {
+            try {
+                const [cliRes, prodRes] = await Promise.all([
+                    api.get("/clients"),
+                    api.get("/products"),
+                ]);
+                setClientes(cliRes.data?.data || cliRes.data || []);
+                setProductos(prodRes.data?.data || prodRes.data || []);
+            } catch {
+                setClientes([]);
+                setProductos([]);
+            }
+        };
+        cargar();
+    }, []);
 
     const cambiarForm = (campo, valor) =>
         setForm((prev) => ({ ...prev, [campo]: valor }));
 
-    const cambiarProducto = (i, campo, valor) =>
-        setProductos((prev) =>
-            prev.map((p, idx) => (idx === i ? { ...p, [campo]: valor } : p)),
+    const cambiarDetalle = (i, campo, valor) =>
+        setDetalles((prev) =>
+            prev.map((d, idx) => (idx === i ? { ...d, [campo]: valor } : d)),
         );
 
-    const agregarProducto = () =>
-        setProductos((prev) => [...prev, productoVacio()]);
+    const agregarDetalle = () =>
+        setDetalles((prev) => [...prev, { idProduct: "", quantity: 1 }]);
 
-    const eliminarProducto = (i) => {
-        if (productos.length === 1) return;
-        setProductos((prev) => prev.filter((_, idx) => idx !== i));
+    const eliminarDetalle = (i) => {
+        if (detalles.length === 1) return;
+        setDetalles((prev) => prev.filter((_, idx) => idx !== i));
     };
 
+    const precioProducto = (idProduct) => {
+        const p = productos.find((p) => String(p.id) === String(idProduct));
+        return p ? Number(p.price) : 0;
+    };
+
+    const subtotal = detalles.reduce(
+        (s, d) => s + precioProducto(d.idProduct) * Number(d.quantity || 0),
+        0,
+    );
+    const iva = Math.round(subtotal * 0.19);
+    const total = subtotal + iva;
+
+    const usuarioActual = JSON.parse(localStorage.getItem("user") || "{}");
+
     const handleGuardar = async () => {
+        if (!form.idClient) {
+            setError("Selecciona un cliente");
+            return;
+        }
+        if (detalles.some((d) => !d.idProduct)) {
+            setError("Selecciona un producto en cada fila");
+            return;
+        }
+        setError(null);
         setGuardando(true);
         try {
-            const data = {
-                ...form,
-                tipo,
-                productos,
-                subtotal,
-                iva,
-                total,
-                fecha: new Date().toISOString(),
+            const payload = {
+                saleDate: new Date(form.saleDate)
+                    .toISOString()
+                    .replace("Z", ""),
+                voucherType: form.voucherType,
+                series: form.series,
+                paymentMethod: form.paymentMethod,
+                transactionStatus: form.transactionStatus,
+                idClient: Number(form.idClient),
+                idUser: usuarioActual?.id || 1,
+                details: detalles.map((d) => ({
+                    idProduct: Number(d.idProduct),
+                    quantity: Number(d.quantity),
+                })),
             };
-            const nuevo = await crearSale(data);
+            const nuevo = await crearSale(payload);
             onMovimientoCreado(nuevo);
+            onClose();
         } catch {
-            const nuevo = {
-                id: `${tipo === "Venta" ? "VTA" : "PED"}-${String(Date.now()).slice(-6)}`,
-                factura: null,
-                ...form,
-                tipo,
-                productos,
-                subtotal,
-                iva,
-                total,
-                fecha: new Date().toISOString(),
-            };
-            onMovimientoCreado(nuevo);
+            setError("Error al guardar la venta. Intenta de nuevo.");
         } finally {
             setGuardando(false);
         }
     };
 
+    const inputClass =
+        "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-cixoil-red transition-colors";
+    const labelClass = "block text-xs font-medium text-gray-600 mb-1";
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
-                {/* Header */}
                 <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <h2 className="text-lg font-bold text-gray-900">
-                        Nuevo pedido / venta
+                        Nueva venta
                     </h2>
                     <button
                         onClick={onClose}
@@ -92,159 +122,157 @@ export default function ModalNuevoMovimiento({ onClose, onMovimientoCreado }) {
                     </button>
                 </div>
 
-                {/* Cuerpo */}
-                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-                    {/* Tipo */}
-                    <div className="flex gap-3">
-                        {["Venta", "Pedido"].map((t) => (
-                            <button
-                                key={t}
-                                onClick={() => setTipo(t)}
-                                className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors ${
-                                    tipo === t
-                                        ? "bg-cixoil-red text-white border-cixoil-red"
-                                        : "border-gray-200 text-gray-600 hover:border-gray-300"
-                                }`}
-                            >
-                                {t}
-                            </button>
-                        ))}
-                    </div>
+                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-lg">
+                            {error}
+                        </div>
+                    )}
 
-                    {/* Campos */}
                     <div className="grid grid-cols-2 gap-4">
-                        <Campo
-                            label="Cliente *"
-                            value={form.cliente}
-                            onChange={(v) => cambiarForm("cliente", v)}
-                            placeholder="Nombre empresa"
-                        />
-                        <Campo
-                            label="NIT"
-                            value={form.nit}
-                            onChange={(v) => cambiarForm("nit", v)}
-                            placeholder="900.000.000-0"
-                        />
-                        <Campo
-                            label="Teléfono"
-                            value={form.telefono}
-                            onChange={(v) => cambiarForm("telefono", v)}
-                            placeholder="300 000 0000"
-                        />
-                        <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                                Estado
-                            </label>
-                            <select
-                                value={form.estado}
-                                onChange={(e) =>
-                                    cambiarForm("estado", e.target.value)
-                                }
-                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-cixoil-red transition-colors"
-                            >
-                                <option>Pendiente</option>
-                                <option>En proceso</option>
-                                <option>Completado</option>
-                                <option>Cancelado</option>
-                            </select>
-                        </div>
-                        <Campo
-                            label="Vendedor"
-                            value={form.vendedor}
-                            onChange={(v) => cambiarForm("vendedor", v)}
-                            placeholder="Nombre del vendedor"
-                        />
-                        <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                                Condición de pago
-                            </label>
-                            <select
-                                value={form.condicionPago}
-                                onChange={(e) =>
-                                    cambiarForm("condicionPago", e.target.value)
-                                }
-                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-cixoil-red transition-colors"
-                            >
-                                <option>Contado</option>
-                                <option>Crédito 30 días</option>
-                                <option>Crédito 60 días</option>
-                                <option>Crédito 90 días</option>
-                            </select>
-                        </div>
                         <div className="col-span-2">
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                                Dirección de entrega
+                            <label className={labelClass}>Cliente *</label>
+                            <select
+                                value={form.idClient}
+                                onChange={(e) =>
+                                    cambiarForm("idClient", e.target.value)
+                                }
+                                className={inputClass}
+                            >
+                                <option value="">Seleccionar cliente</option>
+                                {clientes.map((c) => (
+                                    <option key={c.id} value={c.id}>
+                                        {`${c.name} ${c.fatherLastName || ""} ${c.motherLastName || ""}`.trim()}{" "}
+                                        — {c.docNumber}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className={labelClass}>
+                                Tipo de comprobante
                             </label>
+                            <select
+                                value={form.voucherType}
+                                onChange={(e) =>
+                                    cambiarForm("voucherType", e.target.value)
+                                }
+                                className={inputClass}
+                            >
+                                <option value="SALE_NOTE">Nota de venta</option>
+                                <option value="INVOICE">Factura</option>
+                                <option value="RECEIPT">Boleta</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className={labelClass}>Serie</label>
                             <input
-                                value={form.direccionEntrega}
+                                type="text"
+                                value={form.series}
+                                onChange={(e) =>
+                                    cambiarForm("series", e.target.value)
+                                }
+                                placeholder="Ej: VTA"
+                                className={inputClass}
+                            />
+                        </div>
+
+                        <div>
+                            <label className={labelClass}>Método de pago</label>
+                            <select
+                                value={form.paymentMethod}
+                                onChange={(e) =>
+                                    cambiarForm("paymentMethod", e.target.value)
+                                }
+                                className={inputClass}
+                            >
+                                <option value="CASH">Efectivo</option>
+                                <option value="YAPE">Yape</option>
+                                <option value="CARD">Tarjeta</option>
+                                <option value="TRANSFER">Transferencia</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className={labelClass}>Estado</label>
+                            <select
+                                value={form.transactionStatus}
                                 onChange={(e) =>
                                     cambiarForm(
-                                        "direccionEntrega",
+                                        "transactionStatus",
                                         e.target.value,
                                     )
                                 }
-                                placeholder="Calle, ciudad, departamento"
-                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-cixoil-red transition-colors placeholder:text-gray-300"
+                                className={inputClass}
+                            >
+                                <option value="PENDING">Pendiente</option>
+                                <option value="COMPLETED">Pagada</option>
+                                <option value="CANCELED">Anulada</option>
+                            </select>
+                        </div>
+
+                        <div className="col-span-2">
+                            <label className={labelClass}>Fecha y hora</label>
+                            <input
+                                type="datetime-local"
+                                value={form.saleDate}
+                                onChange={(e) =>
+                                    cambiarForm("saleDate", e.target.value)
+                                }
+                                className={inputClass}
                             />
                         </div>
                     </div>
 
-                    {/* Productos */}
                     <div>
                         <div className="flex items-center justify-between mb-2">
                             <h3 className="text-sm font-semibold text-gray-700">
                                 Productos
                             </h3>
                             <button
-                                onClick={agregarProducto}
+                                onClick={agregarDetalle}
                                 className="flex items-center gap-1 text-xs text-cixoil-red font-medium hover:opacity-80 transition-opacity"
                             >
                                 <Plus size={14} /> Agregar
                             </button>
                         </div>
                         <div className="space-y-2">
-                            {productos.map((p, i) => (
+                            {detalles.map((d, i) => (
                                 <div
                                     key={i}
                                     className="grid grid-cols-12 gap-2 items-end"
                                 >
-                                    <div className="col-span-4">
+                                    <div className="col-span-7">
                                         {i === 0 && (
                                             <label className="block text-xs text-gray-500 mb-1">
                                                 Producto
                                             </label>
                                         )}
-                                        <input
-                                            value={p.nombre}
+                                        <select
+                                            value={d.idProduct}
                                             onChange={(e) =>
-                                                cambiarProducto(
+                                                cambiarDetalle(
                                                     i,
-                                                    "nombre",
+                                                    "idProduct",
                                                     e.target.value,
                                                 )
                                             }
-                                            placeholder="Nombre"
                                             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-cixoil-red"
-                                        />
-                                    </div>
-                                    <div className="col-span-3">
-                                        {i === 0 && (
-                                            <label className="block text-xs text-gray-500 mb-1">
-                                                Descripción
-                                            </label>
-                                        )}
-                                        <input
-                                            value={p.descripcion}
-                                            onChange={(e) =>
-                                                cambiarProducto(
-                                                    i,
-                                                    "descripcion",
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder="Ej: Galón"
-                                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-cixoil-red"
-                                        />
+                                        >
+                                            <option value="">
+                                                Seleccionar
+                                            </option>
+                                            {productos.map((p) => (
+                                                <option key={p.id} value={p.id}>
+                                                    {p.name} — S/{" "}
+                                                    {Number(
+                                                        p.price,
+                                                    ).toLocaleString("es-PE")}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
                                     <div className="col-span-2">
                                         {i === 0 && (
@@ -255,12 +283,12 @@ export default function ModalNuevoMovimiento({ onClose, onMovimientoCreado }) {
                                         <input
                                             type="number"
                                             min="1"
-                                            value={p.cantidad}
+                                            value={d.quantity}
                                             onChange={(e) =>
-                                                cambiarProducto(
+                                                cambiarDetalle(
                                                     i,
-                                                    "cantidad",
-                                                    Number(e.target.value),
+                                                    "quantity",
+                                                    e.target.value,
                                                 )
                                             }
                                             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-cixoil-red"
@@ -269,30 +297,24 @@ export default function ModalNuevoMovimiento({ onClose, onMovimientoCreado }) {
                                     <div className="col-span-2">
                                         {i === 0 && (
                                             <label className="block text-xs text-gray-500 mb-1">
-                                                Precio
+                                                Subtotal
                                             </label>
                                         )}
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            value={p.precio}
-                                            onChange={(e) =>
-                                                cambiarProducto(
-                                                    i,
-                                                    "precio",
-                                                    Number(e.target.value),
-                                                )
-                                            }
-                                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-cixoil-red"
-                                        />
+                                        <p className="text-xs text-gray-700 font-medium py-2 text-right">
+                                            S/{" "}
+                                            {(
+                                                precioProducto(d.idProduct) *
+                                                Number(d.quantity || 0)
+                                            ).toLocaleString("es-PE")}
+                                        </p>
                                     </div>
                                     <div className="col-span-1 flex justify-center">
                                         {i === 0 && (
                                             <div className="mb-1 h-4" />
                                         )}
                                         <button
-                                            onClick={() => eliminarProducto(i)}
-                                            disabled={productos.length === 1}
+                                            onClick={() => eliminarDetalle(i)}
+                                            disabled={detalles.length === 1}
                                             className="text-gray-300 hover:text-red-500 transition-colors disabled:opacity-30"
                                         >
                                             <Trash2 size={15} />
@@ -303,24 +325,22 @@ export default function ModalNuevoMovimiento({ onClose, onMovimientoCreado }) {
                         </div>
                     </div>
 
-                    {/* Totales */}
                     <div className="bg-gray-50 rounded-xl p-4 space-y-1.5 text-sm">
                         <div className="flex justify-between text-gray-600">
                             <span>Subtotal</span>
-                            <span>$ {subtotal.toLocaleString("es-CO")}</span>
+                            <span>S/ {subtotal.toLocaleString("es-PE")}</span>
                         </div>
                         <div className="flex justify-between text-gray-600">
-                            <span>IVA (19%)</span>
-                            <span>$ {iva.toLocaleString("es-CO")}</span>
+                            <span>IGV (19%)</span>
+                            <span>S/ {iva.toLocaleString("es-PE")}</span>
                         </div>
                         <div className="flex justify-between font-bold text-base text-cixoil-red border-t border-gray-200 pt-1.5">
                             <span>Total</span>
-                            <span>$ {total.toLocaleString("es-CO")}</span>
+                            <span>S/ {total.toLocaleString("es-PE")}</span>
                         </div>
                     </div>
                 </div>
 
-                {/* Footer */}
                 <div className="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end">
                     <button
                         onClick={onClose}
@@ -330,29 +350,13 @@ export default function ModalNuevoMovimiento({ onClose, onMovimientoCreado }) {
                     </button>
                     <button
                         onClick={handleGuardar}
-                        disabled={guardando || !form.cliente}
+                        disabled={guardando}
                         className="px-5 py-2.5 bg-cixoil-red text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
                     >
-                        {guardando ? "Guardando..." : "Guardar"}
+                        {guardando ? "Guardando..." : "Guardar venta"}
                     </button>
                 </div>
             </div>
-        </div>
-    );
-}
-
-function Campo({ label, value, onChange, placeholder }) {
-    return (
-        <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
-                {label}
-            </label>
-            <input
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                placeholder={placeholder}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-cixoil-red transition-colors placeholder:text-gray-300"
-            />
         </div>
     );
 }
