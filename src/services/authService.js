@@ -8,19 +8,23 @@ export const authService = {
                 password,
             });
 
-            if (response.data && response.data.token) {
-                localStorage.setItem('token', response.data.token);
-                localStorage.setItem('user', JSON.stringify(response.data.user));
+            const token = response.data?.data?.auth?.accessToken;
+            const user = response.data?.data?.user;
+
+            if (token) {
+                localStorage.setItem('token', token);
             }
+            if (user) {
+                localStorage.setItem('user', JSON.stringify(user));
+            }
+
             return response.data;
         } catch (error) {
             throw error.response?.data?.message || 'Error al conectar con el servidor';
         }
     },
-
     logout: () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
     }
-
 };

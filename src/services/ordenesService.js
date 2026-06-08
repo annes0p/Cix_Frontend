@@ -1,0 +1,16 @@
+import api from "./api";
+
+export const getOrdenes = async () => {
+    const response = await api.get("/purchases");
+    return response.data.data || response.data;
+};
+
+export const crearOrden = async (orden) => {
+    const response = await api.post("/purchases", orden);
+    return response.data.data || response.data;
+};
+
+export const getOrdenById = async (id) => {
+    const response = await api.get(`/purchases/${id}`);
+    return response.data.data || response.data;
+};
