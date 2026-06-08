@@ -4,11 +4,12 @@ import { crearProveedor } from "../../services/proveedoresService";
 
 export default function ModalProveedor({ onClose, onGuardar }) {
     const [form, setForm] = useState({
-        ruc: "",
-        razonSocial: "",
-        telefono: "",
-        correo: "",
-        direccion: "",
+        legalName: "",
+        documentType: "RUC",
+        docNumber: "",
+        phoneNumber: "",
+        email: "",
+        address: "",
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -63,14 +64,30 @@ export default function ModalProveedor({ onClose, onGuardar }) {
 
                     <div>
                         <label className="text-sm font-medium text-gray-600">
-                            RUC
+                            Tipo de documento
+                        </label>
+                        <select
+                            className={inputClass}
+                            value={form.documentType}
+                            onChange={(e) =>
+                                handleChange("documentType", e.target.value)
+                            }
+                        >
+                            <option value="RUC">RUC</option>
+                            <option value="DNI">DNI</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="text-sm font-medium text-gray-600">
+                            Numero de documento
                         </label>
                         <input
                             type="text"
                             className={inputClass}
-                            value={form.ruc}
+                            value={form.docNumber}
                             onChange={(e) =>
-                                handleChange("ruc", e.target.value)
+                                handleChange("docNumber", e.target.value)
                             }
                             required
                         />
@@ -78,14 +95,14 @@ export default function ModalProveedor({ onClose, onGuardar }) {
 
                     <div>
                         <label className="text-sm font-medium text-gray-600">
-                            Razón Social
+                            Razon Social
                         </label>
                         <input
                             type="text"
                             className={inputClass}
-                            value={form.razonSocial}
+                            value={form.legalName}
                             onChange={(e) =>
-                                handleChange("razonSocial", e.target.value)
+                                handleChange("legalName", e.target.value)
                             }
                             required
                         />
@@ -93,14 +110,14 @@ export default function ModalProveedor({ onClose, onGuardar }) {
 
                     <div>
                         <label className="text-sm font-medium text-gray-600">
-                            Teléfono
+                            Telefono
                         </label>
                         <input
                             type="text"
                             className={inputClass}
-                            value={form.telefono}
+                            value={form.phoneNumber}
                             onChange={(e) =>
-                                handleChange("telefono", e.target.value)
+                                handleChange("phoneNumber", e.target.value)
                             }
                             required
                         />
@@ -113,9 +130,9 @@ export default function ModalProveedor({ onClose, onGuardar }) {
                         <input
                             type="email"
                             className={inputClass}
-                            value={form.correo}
+                            value={form.email}
                             onChange={(e) =>
-                                handleChange("correo", e.target.value)
+                                handleChange("email", e.target.value)
                             }
                             required
                         />
@@ -123,14 +140,14 @@ export default function ModalProveedor({ onClose, onGuardar }) {
 
                     <div>
                         <label className="text-sm font-medium text-gray-600">
-                            Dirección
+                            Direccion
                         </label>
                         <input
                             type="text"
                             className={inputClass}
-                            value={form.direccion}
+                            value={form.address}
                             onChange={(e) =>
-                                handleChange("direccion", e.target.value)
+                                handleChange("address", e.target.value)
                             }
                             required
                         />

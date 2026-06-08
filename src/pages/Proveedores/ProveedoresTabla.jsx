@@ -25,19 +25,22 @@ export default function ProveedoresTabla({ proveedores, loading, onRecargar }) {
                 <thead>
                     <tr className="bg-gray-50 border-b">
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            RUC
+                            Doc
                         </th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Razón Social
+                            Numero
                         </th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Teléfono
+                            Razon Social
+                        </th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                            Telefono
                         </th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
                             Correo
                         </th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Dirección
+                            Direccion
                         </th>
                         <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
                             Acciones
@@ -50,21 +53,20 @@ export default function ProveedoresTabla({ proveedores, loading, onRecargar }) {
                             key={proveedor.id}
                             className="border-b hover:bg-gray-50"
                         >
+                            <td className="px-4 py-3 text-xs font-mono">
+                                {proveedor.documentType}
+                            </td>
                             <td className="px-4 py-3 font-mono text-xs">
-                                {proveedor.ruc}
+                                {proveedor.docNumber}
                             </td>
                             <td className="px-4 py-3 font-medium">
-                                {proveedor.razonSocial || proveedor.name}
+                                {proveedor.legalName}
                             </td>
                             <td className="px-4 py-3">
-                                {proveedor.telefono || proveedor.phone}
+                                {proveedor.phoneNumber}
                             </td>
-                            <td className="px-4 py-3">
-                                {proveedor.correo || proveedor.email}
-                            </td>
-                            <td className="px-4 py-3">
-                                {proveedor.direccion || proveedor.address}
-                            </td>
+                            <td className="px-4 py-3">{proveedor.email}</td>
+                            <td className="px-4 py-3">{proveedor.address}</td>
                             <td className="px-4 py-3">
                                 <div className="flex justify-center gap-3">
                                     <button className="text-yellow-500 hover:text-yellow-700">

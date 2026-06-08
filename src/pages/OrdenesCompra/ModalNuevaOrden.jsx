@@ -1,14 +1,16 @@
-import { X } from "lucide-react";
+import { Minus, Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { crearOrden } from "../../services/ordenesService";
 import { getProveedores } from "../../services/proveedoresService";
 
 export default function ModalNuevaOrden({ onClose, onGuardar }) {
     const [form, setForm] = useState({
-        supplierId: "",
-        purchaseDate: "",
-        totalAmount: "",
-        status: "Pendiente",
+        idSupplier: "",
+        purchasedAt: "",
+        estimatedDeliveryAt: "",
+        deliveredAt: "",
+        receptionStatus: "PENDING",
+        details: [],
     });
     const [proveedores, setProveedores] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -30,6 +32,28 @@ export default function ModalNuevaOrden({ onClose, onGuardar }) {
         setForm((prev) => ({ ...prev, [campo]: valor }));
     };
 
+    const agregarDetalle = () => {
+        setForm((prev) => ({
+            ...prev,
+            details: [...prev.details, { idProduct: "", quantity: 1 }],
+        }));
+    };
+
+    const actualizarDetalle = (index, campo, valor) => {
+        setForm((prev) => {
+            const nuevos = [...prev.details];
+            nuevos[index] = { ...nuevos[index], [campo]: valor };
+            return { ...prev, details: nuevos };
+        });
+    };
+
+    const eliminarDetalle = (index) => {
+        setForm((prev) => ({
+            ...prev,
+            details: prev.details.filter((_, i) => i !== index),
+        }));
+    };
+
     const guardar = async (e) => {
         e.preventDefault();
         try {
@@ -37,7 +61,11 @@ export default function ModalNuevaOrden({ onClose, onGuardar }) {
             setError(null);
             await crearOrden({
                 ...form,
-                totalAmount: Number(form.totalAmount),
+                idSupplier: Number(form.idSupplier),
+                details: form.details.map((d) => ({
+                    idProduct: Number(d.idProduct),
+                    quantity: Number(d.quantity),
+                })),
             });
             onGuardar();
             onClose();
@@ -54,7 +82,7 @@ export default function ModalNuevaOrden({ onClose, onGuardar }) {
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center px-6 py-4 border-b">
                     <div>
                         <h2 className="font-bold text-lg">
@@ -85,16 +113,16 @@ export default function ModalNuevaOrden({ onClose, onGuardar }) {
                         </label>
                         <select
                             className={inputClass}
-                            value={form.supplierId}
+                            value={form.idSupplier}
                             onChange={(e) =>
-                                handleChange("supplierId", e.target.value)
+                                handleChange("idSupplier", e.target.value)
                             }
                             required
                         >
                             <option value="">Seleccionar proveedor</option>
                             {proveedores.map((p) => (
                                 <option key={p.id} value={p.id}>
-                                    {p.razonSocial || p.name}
+                                    {p.legalName}
                                 </option>
                             ))}
                         </select>
@@ -102,14 +130,14 @@ export default function ModalNuevaOrden({ onClose, onGuardar }) {
 
                     <div>
                         <label className="text-sm font-medium text-gray-600">
-                            Fecha
+                            Fecha de compra
                         </label>
                         <input
                             type="date"
                             className={inputClass}
-                            value={form.purchaseDate}
+                            value={form.purchasedAt}
                             onChange={(e) =>
-                                handleChange("purchaseDate", e.target.value)
+                                handleChange("purchasedAt", e.target.value)
                             }
                             required
                         />
@@ -117,17 +145,18 @@ export default function ModalNuevaOrden({ onClose, onGuardar }) {
 
                     <div>
                         <label className="text-sm font-medium text-gray-600">
-                            Total (S/.)
+                            Entrega estimada
                         </label>
                         <input
-                            type="number"
-                            min="0"
+                            type="date"
                             className={inputClass}
-                            value={form.totalAmount}
+                            value={form.estimatedDeliveryAt}
                             onChange={(e) =>
-                                handleChange("totalAmount", e.target.value)
+                                handleChange(
+                                    "estimatedDeliveryAt",
+                                    e.target.value,
+                                )
                             }
-                            required
                         />
                     </div>
 
@@ -137,16 +166,78 @@ export default function ModalNuevaOrden({ onClose, onGuardar }) {
                         </label>
                         <select
                             className={inputClass}
-                            value={form.status}
+                            value={form.receptionStatus}
                             onChange={(e) =>
-                                handleChange("status", e.target.value)
+                                handleChange("receptionStatus", e.target.value)
                             }
                         >
-                            <option>Pendiente</option>
-                            <option>Aprobada</option>
-                            <option>Recibida</option>
-                            <option>Cancelada</option>
+                            <option value="PENDING">Pendiente</option>
+                            <option value="PARTIALLY_RECIEVED">
+                                Recibido parcialmente
+                            </option>
+                            <option value="RECIEVED">Recibido</option>
                         </select>
+                    </div>
+
+                    <div>
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="text-sm font-medium text-gray-600">
+                                Productos
+                            </label>
+                            <button
+                                type="button"
+                                onClick={agregarDetalle}
+                                className="flex items-center gap-1 text-xs text-cixoil-green font-medium"
+                            >
+                                <Plus size={14} />
+                                Agregar producto
+                            </button>
+                        </div>
+                        {form.details.length === 0 && (
+                            <p className="text-xs text-gray-400 text-center py-2">
+                                No hay productos agregados.
+                            </p>
+                        )}
+                        {form.details.map((detalle, index) => (
+                            <div key={index} className="flex gap-2 mb-2">
+                                <input
+                                    type="number"
+                                    placeholder="ID producto"
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red"
+                                    value={detalle.idProduct}
+                                    onChange={(e) =>
+                                        actualizarDetalle(
+                                            index,
+                                            "idProduct",
+                                            e.target.value,
+                                        )
+                                    }
+                                    required
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Cantidad"
+                                    min="1"
+                                    className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red"
+                                    value={detalle.quantity}
+                                    onChange={(e) =>
+                                        actualizarDetalle(
+                                            index,
+                                            "quantity",
+                                            e.target.value,
+                                        )
+                                    }
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => eliminarDetalle(index)}
+                                    className="text-red-400 hover:text-red-600"
+                                >
+                                    <Minus size={16} />
+                                </button>
+                            </div>
+                        ))}
                     </div>
 
                     <div className="flex gap-3 pt-2">
