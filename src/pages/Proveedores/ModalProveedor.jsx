@@ -11,35 +11,81 @@ export default function ModalProveedor({ onClose, onGuardar }) {
         email: "",
         address: "",
     });
+    const [errores, setErrores] = useState({});
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [errorApi, setErrorApi] = useState(null);
 
     const handleChange = (campo, valor) => {
         setForm((prev) => ({ ...prev, [campo]: valor }));
+        setErrores((prev) => ({ ...prev, [campo]: null }));
+    };
+
+    const validar = () => {
+        const nuevosErrores = {};
+
+        if (!form.legalName.trim())
+            nuevosErrores.legalName = "La razon social es obligatoria.";
+
+        if (!form.docNumber.trim()) {
+            nuevosErrores.docNumber = "El numero de documento es obligatorio.";
+        } else if (
+            form.documentType === "RUC" &&
+            !/^\d{11}$/.test(form.docNumber)
+        ) {
+            nuevosErrores.docNumber =
+                "El RUC debe tener exactamente 11 digitos.";
+        } else if (
+            form.documentType === "DNI" &&
+            !/^\d{8}$/.test(form.docNumber)
+        ) {
+            nuevosErrores.docNumber =
+                "El DNI debe tener exactamente 8 digitos.";
+        }
+
+        if (!form.phoneNumber.trim()) {
+            nuevosErrores.phoneNumber = "El telefono es obligatorio.";
+        } else if (!/^\d{9}$/.test(form.phoneNumber)) {
+            nuevosErrores.phoneNumber = "El telefono debe tener 9 digitos.";
+        }
+
+        if (!form.email.trim()) {
+            nuevosErrores.email = "El correo es obligatorio.";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+            nuevosErrores.email = "El correo no tiene un formato valido.";
+        }
+
+        if (!form.address.trim())
+            nuevosErrores.address = "La direccion es obligatoria.";
+
+        setErrores(nuevosErrores);
+        return Object.keys(nuevosErrores).length === 0;
     };
 
     const guardar = async (e) => {
         e.preventDefault();
+        if (!validar()) return;
         try {
             setLoading(true);
-            setError(null);
+            setErrorApi(null);
             await crearProveedor(form);
             onGuardar();
             onClose();
         } catch (err) {
-            setError("Error al guardar el proveedor. Intenta de nuevo.");
+            setErrorApi("Error al guardar el proveedor. Intenta de nuevo.");
             console.error(err);
         } finally {
             setLoading(false);
         }
     };
 
-    const inputClass =
-        "w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red";
+    const inputClass = (campo) =>
+        `w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red ${
+            errores[campo] ? "border-red-400 bg-red-50" : "border-gray-300"
+        }`;
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center px-6 py-4 border-b">
                     <div>
                         <h2 className="font-bold text-lg">Nuevo proveedor</h2>
@@ -56,9 +102,9 @@ export default function ModalProveedor({ onClose, onGuardar }) {
                 </div>
 
                 <form onSubmit={guardar} className="p-6 space-y-4">
-                    {error && (
+                    {errorApi && (
                         <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-2 rounded-lg">
-                            {error}
+                            {errorApi}
                         </div>
                     )}
 
@@ -67,7 +113,7 @@ export default function ModalProveedor({ onClose, onGuardar }) {
                             Tipo de documento
                         </label>
                         <select
-                            className={inputClass}
+                            className={inputClass("documentType")}
                             value={form.documentType}
                             onChange={(e) =>
                                 handleChange("documentType", e.target.value)
@@ -84,13 +130,23 @@ export default function ModalProveedor({ onClose, onGuardar }) {
                         </label>
                         <input
                             type="text"
-                            className={inputClass}
+                            className={inputClass("docNumber")}
                             value={form.docNumber}
                             onChange={(e) =>
                                 handleChange("docNumber", e.target.value)
                             }
-                            required
+                            maxLength={form.documentType === "RUC" ? 11 : 8}
+                            placeholder={
+                                form.documentType === "RUC"
+                                    ? "11 digitos"
+                                    : "8 digitos"
+                            }
                         />
+                        {errores.docNumber && (
+                            <p className="text-xs text-red-500 mt-1">
+                                {errores.docNumber}
+                            </p>
+                        )}
                     </div>
 
                     <div>
@@ -99,13 +155,18 @@ export default function ModalProveedor({ onClose, onGuardar }) {
                         </label>
                         <input
                             type="text"
-                            className={inputClass}
+                            className={inputClass("legalName")}
                             value={form.legalName}
                             onChange={(e) =>
                                 handleChange("legalName", e.target.value)
                             }
-                            required
+                            placeholder="Nombre o razon social"
                         />
+                        {errores.legalName && (
+                            <p className="text-xs text-red-500 mt-1">
+                                {errores.legalName}
+                            </p>
+                        )}
                     </div>
 
                     <div>
@@ -114,13 +175,19 @@ export default function ModalProveedor({ onClose, onGuardar }) {
                         </label>
                         <input
                             type="text"
-                            className={inputClass}
+                            className={inputClass("phoneNumber")}
                             value={form.phoneNumber}
                             onChange={(e) =>
                                 handleChange("phoneNumber", e.target.value)
                             }
-                            required
+                            maxLength={9}
+                            placeholder="9 digitos"
                         />
+                        {errores.phoneNumber && (
+                            <p className="text-xs text-red-500 mt-1">
+                                {errores.phoneNumber}
+                            </p>
+                        )}
                     </div>
 
                     <div>
@@ -128,14 +195,19 @@ export default function ModalProveedor({ onClose, onGuardar }) {
                             Correo
                         </label>
                         <input
-                            type="email"
-                            className={inputClass}
+                            type="text"
+                            className={inputClass("email")}
                             value={form.email}
                             onChange={(e) =>
                                 handleChange("email", e.target.value)
                             }
-                            required
+                            placeholder="ejemplo@correo.com"
                         />
+                        {errores.email && (
+                            <p className="text-xs text-red-500 mt-1">
+                                {errores.email}
+                            </p>
+                        )}
                     </div>
 
                     <div>
@@ -144,13 +216,18 @@ export default function ModalProveedor({ onClose, onGuardar }) {
                         </label>
                         <input
                             type="text"
-                            className={inputClass}
+                            className={inputClass("address")}
                             value={form.address}
                             onChange={(e) =>
                                 handleChange("address", e.target.value)
                             }
-                            required
+                            placeholder="Direccion completa"
                         />
+                        {errores.address && (
+                            <p className="text-xs text-red-500 mt-1">
+                                {errores.address}
+                            </p>
+                        )}
                     </div>
 
                     <div className="flex gap-3 pt-2">
