@@ -1,18 +1,20 @@
-import api from '../api/axios';
+import api from "../api/axios";
 
 export const dashboardService = {
-  getSummaryData: async (fechaInicio, fechaFin, empresaId) => {
-    try {
-      const response = await api.get('/dashboard/summary', {
-        params: {
-          startDate: fechaInicio,
-          endDate: fechaFin,
-          companyId: empresaId
-        }
-      });
-      return response.data.data; 
-    } catch (error) {
-      throw error.response?.data?.message || 'Error al cargar los datos del Dashboard';
-    }
-  }
+    getInventario: async () => {
+        const response = await api.get("/inventory");
+        return response.data.data || response.data;
+    },
+    getMovimientos: async () => {
+        const response = await api.get("/movements");
+        return response.data.data || response.data;
+    },
+    getVentas: async () => {
+        const response = await api.get("/sales");
+        return response.data.data || response.data;
+    },
+    getClientes: async () => {
+        const response = await api.get("/clients");
+        return response.data.data || response.data;
+    },
 };
