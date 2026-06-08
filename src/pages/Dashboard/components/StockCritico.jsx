@@ -1,60 +1,74 @@
-import React from 'react';
+export default function StockCritico({ stockCritico }) {
+    if (!stockCritico || stockCritico.length === 0) {
+        return (
+            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm h-full flex flex-col justify-center items-center gap-2">
+                <span className="text-2xl">✓</span>
+                <p className="text-sm font-bold text-cixoil-green">
+                    Todo el stock esta en orden
+                </p>
+                <p className="text-xs text-gray-400">
+                    No hay productos con stock critico
+                </p>
+            </div>
+        );
+    }
 
-export default function StockCritico({ tableData }) {
-  const stockData = tableData || [
-    { id: 1, name: 'Disolvente Industrial', detail: 'Galón', code: 'DIS-002', warehouse: 'Bodega Principal', current: 0, min: 8, status: 'Sin stock' },
-    { id: 2, name: 'Filtro de Aceite Premium', detail: 'Unidad', code: 'FIL-001', warehouse: 'Bodega Principal', current: 2, min: 15, status: 'Stock bajo' },
-    { id: 3, name: 'Transmisión 80W90', detail: 'Galón', code: 'TRF-001', warehouse: 'Bodega Secundaria', current: 8, min: 12, status: 'Stock bajo' },
-    { id: 4, name: 'Grasa Litio EP 2', detail: '400g', code: 'GRA-003', warehouse: 'Bodega Secundaria', current: 5, min: 10, status: 'Stock bajo' },
-    { id: 5, name: 'Aceite Hidráulico ISO 68', detail: 'Galón', code: 'HID-001', warehouse: 'Bodega Principal', current: 6, min: 15, status: 'Stock bajo' },
-  ];
+    return (
+        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col h-full">
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-cixoil-red flex items-center gap-2">
+                    Stock critico
+                </h3>
+                <span className="text-xs font-bold bg-red-50 text-cixoil-red px-2 py-1 rounded-md border border-red-100">
+                    {stockCritico.length} productos
+                </span>
+            </div>
 
-  return (
-    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-between h-full">
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-cixoil-red flex items-center gap-2"><span>⚠️</span> Stock crítico</h3>
+            <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                        <tr className="border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                            <th className="pb-3">Producto</th>
+                            <th className="pb-3 text-center">Stock act.</th>
+                            <th className="pb-3 text-center">Min.</th>
+                            <th className="pb-3 text-center">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50 text-xs font-semibold text-gray-700">
+                        {stockCritico.slice(0, 5).map((item) => (
+                            <tr
+                                key={item.id}
+                                className="hover:bg-slate-50/50 transition-colors"
+                            >
+                                <td className="py-2.5 font-bold text-gray-900 truncate max-w-[150px]">
+                                    {item.product?.name}
+                                </td>
+                                <td
+                                    className={`py-2.5 text-center font-black text-sm ${item.stock === 0 ? "text-cixoil-red" : "text-amber-600"}`}
+                                >
+                                    {item.stock}
+                                </td>
+                                <td className="py-2.5 text-center text-gray-400 font-medium">
+                                    {item.minStock}
+                                </td>
+                                <td className="py-2.5 text-center">
+                                    <span
+                                        className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                                            item.stock === 0
+                                                ? "bg-red-50 text-cixoil-red border-red-100"
+                                                : "bg-amber-50 text-amber-700 border-amber-100"
+                                        }`}
+                                    >
+                                        {item.stock === 0
+                                            ? "Sin stock"
+                                            : "Stock bajo"}
+                                    </span>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                <th className="pb-3">Producto</th>
-                <th className="pb-3">Código</th>
-                <th className="pb-3">Almacén</th>
-                <th className="pb-3 text-center">Stock act.</th>
-                <th className="pb-3 text-center">Mín.</th>
-                <th className="pb-3 text-center">Estado</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 text-xs font-semibold text-gray-700">
-              {stockData.map((item, idx) => (
-                <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="py-2.5 flex items-center gap-2">
-                    <div className="w-7 h-7 bg-gray-50 border border-gray-100 rounded p-0.5 shrink-0">
-                      
-                    </div>
-                    <div>
-                      <p className="font-bold text-gray-900 truncate max-w-[120px]">{item.name}</p>
-                      <p className="text-[10px] text-gray-400 font-medium">{item.detail}</p>
-                    </div>
-                  </td>
-                  <td className="py-2.5 text-gray-500 font-mono text-[11px]">{item.code}</td>
-                  <td className="py-2.5 text-gray-500 font-medium truncate max-w-[100px]">{item.warehouse}</td>
-                  <td className={`py-2.5 text-center font-black text-sm ${item.current === 0 ? 'text-cixoil-red' : 'text-amber-600'}`}>{item.current}</td>
-                  <td className="py-2.5 text-center text-gray-400 font-medium">{item.min}</td>
-                  <td className="py-2.5 text-center">
-                    <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md ${item.status === 'Sin stock' ? 'bg-red-50 text-cixoil-red border border-red-100' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>{item.status}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <button className="text-left text-xs font-bold text-cixoil-red hover:underline mt-4 flex items-center gap-1 group w-max">
-        Ver todos los productos con stock crítico <span className="group-hover:translate-x-1 transition-transform">→</span>
-      </button>
-    </div>
-  );
+    );
 }
