@@ -7,6 +7,7 @@
     Package,
     Settings,
     ShoppingCart,
+    Sparkles,
     Truck,
     Users,
 } from "lucide-react";
@@ -18,11 +19,12 @@ const menuItems = [
     { label: "Inventarios", icon: Package, path: "/inventarios" },
     { label: "Movimientos", icon: ArrowLeftRight, path: "/movimientos" },
     { label: "Clientes", icon: Users, path: "/clientes" },
-    { label: "Órdenes de compra", icon: ShoppingCart, path: "/ordenes" },
+    { label: "Ordenes de compra", icon: ShoppingCart, path: "/ordenes" },
     { label: "Proveedores", icon: Truck, path: "/proveedores" },
     { label: "Reportes", icon: BarChart3, path: "/reportes" },
     { label: "Alertas", icon: Bell, path: "/alertas" },
-    { label: "Configuración", icon: Settings, path: "/configuracion" },
+    { label: "Recomendador", icon: Sparkles, path: "/recomendador" },
+    { label: "Configuracion", icon: Settings, path: "/configuracion" },
 ];
 
 export default function Sidebar() {
@@ -74,7 +76,9 @@ export default function Sidebar() {
                         JC
                     </div>
                     <div className="text-left flex-1">
-                        <p className="text-white text-xs font-semibold">Jorge Cerna</p>
+                        <p className="text-white text-xs font-semibold">
+                            Jorge Cerna
+                        </p>
                         <p className="text-white/50 text-xs">Administrador</p>
                     </div>
                     <ChevronDown size={14} className="text-white/50" />

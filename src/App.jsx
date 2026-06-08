@@ -1,15 +1,16 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
+import Alertas from "./pages/Alertas";
+import Clientes from "./pages/Clientes";
+import Configuracion from "./pages/Configuracion";
 import Dashboard from "./pages/Dashboard";
 import Inventarios from "./pages/Inventarios";
 import Login from "./pages/Login";
 import Movimientos from "./pages/Movimientos";
-import Clientes from "./pages/Clientes";
 import OrdenesCompra from "./pages/OrdenesCompra";
 import Proveedores from "./pages/Proveedores";
+import Recomendador from "./pages/Recomendador";
 import Reportes from "./pages/Reportes";
-import Alertas from "./pages/Alertas";
-import Configuracion from "./pages/Configuracion";
 
 function App() {
     return (
@@ -27,6 +28,7 @@ function App() {
                     <Route path="/reportes" element={<Reportes />} />
                     <Route path="/alertas" element={<Alertas />} />
                     <Route path="/configuracion" element={<Configuracion />} />
+                    <Route path="/recomendador" element={<Recomendador />} />
                 </Route>
             </Routes>
         </BrowserRouter>
