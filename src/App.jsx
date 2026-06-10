@@ -3,6 +3,7 @@ import Layout from "./components/Layout";
 import Alertas from "./pages/Alertas";
 import Clientes from "./pages/Clientes";
 import Configuracion from "./pages/Configuracion";
+import CRM from "./pages/CRM";
 import Dashboard from "./pages/Dashboard";
 import Inventarios from "./pages/Inventarios";
 import Login from "./pages/Login";
@@ -29,6 +30,7 @@ function App() {
                     <Route path="/alertas" element={<Alertas />} />
                     <Route path="/configuracion" element={<Configuracion />} />
                     <Route path="/recomendador" element={<Recomendador />} />
+                    <Route path="/crm" element={<CRM />} />
                 </Route>
             </Routes>
         </BrowserRouter>
