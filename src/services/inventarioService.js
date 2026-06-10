@@ -5,6 +5,11 @@ export const getProductos = async () => {
     return response.data.data || response.data;
 };
 
+export const getInventario = async () => {
+    const response = await api.get("/inventory");
+    return response.data.data || response.data;
+};
+
 export const getCategorias = async () => {
     const response = await api.get("/categories");
     return response.data.data || response.data;
