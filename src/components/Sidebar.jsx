@@ -9,6 +9,7 @@
     ShoppingCart,
     Sparkles,
     Truck,
+    UserCheck,
     Users,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -19,6 +20,7 @@ const menuItems = [
     { label: "Inventarios", icon: Package, path: "/inventarios" },
     { label: "Movimientos", icon: ArrowLeftRight, path: "/movimientos" },
     { label: "Clientes", icon: Users, path: "/clientes" },
+    { label: "CRM", icon: UserCheck, path: "/crm" },
     { label: "Ordenes de compra", icon: ShoppingCart, path: "/ordenes" },
     { label: "Proveedores", icon: Truck, path: "/proveedores" },
     { label: "Reportes", icon: BarChart3, path: "/reportes" },
