@@ -1,6 +1,9 @@
-import { X } from "lucide-react";
+import { Loader, Search, X } from "lucide-react";
 import { useState } from "react";
 import { crearProveedor } from "../../services/proveedoresService";
+
+const SUNAT_TOKEN =
+    "64d370ab0213b3379b939e7f0890c1bde68e4cab4bb8ce62bcf9e13b1e170a0b";
 
 export default function ModalProveedor({ onClose, onGuardar }) {
     const [form, setForm] = useState({
@@ -11,242 +14,254 @@ export default function ModalProveedor({ onClose, onGuardar }) {
         email: "",
         address: "",
     });
-    const [errores, setErrores] = useState({});
     const [loading, setLoading] = useState(false);
-    const [errorApi, setErrorApi] = useState(null);
+    const [buscando, setBuscando] = useState(false);
+    const [error, setError] = useState(null);
 
-    const handleChange = (campo, valor) => {
+    const cambiar = (campo, valor) =>
         setForm((prev) => ({ ...prev, [campo]: valor }));
-        setErrores((prev) => ({ ...prev, [campo]: null }));
+
+    const buscarSunat = async () => {
+        const doc = form.docNumber.trim();
+        if (form.documentType === "RUC" && doc.length !== 11) {
+            setError("El RUC debe tener 11 digitos");
+            return;
+        }
+        if (form.documentType === "DNI" && doc.length !== 8) {
+            setError("El DNI debe tener 8 digitos");
+            return;
+        }
+        setBuscando(true);
+        setError(null);
+        try {
+            const endpoint =
+                form.documentType === "RUC"
+                    ? `https://apiperu.dev/api/ruc/${doc}`
+                    : `https://apiperu.dev/api/dni/${doc}`;
+            const res = await fetch(endpoint, {
+                headers: { Authorization: `Bearer ${SUNAT_TOKEN}` },
+            });
+            const data = await res.json();
+            if (!data.success) {
+                setError("No se encontro el documento en SUNAT");
+                return;
+            }
+            if (form.documentType === "RUC") {
+                setForm((prev) => ({
+                    ...prev,
+                    legalName: data.data.nombre_o_razon_social || "",
+                    address: data.data.direccion_completa || prev.address,
+                }));
+            } else {
+                setForm((prev) => ({
+                    ...prev,
+                    legalName:
+                        `${data.data.nombres || ""} ${data.data.apellido_paterno || ""} ${data.data.apellido_materno || ""}`.trim(),
+                }));
+            }
+        } catch {
+            setError("Error al consultar SUNAT. Verifica tu conexion.");
+        } finally {
+            setBuscando(false);
+        }
     };
 
     const validar = () => {
-        const nuevosErrores = {};
-
-        if (!form.legalName.trim())
-            nuevosErrores.legalName = "La razon social es obligatoria.";
-
-        if (!form.docNumber.trim()) {
-            nuevosErrores.docNumber = "El numero de documento es obligatorio.";
-        } else if (
-            form.documentType === "RUC" &&
-            !/^\d{11}$/.test(form.docNumber)
-        ) {
-            nuevosErrores.docNumber =
-                "El RUC debe tener exactamente 11 digitos.";
-        } else if (
-            form.documentType === "DNI" &&
-            !/^\d{8}$/.test(form.docNumber)
-        ) {
-            nuevosErrores.docNumber =
-                "El DNI debe tener exactamente 8 digitos.";
-        }
-
-        if (!form.phoneNumber.trim()) {
-            nuevosErrores.phoneNumber = "El telefono es obligatorio.";
-        } else if (!/^\d{9}$/.test(form.phoneNumber)) {
-            nuevosErrores.phoneNumber = "El telefono debe tener 9 digitos.";
-        }
-
-        if (!form.email.trim()) {
-            nuevosErrores.email = "El correo es obligatorio.";
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-            nuevosErrores.email = "El correo no tiene un formato valido.";
-        }
-
-        if (!form.address.trim())
-            nuevosErrores.address = "La direccion es obligatoria.";
-
-        setErrores(nuevosErrores);
-        return Object.keys(nuevosErrores).length === 0;
+        if (!form.legalName.trim()) return "La razon social es obligatoria.";
+        if (!form.docNumber.trim())
+            return "El numero de documento es obligatorio.";
+        if (form.documentType === "RUC" && !/^\d{11}$/.test(form.docNumber))
+            return "El RUC debe tener exactamente 11 digitos.";
+        if (form.documentType === "DNI" && !/^\d{8}$/.test(form.docNumber))
+            return "El DNI debe tener exactamente 8 digitos.";
+        if (!form.phoneNumber.trim()) return "El telefono es obligatorio.";
+        if (!/^\d{9}$/.test(form.phoneNumber))
+            return "El telefono debe tener 9 digitos.";
+        if (!form.email.trim()) return "El correo es obligatorio.";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+            return "El correo no tiene formato valido.";
+        if (!form.address.trim()) return "La direccion es obligatoria.";
+        return null;
     };
 
-    const guardar = async (e) => {
-        e.preventDefault();
-        if (!validar()) return;
+    const guardar = async () => {
+        const err = validar();
+        if (err) {
+            setError(err);
+            return;
+        }
+        setError(null);
+        setLoading(true);
         try {
-            setLoading(true);
-            setErrorApi(null);
             await crearProveedor(form);
             onGuardar();
             onClose();
         } catch (err) {
-            setErrorApi("Error al guardar el proveedor. Intenta de nuevo.");
-            console.error(err);
+            setError(
+                err?.response?.data?.message ||
+                    "Error al guardar el proveedor.",
+            );
         } finally {
             setLoading(false);
         }
     };
 
-    const inputClass = (campo) =>
-        `w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red ${
-            errores[campo] ? "border-red-400 bg-red-50" : "border-gray-300"
-        }`;
+    const inputClass =
+        "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-cixoil-red transition-colors placeholder:text-gray-300";
+    const labelClass = "block text-xs font-medium text-gray-600 mb-1";
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center px-6 py-4 border-b">
-                    <div>
-                        <h2 className="font-bold text-lg">Nuevo proveedor</h2>
-                        <p className="text-sm text-gray-500">
-                            Registrar proveedor
-                        </p>
-                    </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <h2 className="text-lg font-bold text-gray-900">
+                        Nuevo proveedor
+                    </h2>
                     <button
                         onClick={onClose}
-                        className="text-gray-500 hover:text-gray-700"
+                        className="text-gray-400 hover:text-gray-700 transition-colors"
                     >
-                        <X />
+                        <X size={20} />
                     </button>
                 </div>
 
-                <form onSubmit={guardar} className="p-6 space-y-4">
-                    {errorApi && (
-                        <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-2 rounded-lg">
-                            {errorApi}
+                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-lg">
+                            {error}
                         </div>
                     )}
 
-                    <div>
-                        <label className="text-sm font-medium text-gray-600">
-                            Tipo de documento
-                        </label>
-                        <select
-                            className={inputClass("documentType")}
-                            value={form.documentType}
-                            onChange={(e) =>
-                                handleChange("documentType", e.target.value)
-                            }
-                        >
-                            <option value="RUC">RUC</option>
-                            <option value="DNI">DNI</option>
-                        </select>
-                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className={labelClass}>
+                                Tipo de documento
+                            </label>
+                            <select
+                                value={form.documentType}
+                                onChange={(e) =>
+                                    cambiar("documentType", e.target.value)
+                                }
+                                className={inputClass}
+                            >
+                                <option value="RUC">RUC</option>
+                                <option value="DNI">DNI</option>
+                            </select>
+                        </div>
 
-                    <div>
-                        <label className="text-sm font-medium text-gray-600">
-                            Numero de documento
-                        </label>
-                        <input
-                            type="text"
-                            className={inputClass("docNumber")}
-                            value={form.docNumber}
-                            onChange={(e) =>
-                                handleChange("docNumber", e.target.value)
-                            }
-                            maxLength={form.documentType === "RUC" ? 11 : 8}
-                            placeholder={
-                                form.documentType === "RUC"
-                                    ? "11 digitos"
-                                    : "8 digitos"
-                            }
-                        />
-                        {errores.docNumber && (
-                            <p className="text-xs text-red-500 mt-1">
-                                {errores.docNumber}
-                            </p>
-                        )}
-                    </div>
+                        <div>
+                            <label className={labelClass}>
+                                Numero de documento *
+                            </label>
+                            <div className="flex gap-2">
+                                <input
+                                    value={form.docNumber}
+                                    onChange={(e) =>
+                                        cambiar(
+                                            "docNumber",
+                                            e.target.value.replace(/\D/g, ""),
+                                        )
+                                    }
+                                    placeholder={
+                                        form.documentType === "RUC"
+                                            ? "20123456789"
+                                            : "12345678"
+                                    }
+                                    maxLength={
+                                        form.documentType === "RUC" ? 11 : 8
+                                    }
+                                    className={inputClass}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={buscarSunat}
+                                    disabled={buscando}
+                                    className="px-3 py-2 bg-cixoil-red text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex-shrink-0"
+                                    title="Buscar en SUNAT"
+                                >
+                                    {buscando ? (
+                                        <Loader
+                                            size={15}
+                                            className="animate-spin"
+                                        />
+                                    ) : (
+                                        <Search size={15} />
+                                    )}
+                                </button>
+                            </div>
+                        </div>
 
-                    <div>
-                        <label className="text-sm font-medium text-gray-600">
-                            Razon Social
-                        </label>
-                        <input
-                            type="text"
-                            className={inputClass("legalName")}
-                            value={form.legalName}
-                            onChange={(e) =>
-                                handleChange("legalName", e.target.value)
-                            }
-                            placeholder="Nombre o razon social"
-                        />
-                        {errores.legalName && (
-                            <p className="text-xs text-red-500 mt-1">
-                                {errores.legalName}
-                            </p>
-                        )}
-                    </div>
+                        <div className="col-span-2">
+                            <label className={labelClass}>Razon Social *</label>
+                            <input
+                                value={form.legalName}
+                                onChange={(e) =>
+                                    cambiar("legalName", e.target.value)
+                                }
+                                placeholder="Se autocompleta con SUNAT"
+                                className={inputClass}
+                            />
+                        </div>
 
-                    <div>
-                        <label className="text-sm font-medium text-gray-600">
-                            Telefono
-                        </label>
-                        <input
-                            type="text"
-                            className={inputClass("phoneNumber")}
-                            value={form.phoneNumber}
-                            onChange={(e) =>
-                                handleChange("phoneNumber", e.target.value)
-                            }
-                            maxLength={9}
-                            placeholder="9 digitos"
-                        />
-                        {errores.phoneNumber && (
-                            <p className="text-xs text-red-500 mt-1">
-                                {errores.phoneNumber}
-                            </p>
-                        )}
-                    </div>
+                        <div>
+                            <label className={labelClass}>Telefono *</label>
+                            <input
+                                value={form.phoneNumber}
+                                onChange={(e) =>
+                                    cambiar(
+                                        "phoneNumber",
+                                        e.target.value.replace(/\D/g, ""),
+                                    )
+                                }
+                                placeholder="987654321"
+                                maxLength={9}
+                                className={inputClass}
+                            />
+                        </div>
 
-                    <div>
-                        <label className="text-sm font-medium text-gray-600">
-                            Correo
-                        </label>
-                        <input
-                            type="text"
-                            className={inputClass("email")}
-                            value={form.email}
-                            onChange={(e) =>
-                                handleChange("email", e.target.value)
-                            }
-                            placeholder="ejemplo@correo.com"
-                        />
-                        {errores.email && (
-                            <p className="text-xs text-red-500 mt-1">
-                                {errores.email}
-                            </p>
-                        )}
-                    </div>
+                        <div>
+                            <label className={labelClass}>Correo *</label>
+                            <input
+                                type="email"
+                                value={form.email}
+                                onChange={(e) =>
+                                    cambiar("email", e.target.value)
+                                }
+                                placeholder="correo@empresa.com"
+                                className={inputClass}
+                            />
+                        </div>
 
-                    <div>
-                        <label className="text-sm font-medium text-gray-600">
-                            Direccion
-                        </label>
-                        <input
-                            type="text"
-                            className={inputClass("address")}
-                            value={form.address}
-                            onChange={(e) =>
-                                handleChange("address", e.target.value)
-                            }
-                            placeholder="Direccion completa"
-                        />
-                        {errores.address && (
-                            <p className="text-xs text-red-500 mt-1">
-                                {errores.address}
-                            </p>
-                        )}
+                        <div className="col-span-2">
+                            <label className={labelClass}>Direccion *</label>
+                            <input
+                                value={form.address}
+                                onChange={(e) =>
+                                    cambiar("address", e.target.value)
+                                }
+                                placeholder="Se autocompleta con SUNAT para RUC"
+                                className={inputClass}
+                            />
+                        </div>
                     </div>
+                </div>
 
-                    <div className="flex gap-3 pt-2">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex-1 border border-gray-300 rounded-lg py-2.5 text-sm"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="flex-1 bg-cixoil-red text-white rounded-lg py-2.5 text-sm font-medium disabled:opacity-50"
-                        >
-                            {loading ? "Guardando..." : "Guardar Proveedor"}
-                        </button>
-                    </div>
-                </form>
+                <div className="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end">
+                    <button
+                        onClick={onClose}
+                        className="px-5 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        onClick={guardar}
+                        disabled={loading}
+                        className="px-5 py-2.5 bg-cixoil-red text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                    >
+                        {loading ? "Guardando..." : "Guardar Proveedor"}
+                    </button>
+                </div>
             </div>
         </div>
     );
