@@ -1,4 +1,6 @@
 import { Eye } from "lucide-react";
+import { useState } from "react";
+import ModalDetalleOrden from "./ModalDetalleOrden";
 
 function EstadoBadge({ estado }) {
     const estilos = {
@@ -16,12 +18,14 @@ function EstadoBadge({ estado }) {
         <span
             className={`px-2 py-1 rounded-md text-xs font-semibold ${estilos[estado] || "bg-gray-100 text-gray-700"}`}
         >
-            {etiquetas[estado] || estado}
+            {etiquetas[estado] || estado || "Sin estado"}
         </span>
     );
 }
 
 export default function OrdenesTabla({ ordenes, loading }) {
+    const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
+
     if (loading) {
         return (
             <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
@@ -41,71 +45,89 @@ export default function OrdenesTabla({ ordenes, loading }) {
     }
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
-                <thead>
-                    <tr className="bg-gray-50 border-b">
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Codigo
-                        </th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Proveedor
-                        </th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Fecha compra
-                        </th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Entrega estimada
-                        </th>
-                        <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Total
-                        </th>
-                        <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Estado
-                        </th>
-                        <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Acciones
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {ordenes.map((orden) => (
-                        <tr
-                            key={orden.id}
-                            className="border-b hover:bg-gray-50"
-                        >
-                            <td className="px-4 py-3 font-medium">
-                                OC-{orden.id.toString().padStart(4, "0")}
-                            </td>
-                            <td className="px-4 py-3">
-                                {orden.supplier?.legalName}
-                            </td>
-                            <td className="px-4 py-3">{orden.purchasedAt}</td>
-                            <td className="px-4 py-3">
-                                {orden.estimatedDeliveryAt}
-                            </td>
-                            <td className="px-4 py-3 text-center font-semibold text-cixoil-red">
-                                S/. {orden.total}
-                            </td>
-                            <td className="px-4 py-3 text-center">
-                                <EstadoBadge estado={orden.receptionStatus} />
-                            </td>
-                            <td className="px-4 py-3">
-                                <div className="flex justify-center">
-                                    <button className="text-blue-500 hover:text-blue-700">
-                                        <Eye size={16} />
-                                    </button>
-                                </div>
-                            </td>
+        <>
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <table className="w-full text-sm">
+                    <thead>
+                        <tr className="bg-gray-50 border-b">
+                            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                                Codigo
+                            </th>
+                            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                                Proveedor
+                            </th>
+                            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                                Fecha compra
+                            </th>
+                            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                                Entrega estimada
+                            </th>
+                            <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                                Total
+                            </th>
+                            <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                                Estado
+                            </th>
+                            <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                                Acciones
+                            </th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
-            <div className="px-4 py-3 border-t border-gray-200">
-                <p className="text-xs text-gray-500">
-                    Total ordenes: {ordenes.length}
-                </p>
+                    </thead>
+                    <tbody>
+                        {ordenes.map((orden) => (
+                            <tr
+                                key={orden.id}
+                                className="border-b hover:bg-gray-50"
+                            >
+                                <td className="px-4 py-3 font-medium">
+                                    OC-{orden.id.toString().padStart(4, "0")}
+                                </td>
+                                <td className="px-4 py-3">
+                                    {orden.supplier?.legalName}
+                                </td>
+                                <td className="px-4 py-3">
+                                    {orden.purchasedAt}
+                                </td>
+                                <td className="px-4 py-3">
+                                    {orden.estimatedDeliveryAt || "-"}
+                                </td>
+                                <td className="px-4 py-3 text-center font-semibold text-cixoil-red">
+                                    S/. {orden.total}
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                    <EstadoBadge
+                                        estado={orden.receptionStatus}
+                                    />
+                                </td>
+                                <td className="px-4 py-3">
+                                    <div className="flex justify-center">
+                                        <button
+                                            onClick={() =>
+                                                setOrdenSeleccionada(orden)
+                                            }
+                                            className="text-blue-500 hover:text-blue-700"
+                                        >
+                                            <Eye size={16} />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                <div className="px-4 py-3 border-t border-gray-200">
+                    <p className="text-xs text-gray-500">
+                        Total ordenes: {ordenes.length}
+                    </p>
+                </div>
             </div>
-        </div>
+
+            {ordenSeleccionada && (
+                <ModalDetalleOrden
+                    orden={ordenSeleccionada}
+                    onClose={() => setOrdenSeleccionada(null)}
+                />
+            )}
+        </>
     );
 }

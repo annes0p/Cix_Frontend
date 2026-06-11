@@ -1,33 +1,28 @@
-import React from 'react';
-import LoginLayout from './LoginLayout';
-import LoginForm from './LoginForm';
+import LoginForm from "./LoginForm";
+import LoginLayout from "./LoginLayout";
 
 export default function Login() {
     return (
         <div className="min-h-screen w-full flex bg-gray-50 font-sans">
-            {/* Mitad Izquierda - Banner Promocional */}
             <LoginLayout />
 
-            {/* Mitad Derecha: Formulario y Derechos */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-between items-center p-8 lg:p-12 bg-[#F9FAFB]">
-                {/* Div espaciador superior para empujar el form al centro real */}
-                <div className="hidden lg:block"></div>
+            <div className="w-full lg:w-1/2 flex flex-col justify-center items-center px-8 lg:px-16 bg-white">
+                <div className="w-full max-w-md">
+                    <LoginForm />
 
-                {/* Formulario de Login */}
-                <LoginForm />
-
-                {/* Footer corporativo de seguridad */}
-                <div className="flex flex-col items-center text-center gap-3 text-xs text-gray-500 mt-8">
-                    <div className="flex items-center gap-2 text-gray-700 font-medium">
-                        <span className="text-cixoil-green text-sm">🛡️</span>
-                        <span>Acceso seguro y protegido</span>
+                    <div className="flex flex-col items-center text-center gap-2 text-xs text-gray-400 mt-10 pt-6 border-t border-gray-100">
+                        <div className="flex items-center gap-2 text-gray-500 font-medium">
+                            <span className="w-2 h-2 rounded-full bg-cixoil-green animate-pulse" />
+                            Acceso seguro y protegido
+                        </div>
+                        <p className="text-gray-400">
+                            Tus datos estan protegidos con encriptacion de nivel
+                            empresarial.
+                        </p>
+                        <p className="mt-1 text-[11px] text-gray-300">
+                            2026 CIXOIL S.A.C. | Todos los derechos reservados
+                        </p>
                     </div>
-                    <p className="text-gray-400">
-                        Tus datos están protegidos con encriptación de nivel empresarial.
-                    </p>
-                    <p className="mt-2 text-[11px] text-gray-400">
-                        © 2025 CIXOIL S.A.C. <span className="mx-1">|</span> Todos los derechos reservados
-                    </p>
                 </div>
             </div>
         </div>

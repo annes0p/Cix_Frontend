@@ -9,7 +9,7 @@ import {
 export default function InventarioKPIs({ productos }) {
     const total = productos.length;
     const valorTotal = productos.reduce(
-        (acc, p) => acc + p.precio * p.stockActual,
+        (acc, p) => acc + (p.precio || 0) * (p.stockActual || 0),
         0,
     );
     const stockBajo = productos.filter(
@@ -35,7 +35,7 @@ export default function InventarioKPIs({ productos }) {
         {
             label: "Stock bajo",
             value: stockBajo,
-            sub: "Requieren atención",
+            sub: "Requieren atencion",
             icon: <AlertTriangle size={28} className="text-yellow-500" />,
             bg: "bg-yellow-50",
         },

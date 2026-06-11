@@ -1,65 +1,76 @@
-import React from 'react';
-import { User, Lock, Eye, EyeOff, Globe } from 'lucide-react';
-import logocixoil from '../../assets/logocixoil.jpeg';
-import bglogin from '../../assets/bglogin.png';
-
-import { ShieldCheck, Settings, BarChart3 } from 'lucide-react';
+import { BarChart3, ShieldCheck, Sparkles } from "lucide-react";
+import bglogin from "../../assets/bglogin.png";
+import logocixoil from "../../assets/logocixoil.jpeg";
 
 export default function LoginLayout() {
     return (
         <div className="hidden lg:flex w-1/2 bg-cixoil-darkBg relative flex-col justify-between p-12 overflow-hidden text-white">
-
             <img
                 src={bglogin}
-                alt="Fondo Planta Cixoil"
-                className="absolute inset-0 w-full h-full object-cover opacity-65 z-0 select-none pointer-events-none"
+                alt="Fondo CIXOIL"
+                className="absolute inset-0 w-full h-full object-cover opacity-40 z-0 select-none pointer-events-none"
             />
 
-            <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-zinc-950/70 to-[#3a0000]/60 z-0 mix-blend-multiply opacity-60"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-black/90 via-cixoil-darkBg/80 to-cixoil-red/30 z-0" />
 
-            {/* Header Izquierdo - Logo */}
             <div className="z-10 flex flex-col items-start">
-                <div className="w-32 h-32 flex items-center justify-center mb-8 overflow-hidden">
+                <div className="w-20 h-20 rounded-2xl overflow-hidden mb-10 shadow-xl border border-white/10">
                     <img
                         src={logocixoil}
-                        alt="Cixoil Logo"
-                        className="w-full h-full object-contain brightness-110"
+                        alt="CIXOIL Logo"
+                        className="w-full h-full object-contain"
                     />
                 </div>
 
-                {/* Copys Principales */}
-                <h1 className="text-4xl font-extrabold tracking-tight mb-2 drop-shadow-lg text-white">
-                    Potencia y protección <br />
-                    <span className="text-cixoil-green font-black">para cada motor</span>
+                <div className="mb-3">
+                    <span className="text-xs font-bold tracking-widest uppercase text-cixoil-green bg-cixoil-green/10 px-3 py-1 rounded-full border border-cixoil-green/20">
+                        Sistema de Gestion Empresarial
+                    </span>
+                </div>
+
+                <h1 className="text-5xl font-black tracking-tight mb-4 leading-tight">
+                    Potencia y <br />
+                    <span className="text-cixoil-green">proteccion</span> <br />
+                    para cada motor
                 </h1>
-                <p className="text-gray-300 text-base max-w-md mt-4 leading-relaxed font-medium drop-shadow-sm">
-                    Gestiona tus inventarios, ventas y clientes de forma eficiente con{' '}
-                    <span className="text-white font-semibold">CIXOIL S.A.C.</span>.
+
+                <p className="text-gray-300 text-base max-w-sm leading-relaxed">
+                    Gestiona inventarios, ventas y clientes de forma inteligente
+                    con{" "}
+                    <span className="text-white font-bold">
+                        CIXOIL SmartFlow
+                    </span>
+                    .
                 </p>
             </div>
 
-            {/* Tarjetas de Beneficios Inferiores */}
-            <div className="z-10 grid grid-cols-3 gap-4 bg-black/60 p-5 rounded-xl border border-white/10 backdrop-blur-md">
-                {/* Item 1 */}
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm font-semibold">
-                        <ShieldCheck className="text-cixoil-green w-5 h-5" /> Calidad garantizada
-                    </div>
-                    <p className="text-xs text-gray-400">Productos certificados para máximo rendimiento</p>
-                </div>
-                {/* Item 2 */}
-                <div className="space-y-1 border-l border-white/10 pl-4">
+            <div className="z-10 grid grid-cols-3 gap-4 bg-white/5 p-5 rounded-2xl border border-white/10 backdrop-blur-md">
+                <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm font-bold text-white">
-                        <Settings className="text-cixoil-green w-5 h-5 animate-spin-slow" /> Gestión eficiente
+                        <ShieldCheck className="text-cixoil-green w-5 h-5 shrink-0" />
+                        Calidad garantizada
                     </div>
-                    <p className="text-xs text-gray-400">Control total de tu negocio en un solo lugar</p>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                        Productos certificados para maximo rendimiento
+                    </p>
                 </div>
-                {/* Item 3 */}
-                <div className="space-y-1 border-l border-white/10 pl-4">
+                <div className="space-y-2 border-l border-white/10 pl-4">
                     <div className="flex items-center gap-2 text-sm font-bold text-white">
-                        <BarChart3 className="text-cixoil-green w-5 h-5" /> Información en tiempo real
+                        <BarChart3 className="text-cixoil-green w-5 h-5 shrink-0" />
+                        Datos en tiempo real
                     </div>
-                    <p className="text-xs text-gray-400">Toma decisiones basadas en datos actualizados</p>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                        Decisiones basadas en informacion actualizada
+                    </p>
+                </div>
+                <div className="space-y-2 border-l border-white/10 pl-4">
+                    <div className="flex items-center gap-2 text-sm font-bold text-white">
+                        <Sparkles className="text-cixoil-green w-5 h-5 shrink-0" />
+                        IA integrada
+                    </div>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                        Recomendaciones inteligentes para tu negocio
+                    </p>
                 </div>
             </div>
         </div>

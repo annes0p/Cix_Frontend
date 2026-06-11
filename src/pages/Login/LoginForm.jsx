@@ -1,4 +1,4 @@
-﻿﻿import { Eye, EyeOff, Globe, Lock, User } from "lucide-react";
+﻿import { Eye, EyeOff, Lock, User } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logocixoil from "../../assets/logocixoil.jpeg";
@@ -40,45 +40,29 @@ export default function LoginForm() {
             );
             navigate("/dashboard");
         } catch (err) {
-            setErrorText("Usuario o contrasena incorrectos");
+            setErrorText("Usuario o contrasena incorrectos. Intenta de nuevo.");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-gray-100 relative">
-            <div className="absolute -top-14 right-0">
-                <button className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                    <Globe size={16} />
-                    <span>Espanol</span>
-                </button>
-            </div>
-
+        <div className="w-full max-w-md">
             <div className="flex flex-col items-center text-center mb-8">
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4 shadow-sm overflow-hidden">
+                <div className="w-20 h-20 rounded-2xl overflow-hidden mb-5 shadow-lg border border-gray-100">
                     <img
                         src={logocixoil}
-                        alt="Cixoil Logo"
+                        alt="CIXOIL Logo"
                         className="w-full h-full object-contain"
                     />
                 </div>
-                <h2 className="text-xl font-normal text-gray-900">
-                    Bienvenido a <br />
-                    <span className="text-2xl font-black tracking-tight text-cixoil-red">
-                        CIXOIL
-                    </span>{" "}
-                    <span className="text-2xl font-black tracking-tight text-cixoil-green">
-                        S.A.C.
-                    </span>
+                <h2 className="text-2xl font-black text-gray-900 tracking-tight">
+                    Bienvenido a <span className="text-cixoil-red">CIXOIL</span>{" "}
+                    <span className="text-cixoil-green">S.A.C.</span>
                 </h2>
-                <div className="flex items-center gap-3 w-full mt-3">
-                    <div className="h-[1px] bg-gradient-to-r from-transparent to-gray-300 flex-1"></div>
-                    <p className="text-xs text-cixoil-grayText tracking-wide uppercase">
-                        Inicia sesion para continuar
-                    </p>
-                    <div className="h-[1px] bg-gradient-to-l from-transparent to-gray-300 flex-1"></div>
-                </div>
+                <p className="text-sm text-gray-500 mt-2">
+                    Ingresa tus credenciales para continuar
+                </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -94,7 +78,7 @@ export default function LoginForm() {
                         <input
                             type="text"
                             placeholder="Ingresa tu usuario"
-                            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red focus:border-transparent transition-all placeholder:text-gray-400"
+                            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red focus:border-transparent transition-all placeholder:text-gray-300 bg-gray-50 focus:bg-white"
                             value={formData.identifier}
                             onChange={(e) =>
                                 setFormData({
@@ -108,11 +92,9 @@ export default function LoginForm() {
                 </div>
 
                 <div>
-                    <div className="flex justify-between items-center mb-1.5">
-                        <label className="text-sm font-semibold text-gray-700">
-                            Contrasena
-                        </label>
-                    </div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                        Contrasena
+                    </label>
                     <div className="relative">
                         <Lock
                             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -121,7 +103,7 @@ export default function LoginForm() {
                         <input
                             type={showPassword ? "text" : "password"}
                             placeholder="Ingresa tu contrasena"
-                            className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red focus:border-transparent transition-all placeholder:text-gray-400"
+                            className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red focus:border-transparent transition-all placeholder:text-gray-300 bg-gray-50 focus:bg-white"
                             value={formData.password}
                             onChange={(e) =>
                                 setFormData({
@@ -145,29 +127,29 @@ export default function LoginForm() {
                     </div>
                 </div>
 
-                <div className="flex items-center">
-                    <input
-                        id="remember"
-                        type="checkbox"
-                        className="w-4 h-4 text-cixoil-green bg-gray-100 border-gray-300 rounded focus:ring-cixoil-green"
-                        checked={formData.recordar}
-                        onChange={(e) =>
-                            setFormData({
-                                ...formData,
-                                recordar: e.target.checked,
-                            })
-                        }
-                    />
-                    <label
-                        htmlFor="remember"
-                        className="ml-2 text-sm font-medium text-gray-700 select-none"
-                    >
-                        Recordarme
+                <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            id="remember"
+                            type="checkbox"
+                            className="w-4 h-4 accent-cixoil-red bg-gray-100 border-gray-300 rounded"
+                            checked={formData.recordar}
+                            onChange={(e) =>
+                                setFormData({
+                                    ...formData,
+                                    recordar: e.target.checked,
+                                })
+                            }
+                        />
+                        <span className="text-sm font-medium text-gray-600 select-none">
+                            Recordarme
+                        </span>
                     </label>
                 </div>
 
                 {errorText && (
-                    <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-lg">
+                    <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
                         {errorText}
                     </div>
                 )}
@@ -175,35 +157,21 @@ export default function LoginForm() {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-cixoil-red text-white py-3 px-4 rounded-lg font-semibold text-sm hover:bg-red-900 transition-colors flex items-center justify-center gap-2 shadow-md disabled:opacity-60"
+                    className="w-full bg-cixoil-red text-white py-3 px-4 rounded-xl font-bold text-sm hover:bg-red-900 transition-all flex items-center justify-center gap-2 shadow-lg shadow-cixoil-red/20 disabled:opacity-60"
                 >
-                    {loading ? "Iniciando..." : "Iniciar sesion"}
-                </button>
-
-                <div className="relative flex py-2 items-center">
-                    <div className="flex-grow border-t border-gray-200"></div>
-                    <span className="flex-shrink mx-4 text-xs text-gray-400">
-                        o continua con
-                    </span>
-                    <div className="flex-grow border-t border-gray-200"></div>
-                </div>
-
-                <button
-                    type="button"
-                    className="w-full bg-white border border-gray-300 text-gray-700 py-2.5 px-4 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 shadow-sm"
-                >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24">
-                        <path
-                            fill="#EA4335"
-                            d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.859-3.578-7.859-8s3.529-8 7.859-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.227C18.216 1.414 15.48 0 12.24 0 5.523 0 0 5.523 0 12.24s5.523 12.24 12.24 12.24c7.01 0 11.67-4.907 11.67-11.88 0-.8-.085-1.405-.188-1.795H12.24z"
-                        />
-                    </svg>
-                    <span>Continuar con Google</span>
+                    {loading ? (
+                        <>
+                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Iniciando sesion...
+                        </>
+                    ) : (
+                        "Iniciar sesion"
+                    )}
                 </button>
             </form>
 
-            <div className="text-center mt-6 text-sm text-gray-600">
-                No tienes una cuenta?{" "}
+            <div className="text-center mt-6 text-sm text-gray-500">
+                Acceso restringido al personal autorizado.{" "}
                 <a
                     href="#"
                     className="font-semibold text-cixoil-green hover:underline"

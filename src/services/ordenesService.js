@@ -14,3 +14,8 @@ export const getOrdenById = async (id) => {
     const response = await api.get(`/purchases/${id}`);
     return response.data.data || response.data;
 };
+
+export const getProductos = async () => {
+    const response = await api.get("/products");
+    return response.data.data || response.data;
+};

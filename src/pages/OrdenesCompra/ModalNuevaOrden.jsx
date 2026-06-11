@@ -1,6 +1,6 @@
 import { Minus, Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { crearOrden } from "../../services/ordenesService";
+import { crearOrden, getProductos } from "../../services/ordenesService";
 import { getProveedores } from "../../services/proveedoresService";
 
 export default function ModalNuevaOrden({ onClose, onGuardar }) {
@@ -11,24 +11,28 @@ export default function ModalNuevaOrden({ onClose, onGuardar }) {
         purchasedAt: hoy,
         estimatedDeliveryAt: "",
         deliveredAt: "",
-        receptionStatus: "PENDING",
         details: [],
     });
     const [proveedores, setProveedores] = useState([]);
+    const [productos, setProductos] = useState([]);
     const [errores, setErrores] = useState({});
     const [loading, setLoading] = useState(false);
     const [errorApi, setErrorApi] = useState(null);
 
     useEffect(() => {
-        const cargarProveedores = async () => {
+        const cargarDatos = async () => {
             try {
-                const data = await getProveedores();
-                setProveedores(data);
+                const [prov, prod] = await Promise.all([
+                    getProveedores(),
+                    getProductos(),
+                ]);
+                setProveedores(prov);
+                setProductos(prod);
             } catch (err) {
-                console.error("Error al cargar proveedores:", err);
+                console.error("Error al cargar datos:", err);
             }
         };
-        cargarProveedores();
+        cargarDatos();
     }, []);
 
     const handleChange = (campo, valor) => {
@@ -60,34 +64,24 @@ export default function ModalNuevaOrden({ onClose, onGuardar }) {
 
     const validar = () => {
         const nuevosErrores = {};
-
         if (!form.idSupplier)
             nuevosErrores.idSupplier = "Selecciona un proveedor.";
-
         if (!form.purchasedAt)
             nuevosErrores.purchasedAt = "La fecha de compra es obligatoria.";
-
         if (
             form.estimatedDeliveryAt &&
             form.estimatedDeliveryAt < form.purchasedAt
         )
             nuevosErrores.estimatedDeliveryAt =
                 "La entrega estimada no puede ser antes de la fecha de compra.";
-
-        if (form.deliveredAt && form.deliveredAt < form.purchasedAt)
-            nuevosErrores.deliveredAt =
-                "La fecha de entrega no puede ser antes de la fecha de compra.";
-
         if (form.details.length === 0)
             nuevosErrores.details = "Agrega al menos un producto.";
-
         form.details.forEach((d, i) => {
-            if (!d.idProduct || Number(d.idProduct) <= 0)
-                nuevosErrores[`idProduct_${i}`] = "ID invalido.";
+            if (!d.idProduct)
+                nuevosErrores[`idProduct_${i}`] = "Selecciona un producto.";
             if (!d.quantity || Number(d.quantity) <= 0)
                 nuevosErrores[`quantity_${i}`] = "Cantidad invalida.";
         });
-
         setErrores(nuevosErrores);
         return Object.keys(nuevosErrores).length === 0;
     };
@@ -99,8 +93,10 @@ export default function ModalNuevaOrden({ onClose, onGuardar }) {
             setLoading(true);
             setErrorApi(null);
             await crearOrden({
-                ...form,
                 idSupplier: Number(form.idSupplier),
+                purchasedAt: form.purchasedAt,
+                estimatedDeliveryAt: form.estimatedDeliveryAt || null,
+                deliveredAt: form.deliveredAt || null,
                 details: form.details.map((d) => ({
                     idProduct: Number(d.idProduct),
                     quantity: Number(d.quantity),
@@ -118,7 +114,7 @@ export default function ModalNuevaOrden({ onClose, onGuardar }) {
 
     const inputClass = (campo) =>
         `w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red ${
-            errores[campo] ? "border-red-400 bg-red-50" : "border-gray-300"
+            errores[campo] ? "border-red-400 bg-red-50" : "border-gray-200"
         }`;
 
     return (
@@ -217,25 +213,6 @@ export default function ModalNuevaOrden({ onClose, onGuardar }) {
                     </div>
 
                     <div>
-                        <label className="text-sm font-medium text-gray-600">
-                            Estado
-                        </label>
-                        <select
-                            className={inputClass("receptionStatus")}
-                            value={form.receptionStatus}
-                            onChange={(e) =>
-                                handleChange("receptionStatus", e.target.value)
-                            }
-                        >
-                            <option value="PENDING">Pendiente</option>
-                            <option value="PARTIALLY_RECIEVED">
-                                Recibido parcialmente
-                            </option>
-                            <option value="RECIEVED">Recibido</option>
-                        </select>
-                    </div>
-
-                    <div>
                         <div className="flex justify-between items-center mb-2">
                             <label className="text-sm font-medium text-gray-600">
                                 Productos
@@ -266,14 +243,11 @@ export default function ModalNuevaOrden({ onClose, onGuardar }) {
                             <div key={index} className="mb-2">
                                 <div className="flex gap-2">
                                     <div className="flex-1">
-                                        <input
-                                            type="number"
-                                            placeholder="ID producto"
-                                            min="1"
+                                        <select
                                             className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red ${
                                                 errores[`idProduct_${index}`]
                                                     ? "border-red-400 bg-red-50"
-                                                    : "border-gray-300"
+                                                    : "border-gray-200"
                                             }`}
                                             value={detalle.idProduct}
                                             onChange={(e) =>
@@ -283,7 +257,16 @@ export default function ModalNuevaOrden({ onClose, onGuardar }) {
                                                     e.target.value,
                                                 )
                                             }
-                                        />
+                                        >
+                                            <option value="">
+                                                Seleccionar producto
+                                            </option>
+                                            {productos.map((p) => (
+                                                <option key={p.id} value={p.id}>
+                                                    {p.name}
+                                                </option>
+                                            ))}
+                                        </select>
                                         {errores[`idProduct_${index}`] && (
                                             <p className="text-xs text-red-500 mt-1">
                                                 {errores[`idProduct_${index}`]}
@@ -298,7 +281,7 @@ export default function ModalNuevaOrden({ onClose, onGuardar }) {
                                             className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red ${
                                                 errores[`quantity_${index}`]
                                                     ? "border-red-400 bg-red-50"
-                                                    : "border-gray-300"
+                                                    : "border-gray-200"
                                             }`}
                                             value={detalle.quantity}
                                             onChange={(e) =>
