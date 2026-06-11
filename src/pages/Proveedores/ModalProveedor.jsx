@@ -2,8 +2,7 @@ import { Loader, Search, X } from "lucide-react";
 import { useState } from "react";
 import { crearProveedor } from "../../services/proveedoresService";
 
-const SUNAT_TOKEN =
-    "64d370ab0213b3379b939e7f0890c1bde68e4cab4bb8ce62bcf9e13b1e170a0b";
+const SUNAT_TOKEN = import.meta.env.VITE_SUNAT_TOKEN;
 
 export default function ModalProveedor({ onClose, onGuardar }) {
     const [form, setForm] = useState({
