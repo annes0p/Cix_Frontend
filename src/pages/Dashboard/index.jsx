@@ -4,6 +4,7 @@ import { dashboardService } from "../../services/dashboardService";
 import ChartsSection from "./components/ChartsSection";
 import MatricsGrid from "./components/MatricsGrid";
 import Navbar from "./components/Navbar";
+import Rentabilidad from "./components/Rentabilidad";
 import StockCritico from "./components/StockCritico";
 import TopProducts from "./components/TopProducts";
 import UltimasVentas from "./components/UltimasVentas";
@@ -111,6 +112,8 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
+                            <Rentabilidad ventas={ventas} />
+
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <StockCritico stockCritico={stockCritico} />
                                 <UltimasVentas ventas={ventas} />
@@ -122,7 +125,7 @@ export default function Dashboard() {
                         <div className="flex items-center gap-2">
                             <span
                                 className={`w-2 h-2 rounded-full ${loading ? "bg-amber-500 animate-pulse" : "bg-emerald-500 animate-pulse"}`}
-                            ></span>
+                            />
                             <span>
                                 {loading
                                     ? "Consultando..."
