@@ -7,12 +7,10 @@ import {
 } from "../../services/reportesService";
 import ReportesFiltros from "./ReportesFiltros";
 import ReportesTabla from "./ReportesTabla";
-
 export default function Reportes() {
     const [reportes, setReportes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [tipoActivo, setTipoActivo] = useState("Inventario");
-
     const cargarReportes = async (tipo) => {
         try {
             setLoading(true);
@@ -28,23 +26,20 @@ export default function Reportes() {
             setLoading(false);
         }
     };
-
     useEffect(() => {
         cargarReportes(tipoActivo);
     }, [tipoActivo]);
-
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="bg-white border-b border-gray-200 px-6 py-4">
+            <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
                 <h1 className="text-xl font-bold text-cixoil-red">Reportes</h1>
                 <p className="text-sm text-gray-500">
                     Consulta y generación de reportes
                 </p>
             </div>
-
-            <div className="p-6">
-                <div className="bg-white rounded-xl border border-gray-200 px-6 py-4 mb-6 shadow-sm flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <div className="p-4 sm:p-6">
+                <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-6 py-4 mb-6 shadow-sm flex items-center gap-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
                         <BarChart3 size={22} className="text-blue-600" />
                     </div>
                     <div>
@@ -56,12 +51,10 @@ export default function Reportes() {
                         </p>
                     </div>
                 </div>
-
                 <ReportesFiltros
                     tipoActivo={tipoActivo}
                     onCambiarTipo={setTipoActivo}
                 />
-
                 <ReportesTabla
                     reportes={reportes}
                     loading={loading}

@@ -27,7 +27,7 @@ export default function ConfiguracionGeneral() {
 
     return (
         <div className="space-y-6">
-            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">
                     Información de la Empresa
                 </h3>
@@ -100,12 +100,12 @@ export default function ConfiguracionGeneral() {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">
                     Notificaciones
                 </h3>
                 <div className="space-y-4">
-                    <label className="flex items-center justify-between">
+                    <label className="flex items-center justify-between gap-3">
                         <span className="text-sm text-gray-700">
                             Recibir notificaciones por correo
                         </span>
@@ -115,10 +115,10 @@ export default function ConfiguracionGeneral() {
                             onChange={(e) =>
                                 handleChange("notificaciones", e.target.checked)
                             }
-                            className="w-4 h-4 accent-cixoil-red"
+                            className="w-4 h-4 accent-cixoil-red shrink-0"
                         />
                     </label>
-                    <label className="flex items-center justify-between">
+                    <label className="flex items-center justify-between gap-3">
                         <span className="text-sm text-gray-700">
                             Alertar cuando el stock sea bajo
                         </span>
@@ -128,13 +128,13 @@ export default function ConfiguracionGeneral() {
                             onChange={(e) =>
                                 handleChange("stockMinimo", e.target.checked)
                             }
-                            className="w-4 h-4 accent-cixoil-red"
+                            className="w-4 h-4 accent-cixoil-red shrink-0"
                         />
                     </label>
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">
                     Seguridad
                 </h3>
@@ -171,7 +171,7 @@ export default function ConfiguracionGeneral() {
             <div className="flex justify-end">
                 <button
                     onClick={guardarConfiguracion}
-                    className="flex items-center gap-2 bg-cixoil-green text-white px-5 py-2.5 rounded-lg font-medium hover:opacity-90 transition"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-cixoil-green text-white px-5 py-2.5 rounded-lg font-medium hover:opacity-90 transition"
                 >
                     <Save size={18} />
                     Guardar Configuración

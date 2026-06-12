@@ -1,10 +1,9 @@
 import { Settings } from "lucide-react";
 import ConfiguracionGeneral from "./ConfiguracionGeneral";
-
 export default function Configuracion() {
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between">
                 <div>
                     <h1 className="text-xl font-bold text-cixoil-red">
                         Configuración
@@ -17,10 +16,9 @@ export default function Configuracion() {
                     CIXOIL S.A.C.
                 </span>
             </div>
-
-            <div className="p-6">
-                <div className="bg-white rounded-xl border border-gray-200 px-6 py-4 mb-6 shadow-sm flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+            <div className="p-4 sm:p-6">
+                <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-6 py-4 mb-6 shadow-sm flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center shrink-0">
                         <Settings size={22} className="text-cixoil-red" />
                     </div>
                     <div>
@@ -33,7 +31,6 @@ export default function Configuracion() {
                         </p>
                     </div>
                 </div>
-
                 <ConfiguracionGeneral />
             </div>
         </div>

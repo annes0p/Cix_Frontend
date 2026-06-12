@@ -73,9 +73,7 @@ export default function Inventarios() {
                         price: producto?.price || 0,
                         marca: producto?.brand?.name || "-",
                         descripcion: producto?.description || "-",
-                        ultimaActualizacion: new Date().toLocaleDateString(
-                            "es-PE",
-                        ),
+                        ultimaActualizacion: new Date().toLocaleDateString("es-PE"),
                         _raw: inv,
                     };
                 });
@@ -146,40 +144,30 @@ export default function Inventarios() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <h1 className="text-xl font-bold text-cixoil-red">
-                        Inventarios
-                    </h1>
-                    <span className="text-gray-400">|</span>
-                    <span className="text-sm text-gray-500">
+            <div className="bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-bold text-cixoil-red">Inventarios</h1>
+                    <span className="text-gray-400 hidden sm:block">|</span>
+                    <span className="text-sm text-gray-500 hidden sm:block">
                         Registro y control de inventarios
                     </span>
                 </div>
-                <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-600 font-medium">
-                        CIXOIL S.A.C.
-                    </span>
-                </div>
+                <span className="text-sm text-gray-600 font-medium hidden sm:block">
+                    CIXOIL S.A.C.
+                </span>
             </div>
 
-            <div className="p-6">
-                <div className="bg-white rounded-xl border border-gray-200 px-6 py-4 mb-6 flex items-center justify-between shadow-sm">
+            <div className="p-4 sm:p-6">
+                <div className="bg-white rounded-xl border border-gray-200 px-4 py-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                            <SlidersHorizontal
-                                size={22}
-                                className="text-cixoil-green"
-                            />
+                        <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center shrink-0">
+                            <SlidersHorizontal size={22} className="text-cixoil-green" />
                         </div>
                         <div>
-                            <h2 className="font-bold text-cixoil-red text-lg">
-                                Inventario general
-                            </h2>
+                            <h2 className="font-bold text-cixoil-red text-lg">Inventario general</h2>
                             <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-500">
-                                    Actualizacion automatica de stock en tiempo
-                                    real
+                                <span className="text-sm text-gray-500 hidden sm:block">
+                                    Actualizacion automatica de stock en tiempo real
                                 </span>
                                 <span className="flex items-center gap-1 text-xs text-green-600 font-medium">
                                     <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
@@ -188,21 +176,21 @@ export default function Inventarios() {
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                             <Download size={16} />
-                            Exportar
+                            <span className="hidden sm:block">Exportar</span>
                         </button>
-                        <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                        <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                             <SlidersHorizontal size={16} />
-                            Ajustar inventario
+                            <span className="hidden sm:block">Ajustar inventario</span>
                         </button>
                         <button
                             onClick={() => setShowModal(true)}
-                            className="flex items-center gap-2 bg-cixoil-green text-white rounded-lg px-4 py-2 text-sm font-semibold hover:opacity-90 transition-opacity"
+                            className="flex items-center gap-2 bg-cixoil-green text-white rounded-lg px-3 py-2 text-sm font-semibold hover:opacity-90 transition-opacity"
                         >
                             <Plus size={16} />
-                            Nuevo producto
+                            <span className="hidden sm:block">Nuevo producto</span>
                         </button>
                     </div>
                 </div>
@@ -216,9 +204,7 @@ export default function Inventarios() {
 
                 {loading ? (
                     <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                        <p className="text-gray-400 text-sm">
-                            Cargando inventario...
-                        </p>
+                        <p className="text-gray-400 text-sm">Cargando inventario...</p>
                     </div>
                 ) : (
                     <InventarioTabla
