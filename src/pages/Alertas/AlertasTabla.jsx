@@ -1,3 +1,5 @@
+import { Minus, TrendingDown, TrendingUp } from "lucide-react";
+
 function NivelBadge({ nivel }) {
     switch (nivel) {
         case "agotado":
@@ -16,6 +18,12 @@ function NivelBadge({ nivel }) {
             return (
                 <span className="px-2 py-1 rounded-md text-xs font-semibold bg-yellow-100 text-yellow-700">
                     Advertencia
+                </span>
+            );
+        case "baja_rotacion":
+            return (
+                <span className="px-2 py-1 rounded-md text-xs font-semibold bg-blue-100 text-blue-700">
+                    Baja rotacion
                 </span>
             );
         default:
@@ -57,6 +65,30 @@ function PrediccionBadge({ dias }) {
     );
 }
 
+function TendenciaBadge({ tendencia, porcentaje }) {
+    if (tendencia === "subiendo") {
+        return (
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-600">
+                <TrendingUp size={14} />+{porcentaje}%
+            </span>
+        );
+    }
+    if (tendencia === "bajando") {
+        return (
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-600">
+                <TrendingDown size={14} />
+                {porcentaje}%
+            </span>
+        );
+    }
+    return (
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-400">
+            <Minus size={14} />
+            Estable
+        </span>
+    );
+}
+
 export default function AlertasTabla({ alertas, loading }) {
     if (loading) {
         return (
@@ -88,7 +120,7 @@ export default function AlertasTabla({ alertas, loading }) {
                             </p>
                             <NivelBadge nivel={alerta.nivelRiesgo} />
                         </div>
-                        <div className="flex items-center justify-between text-xs text-gray-500">
+                        <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
                             <span>
                                 Stock:{" "}
                                 <span
@@ -110,9 +142,13 @@ export default function AlertasTabla({ alertas, loading }) {
                                     : "Sin datos"}
                             </span>
                         </div>
-                        <div className="mt-2">
+                        <div className="flex items-center justify-between">
                             <PrediccionBadge
                                 dias={alerta.diasHastaAgotamiento}
+                            />
+                            <TendenciaBadge
+                                tendencia={alerta.tendencia}
+                                porcentaje={alerta.tendenciaPorcentaje}
                             />
                         </div>
                     </div>
@@ -134,6 +170,9 @@ export default function AlertasTabla({ alertas, loading }) {
                         </th>
                         <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
                             Consumo diario
+                        </th>
+                        <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                            Tendencia
                         </th>
                         <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
                             Se agota
@@ -170,6 +209,12 @@ export default function AlertasTabla({ alertas, loading }) {
                                 {alerta.consumoDiario > 0
                                     ? `${alerta.consumoDiario} uds/dia`
                                     : "Sin datos"}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                                <TendenciaBadge
+                                    tendencia={alerta.tendencia}
+                                    porcentaje={alerta.tendenciaPorcentaje}
+                                />
                             </td>
                             <td className="px-4 py-3 text-center">
                                 <PrediccionBadge

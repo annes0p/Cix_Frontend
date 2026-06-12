@@ -45,6 +45,8 @@ export default function Alertas() {
         critico: alertas.filter((a) => a.nivelRiesgo === "critico").length,
         advertencia: alertas.filter((a) => a.nivelRiesgo === "advertencia")
             .length,
+        bajaRotacion: alertas.filter((a) => a.nivelRiesgo === "baja_rotacion")
+            .length,
     };
 
     return (
@@ -77,7 +79,7 @@ export default function Alertas() {
             </div>
 
             <div className="p-4 sm:p-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 mb-6">
                     <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-4 shadow-sm min-w-0">
                         <p className="text-xs font-semibold text-gray-500 mb-1">
                             Total alertas
@@ -122,6 +124,17 @@ export default function Alertas() {
                             Se agotan en 7 dias
                         </p>
                     </div>
+                    <div className="bg-white rounded-xl border border-blue-200 px-4 sm:px-5 py-4 shadow-sm min-w-0">
+                        <p className="text-xs font-semibold text-blue-500 mb-1">
+                            Baja rotacion
+                        </p>
+                        <p className="text-2xl font-black text-blue-600">
+                            {contadores.bajaRotacion}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                            Sin ventas en 30 dias
+                        </p>
+                    </div>
                 </div>
 
                 <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-6 py-4 mb-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -134,7 +147,8 @@ export default function Alertas() {
                                 Alertas del sistema
                             </h2>
                             <p className="text-sm text-gray-500">
-                                Prediccion inteligente de agotamiento de stock
+                                Prediccion inteligente de agotamiento y rotacion
+                                de stock
                             </p>
                         </div>
                     </div>
@@ -147,7 +161,13 @@ export default function Alertas() {
                 </div>
 
                 <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
-                    {["todos", "agotado", "critico", "advertencia"].map((f) => (
+                    {[
+                        "todos",
+                        "agotado",
+                        "critico",
+                        "advertencia",
+                        "baja_rotacion",
+                    ].map((f) => (
                         <button
                             key={f}
                             onClick={() => setFiltro(f)}
@@ -163,7 +183,9 @@ export default function Alertas() {
                                   ? "Sin stock"
                                   : f === "critico"
                                     ? "Stock critico"
-                                    : "Advertencia"}
+                                    : f === "advertencia"
+                                      ? "Advertencia"
+                                      : "Baja rotacion"}
                         </button>
                     ))}
                 </div>
