@@ -1,4 +1,4 @@
-function SegmentoBadge({ segmento }) {
+﻿function SegmentoBadge({ segmento }) {
     switch (segmento) {
         case "VIP":
             return (
@@ -53,7 +53,57 @@ export default function CRMTabla({
 
     return (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
+            {/* Vista móvil: cards */}
+            <div className="lg:hidden divide-y divide-gray-100">
+                {clientes.map((cliente) => (
+                    <div
+                        key={cliente.id}
+                        onClick={() => onSeleccionar(cliente)}
+                        className={`p-4 cursor-pointer transition-all ${
+                            clienteSeleccionado?.id === cliente.id
+                                ? "bg-cixoil-red/5 border-l-2 border-l-cixoil-red"
+                                : "active:bg-gray-50"
+                        }`}
+                    >
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="w-9 h-9 rounded-full bg-cixoil-red/10 flex items-center justify-center text-xs font-black text-cixoil-red shrink-0">
+                                {cliente.name?.charAt(0)}
+                                {cliente.fatherLastName?.charAt(0)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-gray-900 truncate">
+                                    {cliente.name}{" "}
+                                    {cliente.fatherLastName}{" "}
+                                    {cliente.motherLastName}
+                                </p>
+                                <p className="text-xs text-gray-400 truncate">
+                                    {cliente.email}
+                                </p>
+                            </div>
+                            <SegmentoBadge segmento={cliente.segmento} />
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                            <span className="font-mono text-gray-500">
+                                {cliente.docNumber}
+                            </span>
+                            <div className="flex items-center gap-3">
+                                <span className="text-gray-600">
+                                    <span className="font-bold text-gray-900">
+                                        {cliente.frecuencia}
+                                    </span>{" "}
+                                    compras
+                                </span>
+                                <span className="font-bold text-cixoil-red">
+                                    S/. {cliente.totalGastado.toFixed(2)}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Vista desktop: tabla */}
+            <table className="w-full text-sm hidden lg:table">
                 <thead>
                     <tr className="bg-gray-50 border-b">
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">

@@ -40,23 +40,32 @@ export default function Recomendador() {
         cargarDatos();
     }, []);
 
-    const tiposVehiculo = [...new Set(modelos.map((m) => m.vehicleType?.name))].filter(Boolean).sort();
+    const tiposVehiculo = [...new Set(modelos.map((m) => m.vehicleType?.name))]
+        .filter(Boolean)
+        .sort();
 
-    const marcasFiltradas = [...new Set(
-        modelos
-            .filter((m) => m.vehicleType?.name === tipoVehiculo)
-            .map((m) => m.vehicleBrand?.name)
-    )].filter(Boolean).sort();
+    const marcasFiltradas = [
+        ...new Set(
+            modelos
+                .filter((m) => m.vehicleType?.name === tipoVehiculo)
+                .map((m) => m.vehicleBrand?.name),
+        ),
+    ]
+        .filter(Boolean)
+        .sort();
 
     const modelosFiltrados = modelos.filter(
-        (m) => m.vehicleType?.name === tipoVehiculo && m.vehicleBrand?.name === marca
+        (m) =>
+            m.vehicleType?.name === tipoVehiculo &&
+            m.vehicleBrand?.name === marca,
     );
 
     const modeloSeleccionado = modelos.find((m) => m.id === Number(modeloId));
 
     const validar = () => {
         const nuevosErrores = {};
-        if (!tipoVehiculo) nuevosErrores.tipoVehiculo = "Selecciona el tipo de vehiculo.";
+        if (!tipoVehiculo)
+            nuevosErrores.tipoVehiculo = "Selecciona el tipo de vehiculo.";
         if (!marca) nuevosErrores.marca = "Selecciona la marca.";
         if (!modeloId) nuevosErrores.modeloId = "Selecciona el modelo.";
         if (!tipoUsoId) nuevosErrores.tipoUsoId = "Selecciona el tipo de uso.";
@@ -71,10 +80,15 @@ export default function Recomendador() {
             setLoading(true);
             setErrorApi(null);
             setResultado(null);
-            const data = await getRecomendacion(Number(modeloId), Number(tipoUsoId));
+            const data = await getRecomendacion(
+                Number(modeloId),
+                Number(tipoUsoId),
+            );
             setResultado(data);
         } catch (err) {
-            setErrorApi("No se pudo obtener una recomendacion. Verifica que el servicio de IA este activo.");
+            setErrorApi(
+                "No se pudo obtener una recomendacion. Verifica que el servicio de IA este activo.",
+            );
             console.error(err);
         } finally {
             setLoading(false);
@@ -88,44 +102,64 @@ export default function Recomendador() {
 
     const getPriorityColor = (priority) => {
         switch (priority) {
-            case "HIGH": return "bg-red-100 text-red-700 border-red-200";
-            case "MEDIUM": return "bg-yellow-100 text-yellow-700 border-yellow-200";
-            case "LOW": return "bg-green-100 text-green-700 border-green-200";
-            default: return "bg-gray-100 text-gray-700 border-gray-200";
+            case "HIGH":
+                return "bg-red-100 text-red-700 border-red-200";
+            case "MEDIUM":
+                return "bg-yellow-100 text-yellow-700 border-yellow-200";
+            case "LOW":
+                return "bg-green-100 text-green-700 border-green-200";
+            default:
+                return "bg-gray-100 text-gray-700 border-gray-200";
         }
     };
 
     const getPriorityLabel = (priority) => {
         switch (priority) {
-            case "HIGH": return "Alta prioridad";
-            case "MEDIUM": return "Prioridad media";
-            case "LOW": return "Baja prioridad";
-            default: return priority;
+            case "HIGH":
+                return "Alta prioridad";
+            case "MEDIUM":
+                return "Prioridad media";
+            case "LOW":
+                return "Baja prioridad";
+            default:
+                return priority;
         }
     };
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                    <h1 className="text-xl font-bold text-cixoil-red">Encuentra tu aceite ideal</h1>
-                    <p className="text-sm text-gray-500">Recomendacion inteligente de lubricantes para tu vehiculo</p>
+                    <h1 className="text-xl font-bold text-cixoil-red">
+                        Encuentra tu aceite ideal
+                    </h1>
+                    <p className="text-sm text-gray-500">
+                        Recomendacion inteligente de lubricantes para tu
+                        vehiculo
+                    </p>
                 </div>
-                <div className="flex items-center gap-2 bg-cixoil-red/10 px-3 py-1.5 rounded-lg">
+                <div className="flex items-center gap-2 bg-cixoil-red/10 px-3 py-1.5 rounded-lg self-start sm:self-auto">
                     <Sparkles size={16} className="text-cixoil-red" />
-                    <span className="text-xs font-semibold text-cixoil-red">Powered by AI</span>
+                    <span className="text-xs font-semibold text-cixoil-red">
+                        Powered by AI
+                    </span>
                 </div>
             </div>
 
-            <div className="p-6 max-w-2xl mx-auto">
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6">
+            <div className="p-4 sm:p-6 max-w-2xl mx-auto">
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6 mb-6">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 bg-cixoil-red/10 rounded-xl flex items-center justify-center">
+                        <div className="w-10 h-10 bg-cixoil-red/10 rounded-xl flex items-center justify-center shrink-0">
                             <Car size={20} className="text-cixoil-red" />
                         </div>
                         <div>
-                            <h2 className="font-bold text-gray-800">Datos del vehiculo</h2>
-                            <p className="text-xs text-gray-500">Completa los campos para obtener tu recomendacion</p>
+                            <h2 className="font-bold text-gray-800">
+                                Datos del vehiculo
+                            </h2>
+                            <p className="text-xs text-gray-500">
+                                Completa los campos para obtener tu
+                                recomendacion
+                            </p>
                         </div>
                     </div>
 
@@ -152,12 +186,20 @@ export default function Recomendador() {
                                             setErrores({});
                                         }}
                                     >
-                                        <option value="">Seleccionar tipo</option>
+                                        <option value="">
+                                            Seleccionar tipo
+                                        </option>
                                         {tiposVehiculo.map((t) => (
-                                            <option key={t} value={t}>{t}</option>
+                                            <option key={t} value={t}>
+                                                {t}
+                                            </option>
                                         ))}
                                     </select>
-                                    {errores.tipoVehiculo && <p className="text-xs text-red-500 mt-1">{errores.tipoVehiculo}</p>}
+                                    {errores.tipoVehiculo && (
+                                        <p className="text-xs text-red-500 mt-1">
+                                            {errores.tipoVehiculo}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
@@ -175,12 +217,20 @@ export default function Recomendador() {
                                         }}
                                         disabled={!tipoVehiculo}
                                     >
-                                        <option value="">Seleccionar marca</option>
+                                        <option value="">
+                                            Seleccionar marca
+                                        </option>
                                         {marcasFiltradas.map((m) => (
-                                            <option key={m} value={m}>{m}</option>
+                                            <option key={m} value={m}>
+                                                {m}
+                                            </option>
                                         ))}
                                     </select>
-                                    {errores.marca && <p className="text-xs text-red-500 mt-1">{errores.marca}</p>}
+                                    {errores.marca && (
+                                        <p className="text-xs text-red-500 mt-1">
+                                            {errores.marca}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
@@ -201,26 +251,48 @@ export default function Recomendador() {
                                     <option value="">Seleccionar modelo</option>
                                     {modelosFiltrados.map((m) => (
                                         <option key={m.id} value={m.id}>
-                                            {m.model} {m.year} — {m.motorCC > 0 ? `${m.motorCC}cc` : "Electrico"} {m.fuelType} {m.transmissionType}
+                                            {m.model} {m.year} —{" "}
+                                            {m.motorCC > 0
+                                                ? `${m.motorCC}cc`
+                                                : "Electrico"}{" "}
+                                            {m.fuelType} {m.transmissionType}
                                         </option>
                                     ))}
                                 </select>
-                                {errores.modeloId && <p className="text-xs text-red-500 mt-1">{errores.modeloId}</p>}
+                                {errores.modeloId && (
+                                    <p className="text-xs text-red-500 mt-1">
+                                        {errores.modeloId}
+                                    </p>
+                                )}
                             </div>
 
                             {modeloSeleccionado && (
                                 <div className="bg-gray-50 rounded-xl p-3 grid grid-cols-3 gap-3 text-xs">
                                     <div>
-                                        <p className="text-gray-400 font-medium">Combustible</p>
-                                        <p className="font-bold text-gray-800">{modeloSeleccionado.fuelType}</p>
+                                        <p className="text-gray-400 font-medium">
+                                            Combustible
+                                        </p>
+                                        <p className="font-bold text-gray-800">
+                                            {modeloSeleccionado.fuelType}
+                                        </p>
                                     </div>
                                     <div>
-                                        <p className="text-gray-400 font-medium">Potencia</p>
-                                        <p className="font-bold text-gray-800">{modeloSeleccionado.horsePower} HP</p>
+                                        <p className="text-gray-400 font-medium">
+                                            Potencia
+                                        </p>
+                                        <p className="font-bold text-gray-800">
+                                            {modeloSeleccionado.horsePower} HP
+                                        </p>
                                     </div>
                                     <div>
-                                        <p className="text-gray-400 font-medium">Transmision</p>
-                                        <p className="font-bold text-gray-800">{modeloSeleccionado.transmissionType}</p>
+                                        <p className="text-gray-400 font-medium">
+                                            Transmision
+                                        </p>
+                                        <p className="font-bold text-gray-800">
+                                            {
+                                                modeloSeleccionado.transmissionType
+                                            }
+                                        </p>
                                     </div>
                                 </div>
                             )}
@@ -238,14 +310,20 @@ export default function Recomendador() {
                                         setErrores({});
                                     }}
                                 >
-                                    <option value="">Seleccionar tipo de uso</option>
+                                    <option value="">
+                                        Seleccionar tipo de uso
+                                    </option>
                                     {tiposUso.map((t) => (
                                         <option key={t.value} value={t.value}>
                                             {t.label}
                                         </option>
                                     ))}
                                 </select>
-                                {errores.tipoUsoId && <p className="text-xs text-red-500 mt-1">{errores.tipoUsoId}</p>}
+                                {errores.tipoUsoId && (
+                                    <p className="text-xs text-red-500 mt-1">
+                                        {errores.tipoUsoId}
+                                    </p>
+                                )}
                             </div>
 
                             {errorApi && (
@@ -262,7 +340,10 @@ export default function Recomendador() {
                             >
                                 {loading ? (
                                     <>
-                                        <Loader2 size={16} className="animate-spin" />
+                                        <Loader2
+                                            size={16}
+                                            className="animate-spin"
+                                        />
                                         Analizando con IA...
                                     </>
                                 ) : (
@@ -277,14 +358,16 @@ export default function Recomendador() {
                 </div>
 
                 {resultado && (
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6">
                         <div className="flex items-center gap-2 mb-4">
                             <Sparkles size={18} className="text-cixoil-red" />
-                            <h2 className="font-bold text-gray-800">Recomendacion de la IA</h2>
+                            <h2 className="font-bold text-gray-800">
+                                Recomendacion de la IA
+                            </h2>
                         </div>
 
                         <div className="bg-gradient-to-br from-cixoil-red/5 to-transparent border border-cixoil-red/20 rounded-xl p-5 mb-4">
-                            <div className="flex items-start justify-between gap-4">
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                                 <div>
                                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
                                         Producto recomendado
@@ -293,7 +376,9 @@ export default function Recomendador() {
                                         {resultado.product?.name}
                                     </h3>
                                 </div>
-                                <span className={`text-xs font-bold px-3 py-1 rounded-full border shrink-0 ${getPriorityColor(resultado.priority)}`}>
+                                <span
+                                    className={`text-xs font-bold px-3 py-1 rounded-full border shrink-0 self-start ${getPriorityColor(resultado.priority)}`}
+                                >
                                     {getPriorityLabel(resultado.priority)}
                                 </span>
                             </div>
@@ -309,11 +394,22 @@ export default function Recomendador() {
                         </div>
 
                         {modeloSeleccionado && (
-                            <div className="flex items-center gap-2 text-xs text-gray-400 pt-3 border-t border-gray-100">
-                                <Car size={14} />
-                                <span>{modeloSeleccionado.vehicleBrand?.name} {modeloSeleccionado.model} {modeloSeleccionado.year}</span>
-                                <ChevronRight size={12} />
-                                <span>{tiposUso.find((t) => t.value === Number(tipoUsoId))?.label}</span>
+                            <div className="flex items-center gap-2 text-xs text-gray-400 pt-3 border-t border-gray-100 overflow-x-auto whitespace-nowrap">
+                                <Car size={14} className="shrink-0" />
+                                <span>
+                                    {modeloSeleccionado.vehicleBrand?.name}{" "}
+                                    {modeloSeleccionado.model}{" "}
+                                    {modeloSeleccionado.year}
+                                </span>
+                                <ChevronRight size={12} className="shrink-0" />
+                                <span>
+                                    {
+                                        tiposUso.find(
+                                            (t) =>
+                                                t.value === Number(tipoUsoId),
+                                        )?.label
+                                    }
+                                </span>
                             </div>
                         )}
                     </div>

@@ -173,36 +173,39 @@ export default function Movimientos() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
+            <div className="bg-white border-b border-gray-200 px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                     <h1 className="text-xl font-bold text-cixoil-red">
                         Ventas y pedidos
                     </h1>
-                    <span className="text-gray-400">|</span>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-gray-400 hidden sm:block">|</span>
+                    <span className="text-sm text-gray-500 hidden sm:block">
                         Registro digital de ventas y pedidos de clientes
                     </span>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                <div className="flex items-center gap-2">
+                    <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                         <Download size={16} />
-                        Exportar
+                        <span className="hidden sm:block">Exportar</span>
                     </button>
                     <button
                         onClick={() => setModalNuevo(true)}
-                        className="flex items-center gap-2 bg-cixoil-red text-white rounded-lg px-4 py-2 text-sm font-semibold hover:opacity-90 transition-opacity"
+                        className="flex items-center gap-2 bg-cixoil-red text-white rounded-lg px-3 py-2 text-sm font-semibold hover:opacity-90 transition-opacity flex-1 sm:flex-initial justify-center"
                     >
                         <Plus size={16} />
-                        Nuevo pedido / venta
+                        <span className="hidden sm:block">
+                            Nuevo pedido / venta
+                        </span>
+                        <span className="sm:hidden">Nuevo</span>
                     </button>
                 </div>
             </div>
 
-            <div className="p-6 flex flex-col gap-5">
+            <div className="p-4 sm:p-6 flex flex-col gap-5">
                 {!loading && kpis && <MovimientosKPIs kpis={kpis} />}
 
-                <div className="flex gap-4 items-start">
-                    <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="flex flex-col lg:flex-row gap-4 items-start">
+                    <div className="flex-1 w-full bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         <MovimientosFiltros
                             filtros={filtros}
                             onFiltroChange={handleFiltroChange}
@@ -265,9 +268,9 @@ export default function Movimientos() {
 
                 <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
                     <span className="w-2 h-2 rounded-full bg-green-500 inline-block animate-pulse" />
-                    Sincronización automática activada
+                    Sincronizacion automatica activada
                     <span className="mx-1">|</span>
-                    Última actualización: {new Date().toLocaleString("es-CO")}
+                    Ultima actualizacion: {new Date().toLocaleString("es-PE")}
                 </div>
             </div>
 

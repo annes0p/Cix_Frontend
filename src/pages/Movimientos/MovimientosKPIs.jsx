@@ -38,10 +38,10 @@ function KpiCard({ icon: Icon, iconBg, label, valor, delta }) {
 }
 
 export default function MovimientosKPIs({ kpis }) {
-    const fmt = (val) => "$ " + val.toLocaleString("es-CO");
+    const fmt = (val) => "S/. " + val.toLocaleString("es-PE");
 
     return (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <KpiCard
                 icon={ShoppingCart}
                 iconBg="bg-cixoil-green"
