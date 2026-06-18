@@ -5,6 +5,7 @@ import Clientes from "./pages/Clientes";
 import Configuracion from "./pages/Configuracion";
 import CRM from "./pages/CRM";
 import Dashboard from "./pages/Dashboard";
+import Incidencias from "./pages/Incidencias";
 import Inventarios from "./pages/Inventarios";
 import Login from "./pages/Login";
 import Movimientos from "./pages/Movimientos";
@@ -31,6 +32,7 @@ function App() {
                     <Route path="/configuracion" element={<Configuracion />} />
                     <Route path="/recomendador" element={<Recomendador />} />
                     <Route path="/crm" element={<CRM />} />
+                    <Route path="/incidencias" element={<Incidencias />} />
                 </Route>
             </Routes>
         </BrowserRouter>

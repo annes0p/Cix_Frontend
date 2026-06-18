@@ -1,4 +1,5 @@
 ﻿import {
+    AlertCircle,
     ArrowLeftRight,
     BarChart3,
     Bell,
@@ -26,6 +27,7 @@ const menuItems = [
     { label: "Reportes", icon: BarChart3, path: "/reportes" },
     { label: "Alertas", icon: Bell, path: "/alertas" },
     { label: "Recomendador", icon: Sparkles, path: "/recomendador" },
+    { label: "Incidencias", icon: AlertCircle, path: "/incidencias" },
     { label: "Configuracion", icon: Settings, path: "/configuracion" },
 ];
 
@@ -48,7 +50,7 @@ export default function Sidebar() {
                 />
             </div>
 
-            <nav className="flex-1 px-3 py-4 space-y-1 z-10 overflow-y-auto">
+            <nav className="flex-1 px-3 py-4 space-y-1 z-10 overflow-y-auto scrollbar-none">
                 {menuItems.map((item) => {
                     const Icon = item.icon;
                     const active = location.pathname === item.path;

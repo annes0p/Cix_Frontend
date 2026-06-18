@@ -1,4 +1,4 @@
-import { DollarSign, Star, TrendingUp, Users } from "lucide-react";
+import { DollarSign, TrendingUp, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
     construirCRM,
@@ -39,7 +39,6 @@ export default function CRM() {
             ? clientes
             : clientes.filter((c) => c.segmento === filtro);
 
-    const totalVIP = clientes.filter((c) => c.segmento === "VIP").length;
     const totalFrecuentes = clientes.filter(
         (c) => c.segmento === "Frecuente",
     ).length;
@@ -48,7 +47,7 @@ export default function CRM() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between">
                 <div>
                     <h1 className="text-xl font-bold text-cixoil-red">CRM</h1>
                     <p className="text-sm text-gray-500">
@@ -60,8 +59,8 @@ export default function CRM() {
                 </span>
             </div>
 
-            <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                     <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
                         <div className="flex items-center justify-between mb-2">
                             <p className="text-xs font-semibold text-gray-500">
@@ -74,20 +73,6 @@ export default function CRM() {
                         </p>
                         <p className="text-xs text-gray-400 mt-1">
                             Registrados en el sistema
-                        </p>
-                    </div>
-                    <div className="bg-white rounded-xl border border-yellow-200 px-5 py-4 shadow-sm">
-                        <div className="flex items-center justify-between mb-2">
-                            <p className="text-xs font-semibold text-yellow-600">
-                                Clientes VIP
-                            </p>
-                            <Star size={18} className="text-yellow-500" />
-                        </div>
-                        <p className="text-2xl font-black text-yellow-600">
-                            {totalVIP}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                            5 o mas compras
                         </p>
                     </div>
                     <div className="bg-white rounded-xl border border-green-200 px-5 py-4 shadow-sm">
@@ -104,7 +89,7 @@ export default function CRM() {
                             {totalFrecuentes}
                         </p>
                         <p className="text-xs text-gray-400 mt-1">
-                            2 a 4 compras
+                            2 o mas compras
                         </p>
                     </div>
                     <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
@@ -123,22 +108,20 @@ export default function CRM() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 mb-4">
-                    {["todos", "VIP", "Frecuente", "Ocasional", "Nuevo"].map(
-                        (f) => (
-                            <button
-                                key={f}
-                                onClick={() => setFiltro(f)}
-                                className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                                    filtro === f
-                                        ? "bg-cixoil-red text-white"
-                                        : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
-                                }`}
-                            >
-                                {f === "todos" ? "Todos" : f}
-                            </button>
-                        ),
-                    )}
+                <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+                    {["todos", "Frecuente", "Ocasional", "Nuevo"].map((f) => (
+                        <button
+                            key={f}
+                            onClick={() => setFiltro(f)}
+                            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0 ${
+                                filtro === f
+                                    ? "bg-cixoil-red text-white"
+                                    : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                            }`}
+                        >
+                            {f === "todos" ? "Todos" : f}
+                        </button>
+                    ))}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

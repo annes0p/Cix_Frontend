@@ -1,10 +1,122 @@
-import { Car, ChevronRight, Loader2, Search, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+    Car,
+    ChevronDown,
+    ChevronRight,
+    Loader2,
+    Search,
+    Sparkles,
+    X,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import {
     getRecomendacion,
     getVehicleModels,
     getVehicleUseTypes,
 } from "../../services/recomendadorService";
+
+function ComboBox({ opciones, valor, onChange, placeholder, disabled, error }) {
+    const [inputVal, setInputVal] = useState(valor || "");
+    const [abierto, setAbierto] = useState(false);
+    const ref = useRef(null);
+
+    const opcionesFiltradas = opciones.filter((op) =>
+        op.toLowerCase().includes(inputVal.toLowerCase()),
+    );
+
+    useEffect(() => {
+        setInputVal(valor || "");
+    }, [valor]);
+
+    useEffect(() => {
+        const handler = (e) => {
+            if (ref.current && !ref.current.contains(e.target)) {
+                setAbierto(false);
+                if (!opciones.includes(inputVal)) {
+                    setInputVal(valor || "");
+                }
+            }
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, [inputVal, valor, opciones]);
+
+    const seleccionar = (op) => {
+        setInputVal(op);
+        setAbierto(false);
+        onChange(op);
+    };
+
+    const limpiar = (e) => {
+        e.stopPropagation();
+        setInputVal("");
+        onChange("");
+    };
+
+    return (
+        <div ref={ref} className="relative">
+            <div
+                className={`flex items-center w-full border rounded-xl bg-gray-50 transition-all focus-within:ring-2 focus-within:ring-cixoil-red focus-within:bg-white ${
+                    error ? "border-red-400 bg-red-50" : "border-gray-200"
+                } ${disabled ? "opacity-50 pointer-events-none" : ""}`}
+            >
+                <input
+                    type="text"
+                    className="flex-1 px-3 py-2.5 text-sm bg-transparent focus:outline-none"
+                    placeholder={placeholder}
+                    value={inputVal}
+                    onChange={(e) => {
+                        setInputVal(e.target.value);
+                        setAbierto(true);
+                        if (!e.target.value) onChange("");
+                    }}
+                    onFocus={() => setAbierto(true)}
+                    disabled={disabled}
+                />
+                {inputVal && !disabled ? (
+                    <button
+                        type="button"
+                        onClick={limpiar}
+                        className="px-2 text-gray-400 hover:text-gray-600"
+                    >
+                        <X size={14} />
+                    </button>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={() => !disabled && setAbierto((a) => !a)}
+                        className="px-3 text-gray-400"
+                    >
+                        <ChevronDown size={14} />
+                    </button>
+                )}
+            </div>
+
+            {abierto && opcionesFiltradas.length > 0 && (
+                <ul className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                    {opcionesFiltradas.map((op) => (
+                        <li
+                            key={op}
+                            onMouseDown={() => seleccionar(op)}
+                            className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-cixoil-red/5 hover:text-cixoil-red ${
+                                op === valor
+                                    ? "bg-cixoil-red/10 font-semibold text-cixoil-red"
+                                    : "text-gray-700"
+                            }`}
+                        >
+                            {op}
+                        </li>
+                    ))}
+                </ul>
+            )}
+
+            {abierto && opcionesFiltradas.length === 0 && inputVal && (
+                <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg px-3 py-3 text-xs text-gray-400">
+                    No se encontraron opciones
+                </div>
+            )}
+        </div>
+    );
+}
 
 export default function Recomendador() {
     const [modelos, setModelos] = useState([]);
@@ -14,6 +126,7 @@ export default function Recomendador() {
     const [tipoVehiculo, setTipoVehiculo] = useState("");
     const [marca, setMarca] = useState("");
     const [modeloId, setModeloId] = useState("");
+    const [modeloTexto, setModeloTexto] = useState("");
     const [tipoUsoId, setTipoUsoId] = useState("");
 
     const [resultado, setResultado] = useState(null);
@@ -40,23 +153,37 @@ export default function Recomendador() {
         cargarDatos();
     }, []);
 
-    const tiposVehiculo = [...new Set(modelos.map((m) => m.vehicleType?.name))].filter(Boolean).sort();
+    const tiposVehiculo = [...new Set(modelos.map((m) => m.vehicleType?.name))]
+        .filter(Boolean)
+        .sort();
 
-    const marcasFiltradas = [...new Set(
-        modelos
-            .filter((m) => m.vehicleType?.name === tipoVehiculo)
-            .map((m) => m.vehicleBrand?.name)
-    )].filter(Boolean).sort();
+    const marcasFiltradas = [
+        ...new Set(
+            modelos
+                .filter((m) => m.vehicleType?.name === tipoVehiculo)
+                .map((m) => m.vehicleBrand?.name),
+        ),
+    ]
+        .filter(Boolean)
+        .sort();
 
     const modelosFiltrados = modelos.filter(
-        (m) => m.vehicleType?.name === tipoVehiculo && m.vehicleBrand?.name === marca
+        (m) =>
+            m.vehicleType?.name === tipoVehiculo &&
+            m.vehicleBrand?.name === marca,
     );
+
+    const opcionesModelo = modelosFiltrados.map((m) => ({
+        label: `${m.model} ${m.year} — ${m.motorCC > 0 ? `${m.motorCC}cc` : "Electrico"} ${m.fuelType} ${m.transmissionType}`,
+        id: m.id,
+    }));
 
     const modeloSeleccionado = modelos.find((m) => m.id === Number(modeloId));
 
     const validar = () => {
         const nuevosErrores = {};
-        if (!tipoVehiculo) nuevosErrores.tipoVehiculo = "Selecciona el tipo de vehiculo.";
+        if (!tipoVehiculo)
+            nuevosErrores.tipoVehiculo = "Selecciona el tipo de vehiculo.";
         if (!marca) nuevosErrores.marca = "Selecciona la marca.";
         if (!modeloId) nuevosErrores.modeloId = "Selecciona el modelo.";
         if (!tipoUsoId) nuevosErrores.tipoUsoId = "Selecciona el tipo de uso.";
@@ -71,10 +198,15 @@ export default function Recomendador() {
             setLoading(true);
             setErrorApi(null);
             setResultado(null);
-            const data = await getRecomendacion(Number(modeloId), Number(tipoUsoId));
+            const data = await getRecomendacion(
+                Number(modeloId),
+                Number(tipoUsoId),
+            );
             setResultado(data);
         } catch (err) {
-            setErrorApi("No se pudo obtener una recomendacion. Verifica que el servicio de IA este activo.");
+            setErrorApi(
+                "No se pudo obtener una recomendacion. Verifica que el servicio de IA este activo.",
+            );
             console.error(err);
         } finally {
             setLoading(false);
@@ -88,44 +220,64 @@ export default function Recomendador() {
 
     const getPriorityColor = (priority) => {
         switch (priority) {
-            case "HIGH": return "bg-red-100 text-red-700 border-red-200";
-            case "MEDIUM": return "bg-yellow-100 text-yellow-700 border-yellow-200";
-            case "LOW": return "bg-green-100 text-green-700 border-green-200";
-            default: return "bg-gray-100 text-gray-700 border-gray-200";
+            case "HIGH":
+                return "bg-red-100 text-red-700 border-red-200";
+            case "MEDIUM":
+                return "bg-yellow-100 text-yellow-700 border-yellow-200";
+            case "LOW":
+                return "bg-green-100 text-green-700 border-green-200";
+            default:
+                return "bg-gray-100 text-gray-700 border-gray-200";
         }
     };
 
     const getPriorityLabel = (priority) => {
         switch (priority) {
-            case "HIGH": return "Alta prioridad";
-            case "MEDIUM": return "Prioridad media";
-            case "LOW": return "Baja prioridad";
-            default: return priority;
+            case "HIGH":
+                return "Alta prioridad";
+            case "MEDIUM":
+                return "Prioridad media";
+            case "LOW":
+                return "Baja prioridad";
+            default:
+                return priority;
         }
     };
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                    <h1 className="text-xl font-bold text-cixoil-red">Encuentra tu aceite ideal</h1>
-                    <p className="text-sm text-gray-500">Recomendacion inteligente de lubricantes para tu vehiculo</p>
+                    <h1 className="text-xl font-bold text-cixoil-red">
+                        Encuentra tu aceite ideal
+                    </h1>
+                    <p className="text-sm text-gray-500">
+                        Recomendacion inteligente de lubricantes para tu
+                        vehiculo
+                    </p>
                 </div>
-                <div className="flex items-center gap-2 bg-cixoil-red/10 px-3 py-1.5 rounded-lg">
+                <div className="flex items-center gap-2 bg-cixoil-red/10 px-3 py-1.5 rounded-lg self-start sm:self-auto">
                     <Sparkles size={16} className="text-cixoil-red" />
-                    <span className="text-xs font-semibold text-cixoil-red">Powered by AI</span>
+                    <span className="text-xs font-semibold text-cixoil-red">
+                        Powered by AI
+                    </span>
                 </div>
             </div>
 
-            <div className="p-6 max-w-2xl mx-auto">
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6">
+            <div className="p-4 sm:p-6 max-w-2xl mx-auto">
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6 mb-6">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 bg-cixoil-red/10 rounded-xl flex items-center justify-center">
+                        <div className="w-10 h-10 bg-cixoil-red/10 rounded-xl flex items-center justify-center shrink-0">
                             <Car size={20} className="text-cixoil-red" />
                         </div>
                         <div>
-                            <h2 className="font-bold text-gray-800">Datos del vehiculo</h2>
-                            <p className="text-xs text-gray-500">Completa los campos para obtener tu recomendacion</p>
+                            <h2 className="font-bold text-gray-800">
+                                Datos del vehiculo
+                            </h2>
+                            <p className="text-xs text-gray-500">
+                                Escribe o selecciona para obtener tu
+                                recomendacion
+                            </p>
                         </div>
                     </div>
 
@@ -141,46 +293,50 @@ export default function Recomendador() {
                                     <label className="text-sm font-semibold text-gray-700 mb-1.5 block">
                                         Tipo de vehiculo
                                     </label>
-                                    <select
-                                        className={selectClass("tipoVehiculo")}
-                                        value={tipoVehiculo}
-                                        onChange={(e) => {
-                                            setTipoVehiculo(e.target.value);
+                                    <ComboBox
+                                        opciones={tiposVehiculo}
+                                        valor={tipoVehiculo}
+                                        onChange={(val) => {
+                                            setTipoVehiculo(val);
                                             setMarca("");
                                             setModeloId("");
+                                            setModeloTexto("");
                                             setResultado(null);
                                             setErrores({});
                                         }}
-                                    >
-                                        <option value="">Seleccionar tipo</option>
-                                        {tiposVehiculo.map((t) => (
-                                            <option key={t} value={t}>{t}</option>
-                                        ))}
-                                    </select>
-                                    {errores.tipoVehiculo && <p className="text-xs text-red-500 mt-1">{errores.tipoVehiculo}</p>}
+                                        placeholder="Ej: Sedan, SUV..."
+                                        error={errores.tipoVehiculo}
+                                    />
+                                    {errores.tipoVehiculo && (
+                                        <p className="text-xs text-red-500 mt-1">
+                                            {errores.tipoVehiculo}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
                                     <label className="text-sm font-semibold text-gray-700 mb-1.5 block">
                                         Marca
                                     </label>
-                                    <select
-                                        className={selectClass("marca")}
-                                        value={marca}
-                                        onChange={(e) => {
-                                            setMarca(e.target.value);
+                                    <ComboBox
+                                        opciones={marcasFiltradas}
+                                        valor={marca}
+                                        onChange={(val) => {
+                                            setMarca(val);
                                             setModeloId("");
+                                            setModeloTexto("");
                                             setResultado(null);
                                             setErrores({});
                                         }}
+                                        placeholder="Ej: Toyota, Hyundai..."
                                         disabled={!tipoVehiculo}
-                                    >
-                                        <option value="">Seleccionar marca</option>
-                                        {marcasFiltradas.map((m) => (
-                                            <option key={m} value={m}>{m}</option>
-                                        ))}
-                                    </select>
-                                    {errores.marca && <p className="text-xs text-red-500 mt-1">{errores.marca}</p>}
+                                        error={errores.marca}
+                                    />
+                                    {errores.marca && (
+                                        <p className="text-xs text-red-500 mt-1">
+                                            {errores.marca}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
@@ -188,39 +344,62 @@ export default function Recomendador() {
                                 <label className="text-sm font-semibold text-gray-700 mb-1.5 block">
                                     Modelo y año
                                 </label>
-                                <select
-                                    className={selectClass("modeloId")}
-                                    value={modeloId}
-                                    onChange={(e) => {
-                                        setModeloId(e.target.value);
+                                <ComboBox
+                                    opciones={opcionesModelo.map(
+                                        (o) => o.label,
+                                    )}
+                                    valor={modeloTexto}
+                                    onChange={(val) => {
+                                        setModeloTexto(val);
+                                        const encontrado = opcionesModelo.find(
+                                            (o) => o.label === val,
+                                        );
+                                        setModeloId(
+                                            encontrado
+                                                ? String(encontrado.id)
+                                                : "",
+                                        );
                                         setResultado(null);
                                         setErrores({});
                                     }}
+                                    placeholder="Ej: Corolla 2020..."
                                     disabled={!marca}
-                                >
-                                    <option value="">Seleccionar modelo</option>
-                                    {modelosFiltrados.map((m) => (
-                                        <option key={m.id} value={m.id}>
-                                            {m.model} {m.year} — {m.motorCC > 0 ? `${m.motorCC}cc` : "Electrico"} {m.fuelType} {m.transmissionType}
-                                        </option>
-                                    ))}
-                                </select>
-                                {errores.modeloId && <p className="text-xs text-red-500 mt-1">{errores.modeloId}</p>}
+                                    error={errores.modeloId}
+                                />
+                                {errores.modeloId && (
+                                    <p className="text-xs text-red-500 mt-1">
+                                        {errores.modeloId}
+                                    </p>
+                                )}
                             </div>
 
                             {modeloSeleccionado && (
                                 <div className="bg-gray-50 rounded-xl p-3 grid grid-cols-3 gap-3 text-xs">
                                     <div>
-                                        <p className="text-gray-400 font-medium">Combustible</p>
-                                        <p className="font-bold text-gray-800">{modeloSeleccionado.fuelType}</p>
+                                        <p className="text-gray-400 font-medium">
+                                            Combustible
+                                        </p>
+                                        <p className="font-bold text-gray-800">
+                                            {modeloSeleccionado.fuelType}
+                                        </p>
                                     </div>
                                     <div>
-                                        <p className="text-gray-400 font-medium">Potencia</p>
-                                        <p className="font-bold text-gray-800">{modeloSeleccionado.horsePower} HP</p>
+                                        <p className="text-gray-400 font-medium">
+                                            Potencia
+                                        </p>
+                                        <p className="font-bold text-gray-800">
+                                            {modeloSeleccionado.horsePower} HP
+                                        </p>
                                     </div>
                                     <div>
-                                        <p className="text-gray-400 font-medium">Transmision</p>
-                                        <p className="font-bold text-gray-800">{modeloSeleccionado.transmissionType}</p>
+                                        <p className="text-gray-400 font-medium">
+                                            Transmision
+                                        </p>
+                                        <p className="font-bold text-gray-800">
+                                            {
+                                                modeloSeleccionado.transmissionType
+                                            }
+                                        </p>
                                     </div>
                                 </div>
                             )}
@@ -238,14 +417,20 @@ export default function Recomendador() {
                                         setErrores({});
                                     }}
                                 >
-                                    <option value="">Seleccionar tipo de uso</option>
+                                    <option value="">
+                                        Seleccionar tipo de uso
+                                    </option>
                                     {tiposUso.map((t) => (
                                         <option key={t.value} value={t.value}>
                                             {t.label}
                                         </option>
                                     ))}
                                 </select>
-                                {errores.tipoUsoId && <p className="text-xs text-red-500 mt-1">{errores.tipoUsoId}</p>}
+                                {errores.tipoUsoId && (
+                                    <p className="text-xs text-red-500 mt-1">
+                                        {errores.tipoUsoId}
+                                    </p>
+                                )}
                             </div>
 
                             {errorApi && (
@@ -262,7 +447,10 @@ export default function Recomendador() {
                             >
                                 {loading ? (
                                     <>
-                                        <Loader2 size={16} className="animate-spin" />
+                                        <Loader2
+                                            size={16}
+                                            className="animate-spin"
+                                        />
                                         Analizando con IA...
                                     </>
                                 ) : (
@@ -277,14 +465,16 @@ export default function Recomendador() {
                 </div>
 
                 {resultado && (
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6">
                         <div className="flex items-center gap-2 mb-4">
                             <Sparkles size={18} className="text-cixoil-red" />
-                            <h2 className="font-bold text-gray-800">Recomendacion de la IA</h2>
+                            <h2 className="font-bold text-gray-800">
+                                Recomendacion de la IA
+                            </h2>
                         </div>
 
                         <div className="bg-gradient-to-br from-cixoil-red/5 to-transparent border border-cixoil-red/20 rounded-xl p-5 mb-4">
-                            <div className="flex items-start justify-between gap-4">
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                                 <div>
                                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
                                         Producto recomendado
@@ -293,7 +483,9 @@ export default function Recomendador() {
                                         {resultado.product?.name}
                                     </h3>
                                 </div>
-                                <span className={`text-xs font-bold px-3 py-1 rounded-full border shrink-0 ${getPriorityColor(resultado.priority)}`}>
+                                <span
+                                    className={`text-xs font-bold px-3 py-1 rounded-full border shrink-0 self-start ${getPriorityColor(resultado.priority)}`}
+                                >
                                     {getPriorityLabel(resultado.priority)}
                                 </span>
                             </div>
@@ -309,11 +501,22 @@ export default function Recomendador() {
                         </div>
 
                         {modeloSeleccionado && (
-                            <div className="flex items-center gap-2 text-xs text-gray-400 pt-3 border-t border-gray-100">
-                                <Car size={14} />
-                                <span>{modeloSeleccionado.vehicleBrand?.name} {modeloSeleccionado.model} {modeloSeleccionado.year}</span>
-                                <ChevronRight size={12} />
-                                <span>{tiposUso.find((t) => t.value === Number(tipoUsoId))?.label}</span>
+                            <div className="flex items-center gap-2 text-xs text-gray-400 pt-3 border-t border-gray-100 overflow-x-auto whitespace-nowrap">
+                                <Car size={14} className="shrink-0" />
+                                <span>
+                                    {modeloSeleccionado.vehicleBrand?.name}{" "}
+                                    {modeloSeleccionado.model}{" "}
+                                    {modeloSeleccionado.year}
+                                </span>
+                                <ChevronRight size={12} className="shrink-0" />
+                                <span>
+                                    {
+                                        tiposUso.find(
+                                            (t) =>
+                                                t.value === Number(tipoUsoId),
+                                        )?.label
+                                    }
+                                </span>
                             </div>
                         )}
                     </div>
