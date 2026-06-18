@@ -99,24 +99,58 @@ function ModalAnalisisIA({ alerta, onClose }) {
         try {
             setLoading(true);
             setError(null);
-            // TODO: reemplazar con llamada real cuando Jaime tenga el endpoint
-            // const response = await api.post("/api/inventory/predictions", { productId: alerta.product?.id, ... });
-            // setAnalisis(response.data);
 
-            // Mock temporal mientras Jaime implementa el endpoint
-            await new Promise((r) => setTimeout(r, 1500));
-            setAnalisis({
-                recomendacion: `Se recomienda reponer ${Math.max(alerta.minStock * 2, 20)} unidades de ${alerta.product?.name} en los proximos 3 dias. El consumo diario actual es de ${alerta.consumoDiario} uds/dia con tendencia ${alerta.tendencia === "subiendo" ? "al alza" : alerta.tendencia === "bajando" ? "a la baja" : "estable"}.`,
-                cantidadSugerida: Math.max(alerta.minStock * 2, 20),
-                urgencia:
-                    alerta.nivelRiesgo === "agotado"
-                        ? "INMEDIATA"
-                        : alerta.nivelRiesgo === "critico"
-                          ? "ALTA"
-                          : "MEDIA",
-            });
+            const prompt = `Eres un sistema experto en gestión de inventario de lubricantes automotrices para la empresa CIXOIL S.A.C.
+Analiza el siguiente producto con problemas de stock y proporciona una recomendación de reposición:
+
+PRODUCTO: ${alerta.product?.name}
+STOCK ACTUAL: ${alerta.stock} unidades
+STOCK MÍNIMO: ${alerta.minStock} unidades
+CONSUMO DIARIO PROMEDIO (últimos 14 días): ${alerta.consumoDiario} unidades/día
+TENDENCIA DE DEMANDA: ${alerta.tendencia === "subiendo" ? `al alza (+${alerta.tendenciaPorcentaje}%)` : alerta.tendencia === "bajando" ? `a la baja (${alerta.tendenciaPorcentaje}%)` : "estable"}
+DÍAS HASTA AGOTAMIENTO: ${alerta.diasHastaAgotamiento !== null ? `${alerta.diasHastaAgotamiento} días` : "sin datos de movimiento"}
+NIVEL DE RIESGO: ${alerta.nivelRiesgo}
+
+Responde ÚNICAMENTE con un JSON válido sin markdown ni texto adicional:
+{
+  "recomendacion": "<explicación breve y práctica de qué hacer>",
+  "cantidadSugerida": <número entero de unidades a reponer>,
+  "urgencia": "<INMEDIATA | ALTA | MEDIA>"
+}`;
+
+            const response = await fetch(
+                "https://api.groq.com/openai/v1/chat/completions",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: [
+                            {
+                                role: "user",
+                                content: prompt,
+                            },
+                        ],
+                        temperature: 0.3,
+                        max_tokens: 300,
+                    }),
+                },
+            );
+
+            const data = await response.json();
+            const content = data.choices?.[0]?.message?.content;
+            if (!content) throw new Error("Sin respuesta de IA");
+
+            const parsed = JSON.parse(
+                content.replace(/```json|```/g, "").trim(),
+            );
+            setAnalisis(parsed);
         } catch (err) {
-            setError("No se pudo obtener el analisis. Intenta nuevamente.");
+            console.error(err);
+            setError("No se pudo obtener el análisis. Intenta nuevamente.");
         } finally {
             setLoading(false);
         }
@@ -128,7 +162,7 @@ function ModalAnalisisIA({ alerta, onClose }) {
                 <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Sparkles size={18} className="text-cixoil-red" />
-                        <h2 className="font-bold text-gray-800">Analisis IA</h2>
+                        <h2 className="font-bold text-gray-800">Análisis IA</h2>
                     </div>
                     <button
                         onClick={onClose}
@@ -153,8 +187,8 @@ function ModalAnalisisIA({ alerta, onClose }) {
                                     {alerta.stock}
                                 </span>
                             </span>
-                            <span>Minimo: {alerta.minStock}</span>
-                            <span>{alerta.consumoDiario} uds/dia</span>
+                            <span>Mínimo: {alerta.minStock}</span>
+                            <span>{alerta.consumoDiario} uds/día</span>
                         </div>
                     </div>
 
@@ -169,13 +203,13 @@ function ModalAnalisisIA({ alerta, onClose }) {
                     )}
 
                     {loading && (
-                        <div className="flex items-center justify-center gap-2 py-6 text-gray-400">
+                        <div className="flex flex-col items-center justify-center gap-2 py-6 text-gray-400">
                             <Loader2
-                                size={20}
+                                size={24}
                                 className="animate-spin text-cixoil-red"
                             />
                             <span className="text-sm">
-                                Analizando con IA...
+                                Analizando con Llama 3.3...
                             </span>
                         </div>
                     )}
@@ -190,7 +224,7 @@ function ModalAnalisisIA({ alerta, onClose }) {
                         <div className="space-y-3">
                             <div className="bg-gradient-to-br from-cixoil-red/5 to-transparent border border-cixoil-red/20 rounded-xl p-4">
                                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                                    Recomendacion
+                                    Recomendación
                                 </p>
                                 <p className="text-sm text-gray-700 leading-relaxed">
                                     {analisis.recomendacion}
@@ -321,7 +355,7 @@ export default function AlertasTabla({ alertas, loading }) {
                                 Stock actual
                             </th>
                             <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                                Stock minimo
+                                Stock mínimo
                             </th>
                             <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
                                 Consumo diario
