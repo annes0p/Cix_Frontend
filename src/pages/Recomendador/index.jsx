@@ -368,13 +368,27 @@ export default function Recomendador() {
 
                         <div className="bg-gradient-to-br from-cixoil-red/5 to-transparent border border-cixoil-red/20 rounded-xl p-5 mb-4">
                             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                                <div>
-                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                                        Producto recomendado
-                                    </p>
-                                    <h3 className="text-xl font-black text-cixoil-red">
-                                        {resultado.product?.name}
-                                    </h3>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-20 h-20 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
+                                        {resultado.product?.imageUrl ? (
+                                            <img
+                                                src={resultado.product.imageUrl}
+                                                alt={resultado.product?.name}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-8 h-8 bg-gray-300 rounded" />
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                                            Producto recomendado
+                                        </p>
+                                        <h3 className="text-xl font-black text-cixoil-red">
+                                            {resultado.product?.name}
+                                        </h3>
+                                    </div>
                                 </div>
                                 <span
                                     className={`text-xs font-bold px-3 py-1 rounded-full border shrink-0 self-start ${getPriorityColor(resultado.priority)}`}

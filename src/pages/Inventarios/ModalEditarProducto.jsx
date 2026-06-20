@@ -15,6 +15,7 @@ export default function ModalEditarProducto({
         name: "",
         viscosity: "",
         description: "",
+        imageUrl: "",
         price: "",
         idCategory: "",
         idBrand: "",
@@ -30,6 +31,7 @@ export default function ModalEditarProducto({
                 name: producto.name || producto.nombre || "",
                 viscosity: producto.viscosity || producto.viscosidad || "",
                 description: producto.description || producto.descripcion || "",
+                imageUrl: producto.imageUrl || producto.image_url || "",
                 price: producto.price || producto.precio || "",
                 idCategory: producto.category?.id || "",
                 idBrand: producto.brand?.id || "",
@@ -207,7 +209,19 @@ export default function ModalEditarProducto({
                             }
                         />
                     </div>
-
+                    <div>
+                        <label className={labelClass}>URL de imagen</label>
+                        <input
+                            type="text"
+                            placeholder="https://ejemplo.com/imagen-producto.jpg"
+                            className={inputClass}
+                            value={form.imageUrl}
+                            onChange={(e) =>
+                                handleChange("imageUrl", e.target.value)
+                            }
+                        />
+                    </div>
+                    
                     <div className="flex gap-3 pt-2">
                         <button
                             type="button"

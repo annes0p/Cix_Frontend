@@ -139,8 +139,16 @@ export default function InventarioTabla({
                     <div key={producto.id || i} className="border-b border-gray-100 p-4">
                         <div className="flex items-start justify-between gap-2">
                             <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
-                                    <div className="w-5 h-5 bg-gray-300 rounded" />
+                                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
+                                    {producto.imageUrl ? (
+                                        <img
+                                            src={producto.imageUrl}
+                                            alt={producto.name || producto.nombre}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-5 h-5 bg-gray-300 rounded" />
+                                    )}
                                 </div>
                                 <div className="min-w-0">
                                     <p className="font-semibold text-gray-900 truncate">
@@ -215,8 +223,16 @@ export default function InventarioTabla({
                                 <td className="px-4 py-3 text-gray-500 font-mono text-xs">{producto.codigo}</td>
                                 <td className="px-4 py-3">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
-                                            <div className="w-5 h-5 bg-gray-300 rounded" />
+                                        <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
+                                            {producto.imageUrl ? (
+                                                <img
+                                                    src={producto.imageUrl}
+                                                    alt={producto.name || producto.nombre}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-5 h-5 bg-gray-300 rounded" />
+                                            )}
                                         </div>
                                         <div>
                                             <p className="font-semibold text-gray-900">

@@ -10,6 +10,7 @@ const estadoInicial = {
     name: "",
     viscosity: "",
     description: "",
+    imageUrl: "",
     price: "",
     idCategory: "",
     idBrand: "",
@@ -191,6 +192,18 @@ export default function ModalNuevoProducto({ onClose, onProductoCreado }) {
                             value={form.description}
                             onChange={(e) =>
                                 handleChange("description", e.target.value)
+                            }
+                        />
+                    </div>
+                    <div>
+                        <label className={labelClass}>URL de imagen</label>
+                        <input
+                            type="text"
+                            placeholder="https://ejemplo.com/imagen-producto.jpg"
+                            className={inputClass}
+                            value={form.imageUrl}
+                            onChange={(e) =>
+                                handleChange("imageUrl", e.target.value)
                             }
                         />
                     </div>
