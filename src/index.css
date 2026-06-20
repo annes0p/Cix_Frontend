@@ -2,7 +2,15 @@
 
 @theme {
   --color-cixoil-red: #660000;
-  --color-cixoil-green: #2E7D32;
-  --color-cixoil-darkBg: #0D0D0D;
+  --color-cixoil-green: #2e7d32;
+  --color-cixoil-darkBg: #0d0d0d;
   --color-cixoil-grayText: #666666;
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }

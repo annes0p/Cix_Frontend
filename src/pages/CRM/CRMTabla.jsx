@@ -1,11 +1,5 @@
 ﻿function SegmentoBadge({ segmento }) {
     switch (segmento) {
-        case "VIP":
-            return (
-                <span className="px-2 py-1 rounded-md text-xs font-semibold bg-yellow-100 text-yellow-700">
-                    VIP
-                </span>
-            );
         case "Frecuente":
             return (
                 <span className="px-2 py-1 rounded-md text-xs font-semibold bg-green-100 text-green-700">
