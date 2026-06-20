@@ -134,6 +134,10 @@ export default function Recomendador() {
     const [errorApi, setErrorApi] = useState(null);
     const [errores, setErrores] = useState({});
 
+    const [analisisDetallado, setAnalisisDetallado] = useState(null);
+    const [loadingAnalisis, setLoadingAnalisis] = useState(false);
+    const [errorAnalisis, setErrorAnalisis] = useState(null);
+
     useEffect(() => {
         const cargarDatos = async () => {
             try {
@@ -198,6 +202,7 @@ export default function Recomendador() {
             setLoading(true);
             setErrorApi(null);
             setResultado(null);
+            setAnalisisDetallado(null);
             const data = await getRecomendacion(
                 Number(modeloId),
                 Number(tipoUsoId),
@@ -213,6 +218,74 @@ export default function Recomendador() {
         }
     };
 
+    const analizarDetallado = async () => {
+        if (!resultado || !modeloSeleccionado) return;
+        try {
+            setLoadingAnalisis(true);
+            setErrorAnalisis(null);
+
+            const tipoUsoLabel =
+                tiposUso.find((t) => t.value === Number(tipoUsoId))?.label ||
+                "uso general";
+
+            const prompt = `Eres un experto en lubricantes automotrices de CIXOIL S.A.C., empresa peruana especializada en aceites y lubricantes.
+
+Un sistema de IA recomendó el siguiente aceite para un vehículo. Tu tarea es proporcionar un análisis técnico detallado y consejos prácticos.
+
+VEHÍCULO:
+- Marca y modelo: ${modeloSeleccionado.vehicleBrand?.name} ${modeloSeleccionado.model} ${modeloSeleccionado.year}
+- Tipo: ${tipoVehiculo}
+- Motor: ${modeloSeleccionado.motorCC > 0 ? `${modeloSeleccionado.motorCC}cc` : "Eléctrico"}
+- Combustible: ${modeloSeleccionado.fuelType}
+- Transmisión: ${modeloSeleccionado.transmissionType}
+- Potencia: ${modeloSeleccionado.horsePower} HP
+- Tipo de uso: ${tipoUsoLabel}
+
+ACEITE RECOMENDADO: ${resultado.product?.name}
+PRIORIDAD: ${resultado.priority}
+RAZÓN INICIAL: ${resultado.reason}
+
+Proporciona un análisis más detallado en español. Responde ÚNICAMENTE con JSON válido sin markdown:
+{
+  "beneficios": ["<beneficio 1>", "<beneficio 2>", "<beneficio 3>"],
+  "intervalosCambio": "<cada cuántos km o meses se recomienda cambiar>",
+  "consejo": "<consejo práctico adicional para este vehículo y uso específico>",
+  "advertencia": "<alguna advertencia importante o null si no hay>"
+}`;
+
+            const response = await fetch(
+                "https://api.groq.com/openai/v1/chat/completions",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: [{ role: "user", content: prompt }],
+                        temperature: 0.3,
+                        max_tokens: 500,
+                    }),
+                },
+            );
+
+            const data = await response.json();
+            const content = data.choices?.[0]?.message?.content;
+            if (!content) throw new Error("Sin respuesta");
+
+            const parsed = JSON.parse(
+                content.replace(/```json|```/g, "").trim(),
+            );
+            setAnalisisDetallado(parsed);
+        } catch (err) {
+            console.error(err);
+            setErrorAnalisis("No se pudo obtener el análisis detallado.");
+        } finally {
+            setLoadingAnalisis(false);
+        }
+    };
+
     const selectClass = (campo) =>
         `w-full px-3 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red bg-gray-50 focus:bg-white transition-all ${
             errores[campo] ? "border-red-400 bg-red-50" : "border-gray-200"
@@ -220,27 +293,19 @@ export default function Recomendador() {
 
     const getPriorityColor = (priority) => {
         switch (priority) {
-            case "HIGH":
-                return "bg-red-100 text-red-700 border-red-200";
-            case "MEDIUM":
-                return "bg-yellow-100 text-yellow-700 border-yellow-200";
-            case "LOW":
-                return "bg-green-100 text-green-700 border-green-200";
-            default:
-                return "bg-gray-100 text-gray-700 border-gray-200";
+            case "HIGH": return "bg-red-100 text-red-700 border-red-200";
+            case "MEDIUM": return "bg-yellow-100 text-yellow-700 border-yellow-200";
+            case "LOW": return "bg-green-100 text-green-700 border-green-200";
+            default: return "bg-gray-100 text-gray-700 border-gray-200";
         }
     };
 
     const getPriorityLabel = (priority) => {
         switch (priority) {
-            case "HIGH":
-                return "Alta prioridad";
-            case "MEDIUM":
-                return "Prioridad media";
-            case "LOW":
-                return "Baja prioridad";
-            default:
-                return priority;
+            case "HIGH": return "Alta prioridad";
+            case "MEDIUM": return "Prioridad media";
+            case "LOW": return "Baja prioridad";
+            default: return priority;
         }
     };
 
@@ -252,8 +317,7 @@ export default function Recomendador() {
                         Encuentra tu aceite ideal
                     </h1>
                     <p className="text-sm text-gray-500">
-                        Recomendacion inteligente de lubricantes para tu
-                        vehiculo
+                        Recomendacion inteligente de lubricantes para tu vehiculo
                     </p>
                 </div>
                 <div className="flex items-center gap-2 bg-cixoil-red/10 px-3 py-1.5 rounded-lg self-start sm:self-auto">
@@ -275,8 +339,7 @@ export default function Recomendador() {
                                 Datos del vehiculo
                             </h2>
                             <p className="text-xs text-gray-500">
-                                Escribe o selecciona para obtener tu
-                                recomendacion
+                                Escribe o selecciona para obtener tu recomendacion
                             </p>
                         </div>
                     </div>
@@ -302,6 +365,7 @@ export default function Recomendador() {
                                             setModeloId("");
                                             setModeloTexto("");
                                             setResultado(null);
+                                            setAnalisisDetallado(null);
                                             setErrores({});
                                         }}
                                         placeholder="Ej: Sedan, SUV..."
@@ -326,6 +390,7 @@ export default function Recomendador() {
                                             setModeloId("");
                                             setModeloTexto("");
                                             setResultado(null);
+                                            setAnalisisDetallado(null);
                                             setErrores({});
                                         }}
                                         placeholder="Ej: Toyota, Hyundai..."
@@ -345,9 +410,7 @@ export default function Recomendador() {
                                     Modelo y año
                                 </label>
                                 <ComboBox
-                                    opciones={opcionesModelo.map(
-                                        (o) => o.label,
-                                    )}
+                                    opciones={opcionesModelo.map((o) => o.label)}
                                     valor={modeloTexto}
                                     onChange={(val) => {
                                         setModeloTexto(val);
@@ -355,11 +418,10 @@ export default function Recomendador() {
                                             (o) => o.label === val,
                                         );
                                         setModeloId(
-                                            encontrado
-                                                ? String(encontrado.id)
-                                                : "",
+                                            encontrado ? String(encontrado.id) : "",
                                         );
                                         setResultado(null);
+                                        setAnalisisDetallado(null);
                                         setErrores({});
                                     }}
                                     placeholder="Ej: Corolla 2020..."
@@ -376,29 +438,21 @@ export default function Recomendador() {
                             {modeloSeleccionado && (
                                 <div className="bg-gray-50 rounded-xl p-3 grid grid-cols-3 gap-3 text-xs">
                                     <div>
-                                        <p className="text-gray-400 font-medium">
-                                            Combustible
-                                        </p>
+                                        <p className="text-gray-400 font-medium">Combustible</p>
                                         <p className="font-bold text-gray-800">
                                             {modeloSeleccionado.fuelType}
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-gray-400 font-medium">
-                                            Potencia
-                                        </p>
+                                        <p className="text-gray-400 font-medium">Potencia</p>
                                         <p className="font-bold text-gray-800">
                                             {modeloSeleccionado.horsePower} HP
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-gray-400 font-medium">
-                                            Transmision
-                                        </p>
+                                        <p className="text-gray-400 font-medium">Transmision</p>
                                         <p className="font-bold text-gray-800">
-                                            {
-                                                modeloSeleccionado.transmissionType
-                                            }
+                                            {modeloSeleccionado.transmissionType}
                                         </p>
                                     </div>
                                 </div>
@@ -414,12 +468,11 @@ export default function Recomendador() {
                                     onChange={(e) => {
                                         setTipoUsoId(e.target.value);
                                         setResultado(null);
+                                        setAnalisisDetallado(null);
                                         setErrores({});
                                     }}
                                 >
-                                    <option value="">
-                                        Seleccionar tipo de uso
-                                    </option>
+                                    <option value="">Seleccionar tipo de uso</option>
                                     {tiposUso.map((t) => (
                                         <option key={t.value} value={t.value}>
                                             {t.label}
@@ -447,10 +500,7 @@ export default function Recomendador() {
                             >
                                 {loading ? (
                                     <>
-                                        <Loader2
-                                            size={16}
-                                            className="animate-spin"
-                                        />
+                                        <Loader2 size={16} className="animate-spin" />
                                         Analizando con IA...
                                     </>
                                 ) : (
@@ -483,9 +533,7 @@ export default function Recomendador() {
                                         {resultado.product?.name}
                                     </h3>
                                 </div>
-                                <span
-                                    className={`text-xs font-bold px-3 py-1 rounded-full border shrink-0 self-start ${getPriorityColor(resultado.priority)}`}
-                                >
+                                <span className={`text-xs font-bold px-3 py-1 rounded-full border shrink-0 self-start ${getPriorityColor(resultado.priority)}`}>
                                     {getPriorityLabel(resultado.priority)}
                                 </span>
                             </div>
@@ -500,6 +548,79 @@ export default function Recomendador() {
                             </p>
                         </div>
 
+                        {/* Análisis detallado con Groq */}
+                        {!analisisDetallado && !loadingAnalisis && (
+                            <button
+                                onClick={analizarDetallado}
+                                className="w-full flex items-center justify-center gap-2 border border-cixoil-red/30 text-cixoil-red text-sm font-semibold py-2.5 rounded-xl hover:bg-cixoil-red/5 transition mb-4"
+                            >
+                                <Sparkles size={15} />
+                                Análisis técnico detallado con IA
+                            </button>
+                        )}
+
+                        {loadingAnalisis && (
+                            <div className="flex items-center justify-center gap-2 py-4 text-gray-400 mb-4">
+                                <Loader2 size={18} className="animate-spin text-cixoil-red" />
+                                <span className="text-sm">Generando análisis técnico...</span>
+                            </div>
+                        )}
+
+                        {errorAnalisis && (
+                            <div className="bg-red-50 border border-red-200 text-red-600 text-xs px-4 py-3 rounded-xl mb-4">
+                                {errorAnalisis}
+                            </div>
+                        )}
+
+                        {analisisDetallado && (
+                            <div className="space-y-3 mb-4">
+                                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                                    <p className="text-xs font-semibold text-green-700 uppercase tracking-wider mb-2">
+                                        Beneficios clave
+                                    </p>
+                                    <ul className="space-y-1">
+                                        {analisisDetallado.beneficios?.map((b, i) => (
+                                            <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                                                <span className="text-green-500 font-bold shrink-0">✓</span>
+                                                {b}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div className="bg-gray-50 rounded-xl p-3">
+                                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                                            Intervalo de cambio
+                                        </p>
+                                        <p className="text-sm font-bold text-gray-800">
+                                            {analisisDetallado.intervalosCambio}
+                                        </p>
+                                    </div>
+                                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+                                        <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">
+                                            Consejo
+                                        </p>
+                                        <p className="text-sm text-gray-700">
+                                            {analisisDetallado.consejo}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {analisisDetallado.advertencia &&
+                                    analisisDetallado.advertencia !== "null" && (
+                                    <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
+                                        <p className="text-xs font-semibold text-yellow-700 uppercase tracking-wider mb-1">
+                                            Advertencia
+                                        </p>
+                                        <p className="text-sm text-gray-700">
+                                            {analisisDetallado.advertencia}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {modeloSeleccionado && (
                             <div className="flex items-center gap-2 text-xs text-gray-400 pt-3 border-t border-gray-100 overflow-x-auto whitespace-nowrap">
                                 <Car size={14} className="shrink-0" />
@@ -510,12 +631,7 @@ export default function Recomendador() {
                                 </span>
                                 <ChevronRight size={12} className="shrink-0" />
                                 <span>
-                                    {
-                                        tiposUso.find(
-                                            (t) =>
-                                                t.value === Number(tipoUsoId),
-                                        )?.label
-                                    }
+                                    {tiposUso.find((t) => t.value === Number(tipoUsoId))?.label}
                                 </span>
                             </div>
                         )}
