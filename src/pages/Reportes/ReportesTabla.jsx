@@ -20,7 +20,33 @@ export default function ReportesTabla({ reportes, loading, tipo }) {
     if (tipo === "Inventario") {
         return (
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <table className="w-full text-sm">
+                {/* Vista móvil: cards */}
+                <div className="lg:hidden divide-y divide-gray-100">
+                    {reportes.map((item) => (
+                        <div key={item.id} className="p-4">
+                            <div className="flex items-center justify-between mb-1">
+                                <p className="font-semibold text-gray-900">
+                                    {item.product?.name}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                    {item.product?.categoryName || "-"}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                                <span>
+                                    Stock:{" "}
+                                    <span className="font-bold text-gray-900">
+                                        {item.stock}
+                                    </span>
+                                </span>
+                                <span>Stock minimo: {item.minStock}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Vista desktop: tabla */}
+                <table className="w-full text-sm hidden lg:table">
                     <thead>
                         <tr className="bg-gray-50 border-b">
                             <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
@@ -71,7 +97,33 @@ export default function ReportesTabla({ reportes, loading, tipo }) {
     if (tipo === "Movimientos") {
         return (
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <table className="w-full text-sm">
+                {/* Vista móvil: cards */}
+                <div className="lg:hidden divide-y divide-gray-100">
+                    {reportes.map((item) => (
+                        <div key={item.id} className="p-4">
+                            <div className="flex items-center justify-between mb-1">
+                                <p className="font-semibold text-gray-900">
+                                    {item.productName || item.product?.name}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                    {item.date || item.fecha}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                                <span>{item.type || item.tipo}</span>
+                                <span>
+                                    Cantidad:{" "}
+                                    <span className="font-bold text-gray-900">
+                                        {item.quantity || item.cantidad}
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Vista desktop: tabla */}
+                <table className="w-full text-sm hidden lg:table">
                     <thead>
                         <tr className="bg-gray-50 border-b">
                             <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
@@ -122,7 +174,30 @@ export default function ReportesTabla({ reportes, loading, tipo }) {
     if (tipo === "Compras") {
         return (
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <table className="w-full text-sm">
+                {/* Vista móvil: cards */}
+                <div className="lg:hidden divide-y divide-gray-100">
+                    {reportes.map((item) => (
+                        <div key={item.id} className="p-4">
+                            <div className="flex items-center justify-between mb-1">
+                                <p className="font-semibold text-gray-900">
+                                    OC-{item.id.toString().padStart(4, "0")}
+                                </p>
+                                <p className="font-bold text-cixoil-red text-sm">
+                                    S/. {item.totalAmount || item.total}
+                                </p>
+                            </div>
+                            <div className="flex items-center justify-between text-xs text-gray-500">
+                                <span>
+                                    {item.supplierName || item.supplier?.name}
+                                </span>
+                                <span>{item.purchaseDate || item.fecha}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Vista desktop: tabla */}
+                <table className="w-full text-sm hidden lg:table">
                     <thead>
                         <tr className="bg-gray-50 border-b">
                             <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">

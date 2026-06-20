@@ -1,4 +1,4 @@
-import {
+﻿import {
     Car,
     ChevronDown,
     ChevronRight,
@@ -293,19 +293,27 @@ Proporciona un análisis más detallado en español. Responde ÚNICAMENTE con JS
 
     const getPriorityColor = (priority) => {
         switch (priority) {
-            case "HIGH": return "bg-red-100 text-red-700 border-red-200";
-            case "MEDIUM": return "bg-yellow-100 text-yellow-700 border-yellow-200";
-            case "LOW": return "bg-green-100 text-green-700 border-green-200";
-            default: return "bg-gray-100 text-gray-700 border-gray-200";
+            case "HIGH":
+                return "bg-red-100 text-red-700 border-red-200";
+            case "MEDIUM":
+                return "bg-yellow-100 text-yellow-700 border-yellow-200";
+            case "LOW":
+                return "bg-green-100 text-green-700 border-green-200";
+            default:
+                return "bg-gray-100 text-gray-700 border-gray-200";
         }
     };
 
     const getPriorityLabel = (priority) => {
         switch (priority) {
-            case "HIGH": return "Alta prioridad";
-            case "MEDIUM": return "Prioridad media";
-            case "LOW": return "Baja prioridad";
-            default: return priority;
+            case "HIGH":
+                return "Alta prioridad";
+            case "MEDIUM":
+                return "Prioridad media";
+            case "LOW":
+                return "Baja prioridad";
+            default:
+                return priority;
         }
     };
 
@@ -472,7 +480,9 @@ Proporciona un análisis más detallado en español. Responde ÚNICAMENTE con JS
                                         setErrores({});
                                     }}
                                 >
-                                    <option value="">Seleccionar tipo de uso</option>
+                                    <option value="">
+                                        Seleccionar tipo de uso
+                                    </option>
                                     {tiposUso.map((t) => (
                                         <option key={t.value} value={t.value}>
                                             {t.label}
@@ -500,7 +510,10 @@ Proporciona un análisis más detallado en español. Responde ÚNICAMENTE con JS
                             >
                                 {loading ? (
                                     <>
-                                        <Loader2 size={16} className="animate-spin" />
+                                        <Loader2
+                                            size={16}
+                                            className="animate-spin"
+                                        />
                                         Analizando con IA...
                                     </>
                                 ) : (
@@ -533,7 +546,9 @@ Proporciona un análisis más detallado en español. Responde ÚNICAMENTE con JS
                                         {resultado.product?.name}
                                     </h3>
                                 </div>
-                                <span className={`text-xs font-bold px-3 py-1 rounded-full border shrink-0 self-start ${getPriorityColor(resultado.priority)}`}>
+                                <span
+                                    className={`text-xs font-bold px-3 py-1 rounded-full border shrink-0 self-start ${getPriorityColor(resultado.priority)}`}
+                                >
                                     {getPriorityLabel(resultado.priority)}
                                 </span>
                             </div>

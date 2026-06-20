@@ -21,7 +21,46 @@ export default function ProveedoresTabla({ proveedores, loading, onRecargar }) {
 
     return (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
+            {/* Vista móvil: cards */}
+            <div className="lg:hidden divide-y divide-gray-100">
+                {proveedores.map((proveedor) => (
+                    <div key={proveedor.id} className="p-4">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                            <div className="min-w-0">
+                                <p className="font-semibold text-gray-900 truncate">
+                                    {proveedor.legalName}
+                                </p>
+                                <p className="text-xs font-mono text-gray-500">
+                                    {proveedor.documentType}{" "}
+                                    {proveedor.docNumber}
+                                </p>
+                            </div>
+                            <div className="flex gap-3 shrink-0">
+                                <button className="text-yellow-500 hover:text-yellow-700">
+                                    <Pencil size={16} />
+                                </button>
+                                <button className="text-red-500 hover:text-red-700">
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="text-xs text-gray-500 space-y-1">
+                            {proveedor.phoneNumber && (
+                                <p>Tel: {proveedor.phoneNumber}</p>
+                            )}
+                            {proveedor.email && (
+                                <p className="truncate">{proveedor.email}</p>
+                            )}
+                            {proveedor.address && (
+                                <p className="truncate">{proveedor.address}</p>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Vista desktop: tabla */}
+            <table className="w-full text-sm hidden lg:table">
                 <thead>
                     <tr className="bg-gray-50 border-b">
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">

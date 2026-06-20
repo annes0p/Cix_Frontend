@@ -1,4 +1,4 @@
-import { Eye } from "lucide-react";
+﻿import { Eye } from "lucide-react";
 import { useState } from "react";
 import ModalDetalleOrden from "./ModalDetalleOrden";
 
@@ -47,7 +47,44 @@ export default function OrdenesTabla({ ordenes, loading }) {
     return (
         <>
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <table className="w-full text-sm">
+                {/* Vista móvil: cards */}
+                <div className="lg:hidden divide-y divide-gray-100">
+                    {ordenes.map((orden) => (
+                        <div
+                            key={orden.id}
+                            onClick={() => setOrdenSeleccionada(orden)}
+                            className="p-4 active:bg-gray-50 cursor-pointer"
+                        >
+                            <div className="flex items-center justify-between mb-2">
+                                <p className="font-semibold text-gray-900">
+                                    OC-{orden.id.toString().padStart(4, "0")}
+                                </p>
+                                <EstadoBadge estado={orden.receptionStatus} />
+                            </div>
+                            <p className="text-sm text-gray-700 mb-1">
+                                {orden.supplier?.legalName}
+                            </p>
+                            <div className="flex items-center justify-between text-xs text-gray-500">
+                                <div>
+                                    <p>Compra: {orden.purchasedAt}</p>
+                                    <p>
+                                        Entrega:{" "}
+                                        {orden.estimatedDeliveryAt || "-"}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="font-bold text-cixoil-red text-sm">
+                                        S/. {orden.total}
+                                    </span>
+                                    <Eye size={16} className="text-blue-500" />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Vista desktop: tabla */}
+                <table className="w-full text-sm hidden lg:table">
                     <thead>
                         <tr className="bg-gray-50 border-b">
                             <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
