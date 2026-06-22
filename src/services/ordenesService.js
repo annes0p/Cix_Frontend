@@ -19,3 +19,13 @@ export const getProductos = async () => {
     const response = await api.get("/products");
     return response.data.data || response.data;
 };
+
+export const recibirOrden = async (id) => {
+    const response = await api.patch(`/purchases/${id}/receive`);
+    return response.data.data || response.data;
+};
+
+export const recibirOrdenParcial = async (id) => {
+    const response = await api.patch(`/purchases/${id}/partially-receive`);
+    return response.data.data || response.data;
+};
