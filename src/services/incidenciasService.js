@@ -78,6 +78,20 @@ export const actualizarEstadoIncidencia = async (id, nuevoEstado) => {
     return Promise.resolve(incidencias.find((i) => i.id === Number(id)));
 };
 
+export const documentarResolucion = async (id, documentacion) => {
+    incidencias = incidencias.map((i) =>
+        i.id === Number(id)
+            ? {
+                  ...i,
+                  estado: "RESUELTA",
+                  resolvedAt: new Date().toISOString(),
+                  documentacionResolucion: documentacion,
+              }
+            : i,
+    );
+    return Promise.resolve(incidencias.find((i) => i.id === Number(id)));
+};
+
 export const TIPOS_INCIDENCIA = [
     { value: "PRODUCTO_DANADO", label: "Producto dañado" },
     { value: "ERROR_PEDIDO", label: "Error en pedido" },
@@ -85,6 +99,14 @@ export const TIPOS_INCIDENCIA = [
     { value: "QUEJA_CLIENTE", label: "Queja de cliente" },
     { value: "PROBLEMA_PROVEEDOR", label: "Problema con proveedor" },
 ];
+
+export const PRIORIDAD_POR_TIPO = {
+    PRODUCTO_DANADO: "ALTA",
+    ERROR_PEDIDO: "ALTA",
+    DEVOLUCION: "MEDIA",
+    QUEJA_CLIENTE: "MEDIA",
+    PROBLEMA_PROVEEDOR: "MEDIA",
+};
 
 export const ESTADOS_INCIDENCIA = [
     { value: "ABIERTA", label: "Abierta" },
