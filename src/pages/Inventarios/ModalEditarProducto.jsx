@@ -15,6 +15,7 @@ export default function ModalEditarProducto({
         name: "",
         viscosity: "",
         description: "",
+        imageUrl: "",
         price: "",
         idCategory: "",
         idBrand: "",
@@ -30,6 +31,7 @@ export default function ModalEditarProducto({
                 name: producto.name || producto.nombre || "",
                 viscosity: producto.viscosity || producto.viscosidad || "",
                 description: producto.description || producto.descripcion || "",
+                imageUrl: producto.imageUrl || producto.image_url || "",
                 price: producto.price || producto.precio || "",
                 idCategory: producto.category?.id || "",
                 idBrand: producto.brand?.id || "",
@@ -84,7 +86,6 @@ export default function ModalEditarProducto({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
-                {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                     <div>
                         <h2 className="text-lg font-bold text-gray-900">
@@ -102,7 +103,6 @@ export default function ModalEditarProducto({
                     </button>
                 </div>
 
-                {/* Form */}
                 <form onSubmit={handleGuardar} className="px-6 py-5 space-y-4">
                     {error && (
                         <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-lg">
@@ -204,6 +204,19 @@ export default function ModalEditarProducto({
                             value={form.description}
                             onChange={(e) =>
                                 handleChange("description", e.target.value)
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label className={labelClass}>URL de imagen</label>
+                        <input
+                            type="text"
+                            placeholder="https://ejemplo.com/imagen-producto.jpg"
+                            className={inputClass}
+                            value={form.imageUrl}
+                            onChange={(e) =>
+                                handleChange("imageUrl", e.target.value)
                             }
                         />
                     </div>
