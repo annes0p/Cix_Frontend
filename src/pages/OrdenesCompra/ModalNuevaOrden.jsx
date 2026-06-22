@@ -4,7 +4,7 @@ import { crearOrden, getProductos } from "../../services/ordenesService";
 import { getProveedores } from "../../services/proveedoresService";
 
 export default function ModalNuevaOrden({ onClose, onGuardar }) {
-    const hoy = new Date().toISOString().split("T")[0];
+    const hoy = new Date().toLocaleDateString("sv-SE");
 
     const [form, setForm] = useState({
         idSupplier: "",

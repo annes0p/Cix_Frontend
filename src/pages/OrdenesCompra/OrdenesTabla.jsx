@@ -5,13 +5,13 @@ import ModalDetalleOrden from "./ModalDetalleOrden";
 function EstadoBadge({ estado }) {
     const estilos = {
         PENDING: "bg-yellow-100 text-yellow-700",
-        PARTIALLY_RECIEVED: "bg-blue-100 text-blue-700",
-        RECIEVED: "bg-green-100 text-green-700",
+        PARTIALLY_RECEIVED: "bg-blue-100 text-blue-700",
+        RECEIVED: "bg-green-100 text-green-700",
     };
     const etiquetas = {
         PENDING: "Pendiente",
-        PARTIALLY_RECIEVED: "Recibido parcialmente",
-        RECIEVED: "Recibido",
+        PARTIALLY_RECEIVED: "Recibido parcialmente",
+        RECEIVED: "Recibido",
     };
 
     return (
@@ -23,7 +23,7 @@ function EstadoBadge({ estado }) {
     );
 }
 
-export default function OrdenesTabla({ ordenes, loading }) {
+export default function OrdenesTabla({ ordenes, loading, onRecargar }) {
     const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
 
     if (loading) {
@@ -163,6 +163,10 @@ export default function OrdenesTabla({ ordenes, loading }) {
                 <ModalDetalleOrden
                     orden={ordenSeleccionada}
                     onClose={() => setOrdenSeleccionada(null)}
+                    onActualizar={() => {
+                        setOrdenSeleccionada(null);
+                        onRecargar?.();
+                    }}
                 />
             )}
         </>
