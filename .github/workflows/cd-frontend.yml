@@ -1,0 +1,32 @@
+name: CD - Empaquetado Frontend
+
+on:
+  push:
+    branches: 
+      - main
+      - 'feature/*'
+
+jobs:
+  empaquetar-frontend:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+        
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Instalar dependencias
+        run: npm install
+        
+      - name: Construir el Artefacto (Empaquetar con Vite)
+        run: npm run build
+        
+      - name: Guardar el Artefacto generado (carpeta dist)
+        uses: actions/upload-artifact@v4
+        with:
+          name: cix-frontend-release
+          path: dist/
