@@ -73,6 +73,7 @@ export default function Inventarios() {
                         price: producto?.price || 0,
                         marca: producto?.brand?.name || "-",
                         descripcion: producto?.description || "-",
+                        imageUrl: inv.product?.imageUrl || producto?.imageUrl || null,
                         ultimaActualizacion: new Date().toLocaleDateString("es-PE"),
                         _raw: inv,
                     };
