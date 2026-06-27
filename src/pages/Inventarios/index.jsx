@@ -53,41 +53,38 @@ export default function Inventarios() {
                     getInventario(),
                 ]);
 
-                const productosMapeados = inventarioData
-                    .filter((inv) => inv.product?.status === 1)
-                    .map((inv) => {
-                        const producto = productosData.find(
-                            (p) => p.id === inv.product?.id,
-                        );
-                        return {
-                            id: inv.id,
-                            idProducto: inv.product?.id,
-                            codigo: `PRD-${String(inv.product?.id).padStart(4, "0")}`,
-                            nombre: inv.product?.name || "-",
-                            name: inv.product?.name || "-",
-                            categoria: producto?.category?.name || "-",
-                            almacen: "Bodega Principal",
-                            stockActual: inv.stock,
-                            stock: inv.stock,
-                            stockMinimo: inv.minStock,
-                            minStock: inv.minStock,
-                            precio: producto?.price || 0,
-                            price: producto?.price || 0,
-                            marca: producto?.brand?.name || "-",
-                            descripcion: producto?.description || "-",
-                            imageUrl:
-                                inv.product?.imageUrl ||
-                                producto?.imageUrl ||
-                                null,
-                            ultimaActualizacion: new Date().toLocaleDateString(
-                                "es-PE",
-                            ),
-                            _raw: inv,
-                        };
-                    });
+                const productosMapeados = inventarioData.map((inv) => {
+                    const producto = productosData.find(
+                        (p) => p.id === inv.product?.id,
+                    );
+                    return {
+                        id: inv.id,
+                        idProducto: inv.product?.id,
+                        codigo: `PRD-${String(inv.product?.id).padStart(4, "0")}`,
+                        nombre: inv.product?.name || "-",
+                        name: inv.product?.name || "-",
+                        categoria: producto?.category?.name || "-",
+                        almacen: "Bodega Principal",
+                        stockActual: inv.stock,
+                        stock: inv.stock,
+                        stockMinimo: inv.minStock,
+                        minStock: inv.minStock,
+                        precio: producto?.price || 0,
+                        price: producto?.price || 0,
+                        marca: producto?.brand?.name || "-",
+                        descripcion: producto?.description || "-",
+                        imageUrl:
+                            inv.product?.imageUrl || producto?.imageUrl || null,
+                        ultimaActualizacion: new Date().toLocaleDateString(
+                            "es-PE",
+                        ),
+                        _raw: inv,
+                    };
+                });
 
                 setProductos(productosMapeados);
-            } catch {
+            } catch (error) {
+                console.error("Error cargando inventario:", error);
                 setProductos(productosDemo);
             } finally {
                 setLoading(false);
