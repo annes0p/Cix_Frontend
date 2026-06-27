@@ -79,12 +79,11 @@ const PRIORIDAD_A_FRONTEND = {
 
 const ESTADO_A_FRONTEND = {
     OPEN: "ABIERTA",
+    IN_PROCESS: "EN_PROCESO",
     RESOLVED: "RESUELTA",
     CLOSED: "CERRADA",
     CANCELED: "CERRADA",
 };
-
-// ─── Transformadores ──────────────────────────────────────────────────────
 
 const toFrontend = (inc) => ({
     id: inc.id,
@@ -101,6 +100,7 @@ const toFrontend = (inc) => ({
               nombre: inc.reference || null,
           }
         : { tipo: null, id: null, nombre: null },
+    documentacionResolucion: inc.resolutionNote || null,
     createdAt: new Date().toISOString(),
     resolvedAt:
         inc.incidentStatus === "RESOLVED" || inc.incidentStatus === "CLOSED"
@@ -119,8 +119,6 @@ const toBackend = (data) => ({
         : null,
     reference: data.relacionado?.nombre || null,
 });
-
-// ─── Funciones del service ────────────────────────────────────────────────
 
 export const getIncidencias = async () => {
     const response = await api.get("/incidents");
@@ -142,7 +140,7 @@ export const crearIncidencia = async (data) => {
 
 export const actualizarEstadoIncidencia = async (id, nuevoEstado) => {
     const endpointMap = {
-        RESUELTA: `/incidents/${id}/resolve`,
+        EN_PROCESO: `/incidents/${id}/in-process`,
         CERRADA: `/incidents/${id}/close`,
         ABIERTA: `/incidents/${id}/reopen`,
     };
@@ -154,14 +152,9 @@ export const actualizarEstadoIncidencia = async (id, nuevoEstado) => {
 };
 
 export const documentarResolucion = async (id, documentacion) => {
-    // Primero actualiza la incidencia con la documentación vía PUT
-    const incActual = await getIncidenciaById(id);
-    const response = await api.put(`/incidents/${id}`, {
-        ...toBackend(incActual),
-        description: incActual.descripcion + "\n\nRESOLUCIÓN: " + documentacion,
+    const response = await api.patch(`/incidents/${id}/resolve`, {
+        resolutionNote: documentacion,
     });
-    // Luego la marca como resuelta
-    await api.patch(`/incidents/${id}/resolve`);
     const data = response.data.data || response.data;
     return toFrontend(data);
 };
