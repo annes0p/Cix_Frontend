@@ -1,3 +1,5 @@
+import { Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 import LoginForm from "./LoginForm";
 import LoginLayout from "./LoginLayout";
 
@@ -9,6 +11,14 @@ export default function Login() {
             <div className="w-full lg:w-1/2 flex flex-col justify-center items-center px-8 lg:px-16 bg-white">
                 <div className="w-full max-w-md">
                     <LoginForm />
+
+                    <Link
+                        to="/recomendador-publico"
+                        className="mt-6 w-full flex items-center justify-center gap-2 border border-cixoil-green/30 bg-cixoil-green/5 text-cixoil-green font-semibold text-sm py-3 rounded-xl hover:bg-cixoil-green/10 transition-all"
+                    >
+                        <Sparkles size={16} />
+                        ¿Eres cliente? Encuentra tu aceite ideal aqui
+                    </Link>
 
                     <div className="flex flex-col items-center text-center gap-2 text-xs text-gray-400 mt-10 pt-6 border-t border-gray-100">
                         <div className="flex items-center gap-2 text-gray-500 font-medium">

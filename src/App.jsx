@@ -13,13 +13,16 @@ import OrdenesCompra from "./pages/OrdenesCompra";
 import Proveedores from "./pages/Proveedores";
 import Recomendador from "./pages/Recomendador";
 import Reportes from "./pages/Reportes";
-
 function App() {
     return (
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="/login" element={<Login />} />
+                <Route
+                    path="/recomendador-publico"
+                    element={<Recomendador />}
+                />
                 <Route element={<Layout />}>
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/inventarios" element={<Inventarios />} />
@@ -38,5 +41,4 @@ function App() {
         </BrowserRouter>
     );
 }
-
 export default App;
