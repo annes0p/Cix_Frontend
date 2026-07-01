@@ -25,7 +25,7 @@ export const recibirOrden = async (id) => {
     return response.data.data || response.data;
 };
 
-export const recibirOrdenParcial = async (id) => {
-    const response = await api.patch(`/purchases/${id}/partially-receive`);
+export const recibirOrdenParcial = async (id, items) => {
+    const response = await api.patch(`/purchases/${id}/partially-receive`, { items });
     return response.data.data || response.data;
 };
