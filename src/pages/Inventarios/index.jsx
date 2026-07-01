@@ -73,14 +73,18 @@ export default function Inventarios() {
                         price: producto?.price || 0,
                         marca: producto?.brand?.name || "-",
                         descripcion: producto?.description || "-",
-                        imageUrl: inv.product?.imageUrl || producto?.imageUrl || null,
-                        ultimaActualizacion: new Date().toLocaleDateString("es-PE"),
+                        imageUrl:
+                            inv.product?.imageUrl || producto?.imageUrl || null,
+                        ultimaActualizacion: new Date().toLocaleDateString(
+                            "es-PE",
+                        ),
                         _raw: inv,
                     };
                 });
 
                 setProductos(productosMapeados);
-            } catch {
+            } catch (error) {
+                console.error("Error cargando inventario:", error);
                 setProductos(productosDemo);
             } finally {
                 setLoading(false);
@@ -94,11 +98,56 @@ export default function Inventarios() {
         setPagina(1);
     };
 
+    const exportarExcel = () => {
+        const encabezados = [
+            "Código",
+            "Producto",
+            "Categoría",
+            "Marca",
+            "Almacén",
+            "Stock Actual",
+            "Stock Mínimo",
+            "Estado",
+            "Precio (S/.)",
+            "Última Actualización",
+        ];
+
+        const filas = productosFiltrados.map((p) => [
+            p.codigo,
+            p.name || p.nombre,
+            p.categoria,
+            p.marca,
+            p.almacen,
+            p.stockActual,
+            p.stockMinimo,
+            p.stockActual === 0
+                ? "Sin stock"
+                : p.stockActual < p.stockMinimo
+                  ? "Stock bajo"
+                  : "Óptimo",
+            p.precio || p.price,
+            p.ultimaActualizacion,
+        ]);
+
+        const csv = [encabezados, ...filas]
+            .map((fila) => fila.map((v) => `"${v}"`).join(","))
+            .join("\n");
+
+        const BOM = "\uFEFF";
+        const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `CIXOIL_Inventario_${new Date().toLocaleDateString("sv-SE")}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+    };
+
     const handleConfirmarEliminar = async (id) => {
         try {
             setEliminando(true);
             await eliminarProducto(id);
-            setProductos((prev) => prev.filter((p) => p.id !== id));
+            setProductos((prev) => prev.filter((p) => p.idProducto !== id));
             setProductoEliminar(null);
         } catch (error) {
             console.error("Error al eliminar producto:", error);
@@ -147,7 +196,9 @@ export default function Inventarios() {
         <div className="min-h-screen bg-gray-50">
             <div className="bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-bold text-cixoil-red">Inventarios</h1>
+                    <h1 className="text-xl font-bold text-cixoil-red">
+                        Inventarios
+                    </h1>
                     <span className="text-gray-400 hidden sm:block">|</span>
                     <span className="text-sm text-gray-500 hidden sm:block">
                         Registro y control de inventarios
@@ -162,13 +213,19 @@ export default function Inventarios() {
                 <div className="bg-white rounded-xl border border-gray-200 px-4 py-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center shrink-0">
-                            <SlidersHorizontal size={22} className="text-cixoil-green" />
+                            <SlidersHorizontal
+                                size={22}
+                                className="text-cixoil-green"
+                            />
                         </div>
                         <div>
-                            <h2 className="font-bold text-cixoil-red text-lg">Inventario general</h2>
+                            <h2 className="font-bold text-cixoil-red text-lg">
+                                Inventario general
+                            </h2>
                             <div className="flex items-center gap-2">
                                 <span className="text-sm text-gray-500 hidden sm:block">
-                                    Actualizacion automatica de stock en tiempo real
+                                    Actualizacion automatica de stock en tiempo
+                                    real
                                 </span>
                                 <span className="flex items-center gap-1 text-xs text-green-600 font-medium">
                                     <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
@@ -178,20 +235,27 @@ export default function Inventarios() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                        <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                        <button
+                            onClick={exportarExcel}
+                            className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
                             <Download size={16} />
                             <span className="hidden sm:block">Exportar</span>
                         </button>
                         <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                             <SlidersHorizontal size={16} />
-                            <span className="hidden sm:block">Ajustar inventario</span>
+                            <span className="hidden sm:block">
+                                Ajustar inventario
+                            </span>
                         </button>
                         <button
                             onClick={() => setShowModal(true)}
                             className="flex items-center gap-2 bg-cixoil-green text-white rounded-lg px-3 py-2 text-sm font-semibold hover:opacity-90 transition-opacity"
                         >
                             <Plus size={16} />
-                            <span className="hidden sm:block">Nuevo producto</span>
+                            <span className="hidden sm:block">
+                                Nuevo producto
+                            </span>
                         </button>
                     </div>
                 </div>
@@ -205,7 +269,9 @@ export default function Inventarios() {
 
                 {loading ? (
                     <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                        <p className="text-gray-400 text-sm">Cargando inventario...</p>
+                        <p className="text-gray-400 text-sm">
+                            Cargando inventario...
+                        </p>
                     </div>
                 ) : (
                     <InventarioTabla

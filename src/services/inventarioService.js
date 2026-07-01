@@ -21,12 +21,36 @@ export const getMarcas = async () => {
 };
 
 export const crearProducto = async (producto) => {
-    const response = await api.post("/products", producto);
+    const formData = new FormData();
+    formData.append("name", producto.name);
+    formData.append("viscosity", producto.viscosity || "");
+    formData.append("description", producto.description || "");
+    formData.append("price", producto.price);
+    formData.append("idCategory", producto.idCategory);
+    formData.append("idBrand", producto.idBrand);
+    if (producto.image) {
+        formData.append("image", producto.image);
+    }
+    const response = await api.post("/products", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data.data || response.data;
 };
 
 export const actualizarProducto = async (id, producto) => {
-    const response = await api.put(`/products/${id}`, producto);
+    const formData = new FormData();
+    formData.append("name", producto.name);
+    formData.append("viscosity", producto.viscosity || "");
+    formData.append("description", producto.description || "");
+    formData.append("price", producto.price);
+    formData.append("idCategory", producto.idCategory);
+    formData.append("idBrand", producto.idBrand);
+    if (producto.image) {
+        formData.append("image", producto.image);
+    }
+    const response = await api.put(`/products/${id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data.data || response.data;
 };
 

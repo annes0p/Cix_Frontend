@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     crearProducto,
     getCategorias,
@@ -10,7 +10,7 @@ const estadoInicial = {
     name: "",
     viscosity: "",
     description: "",
-    imageUrl: "",
+    image: null,
     price: "",
     idCategory: "",
     idBrand: "",
@@ -18,10 +18,12 @@ const estadoInicial = {
 
 export default function ModalNuevoProducto({ onClose, onProductoCreado }) {
     const [form, setForm] = useState(estadoInicial);
+    const [preview, setPreview] = useState(null);
     const [categorias, setCategorias] = useState([]);
     const [marcas, setMarcas] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const fileRef = useRef(null);
 
     useEffect(() => {
         const cargarSelects = async () => {
@@ -42,6 +44,13 @@ export default function ModalNuevoProducto({ onClose, onProductoCreado }) {
 
     const handleChange = (campo, valor) => {
         setForm((prev) => ({ ...prev, [campo]: valor }));
+    };
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setForm((prev) => ({ ...prev, image: file }));
+        setPreview(URL.createObjectURL(file));
     };
 
     const handleGuardar = async (e) => {
@@ -71,7 +80,7 @@ export default function ModalNuevoProducto({ onClose, onProductoCreado }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                     <div>
                         <h2 className="text-lg font-bold text-gray-900">
@@ -195,16 +204,45 @@ export default function ModalNuevoProducto({ onClose, onProductoCreado }) {
                     </div>
 
                     <div>
-                        <label className={labelClass}>URL de imagen</label>
+                        <label className={labelClass}>
+                            Imagen del producto
+                        </label>
+                        <div
+                            onClick={() => fileRef.current?.click()}
+                            className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-cixoil-red transition-colors"
+                        >
+                            {preview ? (
+                                <img
+                                    src={preview}
+                                    alt="Preview"
+                                    className="w-24 h-24 object-cover rounded-lg"
+                                />
+                            ) : (
+                                <div className="text-center">
+                                    <div className="w-10 h-10 bg-gray-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                                        <div className="w-5 h-5 bg-gray-300 rounded" />
+                                    </div>
+                                    <p className="text-xs text-gray-400">
+                                        Click para subir imagen
+                                    </p>
+                                    <p className="text-xs text-gray-300 mt-0.5">
+                                        JPG, PNG, WEBP
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                         <input
-                            type="text"
-                            placeholder="https://ejemplo.com/imagen-producto.jpg"
-                            className={inputClass}
-                            value={form.imageUrl}
-                            onChange={(e) =>
-                                handleChange("imageUrl", e.target.value)
-                            }
+                            ref={fileRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleImageChange}
                         />
+                        {form.image && (
+                            <p className="text-xs text-gray-400 mt-1">
+                                {form.image.name}
+                            </p>
+                        )}
                     </div>
 
                     <div className="flex gap-3 pt-2">
