@@ -13,6 +13,7 @@ import OrdenesCompra from "./pages/OrdenesCompra";
 import Proveedores from "./pages/Proveedores";
 import Recomendador from "./pages/Recomendador";
 import Reportes from "./pages/Reportes";
+import Rutas from "./pages/Rutas";
 function App() {
     return (
         <BrowserRouter>
@@ -36,6 +37,7 @@ function App() {
                     <Route path="/recomendador" element={<Recomendador />} />
                     <Route path="/crm" element={<CRM />} />
                     <Route path="/incidencias" element={<Incidencias />} />
+                    <Route path="/rutas" element={<Rutas />} />
                 </Route>
             </Routes>
         </BrowserRouter>

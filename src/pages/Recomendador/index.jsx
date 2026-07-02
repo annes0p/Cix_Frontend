@@ -3,6 +3,7 @@
     ChevronDown,
     ChevronRight,
     Loader2,
+    MessageCircle,
     Search,
     Sparkles,
     X,
@@ -137,6 +138,9 @@ export default function Recomendador() {
     const [analisisDetallado, setAnalisisDetallado] = useState(null);
     const [loadingAnalisis, setLoadingAnalisis] = useState(false);
     const [errorAnalisis, setErrorAnalisis] = useState(null);
+
+    const [telefonoCliente, setTelefonoCliente] = useState("");
+    const [errorTelefono, setErrorTelefono] = useState(null);
 
     useEffect(() => {
         const cargarDatos = async () => {
@@ -284,6 +288,61 @@ Proporciona un análisis más detallado en español. Responde ÚNICAMENTE con JS
         } finally {
             setLoadingAnalisis(false);
         }
+    };
+
+    const construirReporteWhatsApp = () => {
+        const tipoUsoLabel =
+            tiposUso.find((t) => t.value === Number(tipoUsoId))?.label || "-";
+
+        const lineas = [
+            "*CIXOIL S.A.C. - Reporte de recomendacion*",
+            "",
+            `Vehiculo: ${modeloSeleccionado?.vehicleBrand?.name} ${modeloSeleccionado?.model} ${modeloSeleccionado?.year}`,
+            `Tipo de uso: ${tipoUsoLabel}`,
+            "",
+            `Aceite recomendado: ${resultado?.product?.name}`,
+            `Prioridad: ${getPriorityLabel(resultado?.priority)}`,
+            `Motivo: ${resultado?.reason}`,
+        ];
+
+        if (analisisDetallado?.beneficios?.length) {
+            lineas.push("", "Beneficios:");
+            analisisDetallado.beneficios.forEach((b) =>
+                lineas.push(`- ${b}`),
+            );
+        }
+        if (analisisDetallado?.intervalosCambio) {
+            lineas.push(
+                "",
+                `Intervalo de cambio: ${analisisDetallado.intervalosCambio}`,
+            );
+        }
+        if (analisisDetallado?.consejo) {
+            lineas.push(`Consejo: ${analisisDetallado.consejo}`);
+        }
+        if (
+            analisisDetallado?.advertencia &&
+            analisisDetallado.advertencia !== "null"
+        ) {
+            lineas.push(`Advertencia: ${analisisDetallado.advertencia}`);
+        }
+
+        lineas.push("", "CIXOIL S.A.C. - Lubricantes y derivados");
+
+        return lineas.join("\n");
+    };
+
+    const enviarPorWhatsApp = () => {
+        const telefono = telefonoCliente.replace(/\D/g, "");
+        if (telefono.length !== 9) {
+            setErrorTelefono(
+                "Ingresa un numero de celular valido (9 digitos).",
+            );
+            return;
+        }
+        setErrorTelefono(null);
+        const texto = encodeURIComponent(construirReporteWhatsApp());
+        window.open(`https://wa.me/51${telefono}?text=${texto}`, "_blank");
     };
 
     const selectClass = (campo) =>
@@ -632,6 +691,45 @@ Proporciona un análisis más detallado en español. Responde ÚNICAMENTE con JS
                                             {analisisDetallado.advertencia}
                                         </p>
                                     </div>
+                                )}
+                            </div>
+                        )}
+
+                        {analisisDetallado && (
+                            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4">
+                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                                    Enviar reporte al cliente
+                                </p>
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                    <input
+                                        type="tel"
+                                        className={`flex-1 px-3 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red bg-white ${
+                                            errorTelefono
+                                                ? "border-red-400 bg-red-50"
+                                                : "border-gray-200"
+                                        }`}
+                                        placeholder="Celular del cliente (ej: 987654321)"
+                                        value={telefonoCliente}
+                                        onChange={(e) => {
+                                            setTelefonoCliente(
+                                                e.target.value,
+                                            );
+                                            setErrorTelefono(null);
+                                        }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={enviarPorWhatsApp}
+                                        className="flex items-center justify-center gap-2 bg-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-green-700 transition shrink-0"
+                                    >
+                                        <MessageCircle size={16} />
+                                        Enviar por WhatsApp
+                                    </button>
+                                </div>
+                                {errorTelefono && (
+                                    <p className="text-xs text-red-500 mt-1">
+                                        {errorTelefono}
+                                    </p>
                                 )}
                             </div>
                         )}

@@ -55,6 +55,7 @@ const CATEGORIA_A_ID = {
     ORDEN_COMPRA: 3,
     CLIENTE: 4,
     PROVEEDOR: 5,
+    RUTA: 6,
 };
 
 const ID_A_CATEGORIA = {
@@ -63,6 +64,7 @@ const ID_A_CATEGORIA = {
     3: "ORDEN_COMPRA",
     4: "CLIENTE",
     5: "PROVEEDOR",
+    6: "RUTA",
 };
 
 const PRIORIDAD_A_BACKEND = {

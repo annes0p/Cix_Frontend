@@ -1,6 +1,7 @@
 import { ChevronDown, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { getClientes, getVentas } from "../../services/crmService";
+import { getRutas } from "../../services/rutasService";
 import {
     crearIncidencia,
     PRIORIDAD_POR_TIPO,
@@ -17,6 +18,7 @@ const RELACIONADO_TIPOS = [
     { value: "ORDEN_COMPRA", label: "Orden de compra" },
     { value: "CLIENTE", label: "Cliente" },
     { value: "PROVEEDOR", label: "Proveedor" },
+    { value: "RUTA", label: "Ruta" },
 ];
 
 function ComboBoxEntidad({ opciones, valor, onChange, placeholder, disabled }) {
@@ -166,24 +168,27 @@ export default function ModalIncidencia({ onClose, onGuardar }) {
     const [ordenes, setOrdenes] = useState([]);
     const [clientes, setClientes] = useState([]);
     const [proveedores, setProveedores] = useState([]);
+    const [rutas, setRutas] = useState([]);
     const [cargandoEntidades, setCargandoEntidades] = useState(true);
 
     useEffect(() => {
         const cargarTodo = async () => {
             try {
                 setCargandoEntidades(true);
-                const [prod, vts, ords, cls, provs] = await Promise.all([
+                const [prod, vts, ords, cls, provs, rts] = await Promise.all([
                     getProductos(),
                     getVentas(),
                     getOrdenes(),
                     getClientes(),
                     getProveedores(),
+                    getRutas(),
                 ]);
                 setProductos(prod);
                 setVentas(vts);
                 setOrdenes(ords);
                 setClientes(cls);
                 setProveedores(provs);
+                setRutas(rts);
             } catch (err) {
                 console.error("Error al cargar entidades:", err);
             } finally {
@@ -216,6 +221,11 @@ export default function ModalIncidencia({ onClose, onGuardar }) {
                 return proveedores.map((p) => ({
                     id: p.id,
                     nombre: p.legalName,
+                }));
+            case "RUTA":
+                return rutas.map((r) => ({
+                    id: r.id,
+                    nombre: `Ruta #${r.id.toString().padStart(4, "0")} - ${r.routeDate}`,
                 }));
             default:
                 return [];
