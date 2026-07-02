@@ -55,16 +55,21 @@ function TrackerEstado({ estadoActual }) {
     );
 }
 
-function ModalRecepcionParcial({ orden, onConfirmar, onCancelar, cargando }) {
+function ModalRecepcionParcial({ orden, onConfirmar, onCancelar, cargando, error }) {
     const [cantidades, setCantidades] = useState(
         Object.fromEntries(
             (orden.details || []).map((d) => [d.product?.id, ""])
         )
     );
 
-    const handleCambio = (idProducto, valor) => {
+    const handleCambio = (idProducto, valor, maxPendiente) => {
         const num = parseInt(valor, 10);
-        setCantidades((prev) => ({ ...prev, [idProducto]: isNaN(num) ? "" : num }));
+        if (isNaN(num)) {
+            setCantidades((prev) => ({ ...prev, [idProducto]: "" }));
+            return;
+        }
+        const acotado = Math.min(Math.max(num, 0), maxPendiente);
+        setCantidades((prev) => ({ ...prev, [idProducto]: acotado }));
     };
 
     const handleConfirmar = () => {
@@ -93,6 +98,11 @@ function ModalRecepcionParcial({ orden, onConfirmar, onCancelar, cargando }) {
                     </button>
                 </div>
                 <div className="p-6 space-y-3">
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-lg">
+                            {error}
+                        </div>
+                    )}
                     <p className="text-sm text-gray-500 mb-4">
                         Ingresa la cantidad recibida por producto. Deja en 0 los que no llegaron.
                     </p>
@@ -111,7 +121,7 @@ function ModalRecepcionParcial({ orden, onConfirmar, onCancelar, cargando }) {
                                     min="0"
                                     max={detalle.quantity}
                                     value={cantidades[detalle.product?.id] ?? ""}
-                                    onChange={(e) => handleCambio(detalle.product?.id, e.target.value)}
+                                    onChange={(e) => handleCambio(detalle.product?.id, e.target.value, detalle.quantity)}
                                     className="w-20 text-center border border-gray-300 rounded-lg px-2 py-1.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-cixoil-red"
                                     placeholder="0"
                                 />
@@ -143,6 +153,8 @@ export default function ModalDetalleOrden({ orden, onClose, onActualizar }) {
     const [cargando, setCargando] = useState(false);
     const [mostrarParcial, setMostrarParcial] = useState(false);
     const [estadoActual, setEstadoActual] = useState(orden.receptionStatus);
+    const [error, setError] = useState(null);
+    const [errorParcial, setErrorParcial] = useState(null);
 
     if (!orden) return null;
 
@@ -151,19 +163,24 @@ export default function ModalDetalleOrden({ orden, onClose, onActualizar }) {
     const puedeRecibir = esPendiente || esParcial;
 
     const handleRecibir = async () => {
+        setError(null);
         try {
             setCargando(true);
             await recibirOrden(orden.id);
             setEstadoActual("RECEIVED");
             onActualizar?.();
         } catch (err) {
-            console.error("Error al marcar como recibido:", err);
+            setError(
+                err?.response?.data?.message ||
+                    "No se pudo marcar la orden como recibida.",
+            );
         } finally {
             setCargando(false);
         }
     };
 
     const handleConfirmarParcial = async (items) => {
+        setErrorParcial(null);
         try {
             setCargando(true);
             await recibirOrdenParcial(orden.id, items);
@@ -171,7 +188,10 @@ export default function ModalDetalleOrden({ orden, onClose, onActualizar }) {
             setMostrarParcial(false);
             onActualizar?.();
         } catch (err) {
-            console.error("Error al marcar como recibido parcialmente:", err);
+            setErrorParcial(
+                err?.response?.data?.message ||
+                    "No se pudo registrar la recepcion parcial.",
+            );
         } finally {
             setCargando(false);
         }
@@ -194,6 +214,11 @@ export default function ModalDetalleOrden({ orden, onClose, onActualizar }) {
                     </div>
 
                     <div className="p-6 space-y-4">
+                        {error && (
+                            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-lg">
+                                {error}
+                            </div>
+                        )}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="bg-gray-50 rounded-xl p-4 flex items-center gap-3">
                                 <Truck size={18} className="text-cixoil-red shrink-0" />
@@ -259,7 +284,10 @@ export default function ModalDetalleOrden({ orden, onClose, onActualizar }) {
                             <>
                                 {esPendiente && (
                                     <button
-                                        onClick={() => setMostrarParcial(true)}
+                                        onClick={() => {
+                                            setErrorParcial(null);
+                                            setMostrarParcial(true);
+                                        }}
                                         disabled={cargando}
                                         className="w-full border border-blue-300 text-blue-700 rounded-lg py-2.5 text-sm font-medium hover:bg-blue-50 transition-colors disabled:opacity-50"
                                     >
@@ -268,7 +296,10 @@ export default function ModalDetalleOrden({ orden, onClose, onActualizar }) {
                                 )}
                                 {esParcial && (
                                     <button
-                                        onClick={() => setMostrarParcial(true)}
+                                        onClick={() => {
+                                            setErrorParcial(null);
+                                            setMostrarParcial(true);
+                                        }}
                                         disabled={cargando}
                                         className="w-full border border-blue-300 text-blue-700 rounded-lg py-2.5 text-sm font-medium hover:bg-blue-50 transition-colors disabled:opacity-50"
                                     >
@@ -300,6 +331,7 @@ export default function ModalDetalleOrden({ orden, onClose, onActualizar }) {
                     onConfirmar={handleConfirmarParcial}
                     onCancelar={() => setMostrarParcial(false)}
                     cargando={cargando}
+                    error={errorParcial}
                 />
             )}
         </>
