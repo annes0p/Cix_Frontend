@@ -42,8 +42,35 @@ export default function ModalNuevoMovimiento({ onClose, onMovimientoCreado }) {
         cargar();
     }, []);
 
-    const cambiarForm = (campo, valor) =>
-        setForm((prev) => ({ ...prev, [campo]: valor }));
+    const clientesFiltrados = clientes.filter((c) => {
+        if (form.voucherType === "RECEIPT") return c.documentType === "DNI";
+        if (form.voucherType === "INVOICE") return c.documentType === "RUC";
+        return true;
+    });
+
+    const cambiarForm = (campo, valor) => {
+        setForm((prev) => {
+            const siguiente = { ...prev, [campo]: valor };
+
+            if (campo === "voucherType") {
+                const clienteActual = clientes.find(
+                    (c) => String(c.id) === String(prev.idClient),
+                );
+                const documentoRequerido =
+                    valor === "RECEIPT" ? "DNI" : valor === "INVOICE" ? "RUC" : null;
+
+                if (
+                    documentoRequerido &&
+                    clienteActual &&
+                    clienteActual.documentType !== documentoRequerido
+                ) {
+                    siguiente.idClient = "";
+                }
+            }
+
+            return siguiente;
+        });
+    };
 
     const cambiarDetalle = (i, campo, valor) =>
         setDetalles((prev) =>
@@ -80,6 +107,17 @@ export default function ModalNuevoMovimiento({ onClose, onMovimientoCreado }) {
     const handleGuardar = async () => {
         if (!form.idClient) {
             setError("Selecciona un cliente");
+            return;
+        }
+        const clienteSeleccionado = clientes.find(
+            (c) => String(c.id) === String(form.idClient),
+        );
+        if (form.voucherType === "RECEIPT" && clienteSeleccionado?.documentType !== "DNI") {
+            setError("Para emitir una boleta el cliente debe tener DNI");
+            return;
+        }
+        if (form.voucherType === "INVOICE" && clienteSeleccionado?.documentType !== "RUC") {
+            setError("Para emitir una factura el cliente debe tener RUC");
             return;
         }
         if (detalles.some((d) => !d.idProduct)) {
@@ -163,20 +201,30 @@ export default function ModalNuevoMovimiento({ onClose, onMovimientoCreado }) {
                                 className={inputClass}
                             >
                                 <option value="">Seleccionar cliente</option>
-                                {clientes.map((c) => (
+                                {clientesFiltrados.map((c) => (
                                     <option key={c.id} value={c.id}>
                                         {`${c.name} ${c.fatherLastName || ""} ${c.motherLastName || ""}`.trim()} - {c.docNumber || `ID-${c.id}`}
                                     </option>
                                 ))}
                             </select>
+                            {form.voucherType === "RECEIPT" && (
+                                <p className="text-xs text-gray-400 mt-1">
+                                    Boleta: solo se muestran clientes con DNI.
+                                </p>
+                            )}
+                            {form.voucherType === "INVOICE" && (
+                                <p className="text-xs text-gray-400 mt-1">
+                                    Factura: solo se muestran clientes con RUC.
+                                </p>
+                            )}
                         </div>
 
                         <div>
                             <label className={labelClass}>Tipo de comprobante</label>
                             <select value={form.voucherType} onChange={(e) => cambiarForm("voucherType", e.target.value)} className={inputClass}>
                                 <option value="SALE_NOTE">Nota de venta</option>
-                                <option value="INVOICE">Factura</option>
-                                <option value="RECEIPT">Boleta</option>
+                                <option value="INVOICE">Factura (cliente con RUC)</option>
+                                <option value="RECEIPT">Boleta (cliente con DNI)</option>
                             </select>
                         </div>
 

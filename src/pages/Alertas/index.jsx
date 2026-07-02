@@ -1,4 +1,4 @@
-import { Bell, RefreshCw, TriangleAlert } from "lucide-react";
+import { Bell, PackagePlus, RefreshCw, TriangleAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
     calcularPrediccion,
@@ -6,11 +6,15 @@ import {
     getMovimientos,
 } from "../../services/alertasService";
 import AlertasTabla from "./AlertasTabla";
+import ModalReabastecimiento from "./ModalReabastecimiento";
+
+const NIVELES_QUE_NECESITAN_COMPRA = ["agotado", "critico", "advertencia"];
 
 export default function Alertas() {
     const [alertas, setAlertas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filtro, setFiltro] = useState("todos");
+    const [mostrarReabastecimiento, setMostrarReabastecimiento] = useState(false);
 
     const cargarAlertas = async () => {
         try {
@@ -40,6 +44,10 @@ export default function Alertas() {
             ? alertas
             : alertas.filter((a) => a.nivelRiesgo === filtro);
 
+    const necesitanCompra = alertas.filter((a) =>
+        NIVELES_QUE_NECESITAN_COMPRA.includes(a.nivelRiesgo),
+    ).length;
+
     const contadores = {
         agotado: alertas.filter((a) => a.nivelRiesgo === "agotado").length,
         critico: alertas.filter((a) => a.nivelRiesgo === "critico").length,
@@ -61,7 +69,7 @@ export default function Alertas() {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-600">
+                    <span className="text-sm font-medium text-gray-600 hidden sm:inline">
                         CIXOIL S.A.C.
                     </span>
                     <button
@@ -74,6 +82,15 @@ export default function Alertas() {
                             className={loading ? "animate-spin" : ""}
                         />
                         Actualizar
+                    </button>
+                    <button
+                        onClick={() => setMostrarReabastecimiento(true)}
+                        disabled={loading || necesitanCompra === 0}
+                        className="flex items-center gap-1.5 text-xs font-semibold bg-cixoil-red text-white px-3 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40"
+                    >
+                        <PackagePlus size={14} />
+                        Generar reabastecimiento
+                        {necesitanCompra > 0 && ` (${necesitanCompra})`}
                     </button>
                 </div>
             </div>
@@ -192,6 +209,14 @@ export default function Alertas() {
 
                 <AlertasTabla alertas={alertasFiltradas} loading={loading} />
             </div>
+
+            {mostrarReabastecimiento && (
+                <ModalReabastecimiento
+                    alertas={alertas}
+                    onClose={() => setMostrarReabastecimiento(false)}
+                    onGenerado={cargarAlertas}
+                />
+            )}
         </div>
     );
 }
