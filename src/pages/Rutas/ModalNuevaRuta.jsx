@@ -201,6 +201,7 @@ export default function ModalNuevaRuta({ onClose, onGuardar }) {
                             </label>
                             <input
                                 type="date"
+                                min={hoyISO()}
                                 className={inputClass("routeDate")}
                                 value={routeDate}
                                 onChange={(e) => {
@@ -255,9 +256,17 @@ export default function ModalNuevaRuta({ onClose, onGuardar }) {
                                 >
                                     <div className="flex-1 min-w-0 space-y-1.5">
                                         <select
-                                            className="w-full min-w-0 px-2 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-cixoil-red"
+                                            className={`w-full min-w-0 px-2 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-cixoil-red ${
+                                                errores.paradas &&
+                                                !parada.idDestino
+                                                    ? "border-red-400 bg-red-50"
+                                                    : "border-gray-300"
+                                            }`}
                                             value={parada.idDestino}
-                                            disabled={cargandoDatos}
+                                            disabled={
+                                                cargandoDatos ||
+                                                lugaresDestino.length === 0
+                                            }
                                             onChange={(e) =>
                                                 actualizarParada(
                                                     index,
@@ -267,7 +276,12 @@ export default function ModalNuevaRuta({ onClose, onGuardar }) {
                                             }
                                         >
                                             <option value="">
-                                                Selecciona destino...
+                                                {cargandoDatos
+                                                    ? "Cargando..."
+                                                    : lugaresDestino.length ===
+                                                        0
+                                                      ? "No hay destinos disponibles"
+                                                      : "Selecciona destino..."}
                                             </option>
                                             {lugaresDestino.map((l) => (
                                                 <option
