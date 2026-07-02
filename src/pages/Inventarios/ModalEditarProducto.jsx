@@ -68,8 +68,22 @@ export default function ModalEditarProducto({
         setPreview(URL.createObjectURL(file));
     };
 
+    const validar = () => {
+        if (!form.name.trim()) return "El nombre del producto es obligatorio";
+        if (!form.idBrand) return "Selecciona una marca";
+        if (!form.idCategory) return "Selecciona una categoria";
+        if (form.price === "") return "El precio es obligatorio";
+        if (Number(form.price) < 0) return "El precio no puede ser negativo";
+        return null;
+    };
+
     const handleGuardar = async (e) => {
         e.preventDefault();
+        const errorValidacion = validar();
+        if (errorValidacion) {
+            setError(errorValidacion);
+            return;
+        }
         setError(null);
         setLoading(true);
         try {
@@ -84,8 +98,11 @@ export default function ModalEditarProducto({
             );
             onProductoActualizado(actualizado);
             onClose();
-        } catch {
-            setError("No se pudo actualizar el producto. Intenta nuevamente.");
+        } catch (err) {
+            setError(
+                err?.response?.data?.message ||
+                    "No se pudo actualizar el producto. Intenta nuevamente.",
+            );
         } finally {
             setLoading(false);
         }
