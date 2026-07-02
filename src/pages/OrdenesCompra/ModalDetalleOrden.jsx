@@ -264,11 +264,24 @@ export default function ModalDetalleOrden({ orden, onClose, onActualizar }) {
                             ) : (
                                 <div className="space-y-2">
                                     {orden.details.map((detalle, index) => (
-                                        <div key={index} className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
-                                            <p className="text-sm font-semibold text-gray-800">
-                                                {detalle.productName || detalle.product?.name || `Producto #${detalle.product?.id}`}
-                                            </p>
-                                            <div className="text-right">
+                                        <div key={index} className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3 gap-3">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="w-10 h-10 bg-white border border-gray-200 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
+                                                    {detalle.product?.imageUrl ? (
+                                                        <img
+                                                            src={detalle.product.imageUrl}
+                                                            alt={detalle.product?.name}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <Package size={16} className="text-gray-300" />
+                                                    )}
+                                                </div>
+                                                <p className="text-sm font-semibold text-gray-800 truncate">
+                                                    {detalle.productName || detalle.product?.name || `Producto #${detalle.product?.id}`}
+                                                </p>
+                                            </div>
+                                            <div className="text-right shrink-0">
                                                 <p className="text-xs text-gray-400">Cantidad</p>
                                                 <p className="text-sm font-black text-cixoil-red">{detalle.quantity}</p>
                                             </div>

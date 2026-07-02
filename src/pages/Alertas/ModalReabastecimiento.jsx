@@ -6,7 +6,7 @@ import {
     X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { crearOrden } from "../../services/ordenesService";
+import { crearOrden, getOrdenes } from "../../services/ordenesService";
 import {
     getProductosDeProveedor,
     getProveedores,
@@ -16,18 +16,37 @@ const DIAS_OBJETIVO = 30;
 const DIAS_ENTREGA_ESTIMADA = 7;
 const NIVELES_QUE_NECESITAN_COMPRA = ["agotado", "critico", "advertencia"];
 
-const calcularCantidadSugerida = (alerta) => {
+const calcularCantidadYaPedidaPorProducto = (ordenes) => {
+    const pendientePorProducto = {};
+    ordenes
+        .filter((orden) => orden.receptionStatus !== "RECEIVED")
+        .forEach((orden) => {
+            (orden.details || []).forEach((detalle) => {
+                const idProduct = detalle.product?.id;
+                if (!idProduct) return;
+                const cantidadPendiente =
+                    (detalle.quantity || 0) - (detalle.receivedQuantity || 0);
+                if (cantidadPendiente <= 0) return;
+                pendientePorProducto[idProduct] =
+                    (pendientePorProducto[idProduct] || 0) + cantidadPendiente;
+            });
+        });
+    return pendientePorProducto;
+};
+
+const calcularCantidadSugerida = (alerta, yaPedido) => {
     const consumoDiario = parseFloat(alerta.consumoDiario) || 0;
     const objetivoPorConsumo = Math.ceil(consumoDiario * DIAS_OBJETIVO);
     const objetivoPorMinimo = (alerta.minStock || 0) * 2;
     const objetivo = Math.max(objetivoPorConsumo, objetivoPorMinimo);
-    return Math.max(0, objetivo - alerta.stock);
+    return Math.max(0, objetivo - alerta.stock - yaPedido);
 };
 
 export default function ModalReabastecimiento({ alertas, onClose, onGenerado }) {
     const [cargando, setCargando] = useState(true);
     const [grupos, setGrupos] = useState([]);
     const [sinProveedor, setSinProveedor] = useState([]);
+    const [yaCubiertos, setYaCubiertos] = useState([]);
     const [generando, setGenerando] = useState(false);
     const [resultado, setResultado] = useState(null);
     const [errorApi, setErrorApi] = useState(null);
@@ -38,7 +57,12 @@ export default function ModalReabastecimiento({ alertas, onClose, onGenerado }) 
                 setCargando(true);
                 setErrorApi(null);
 
-                const proveedores = await getProveedores();
+                const [proveedores, ordenes] = await Promise.all([
+                    getProveedores(),
+                    getOrdenes(),
+                ]);
+
+                const yaPedidoPorProducto = calcularCantidadYaPedidaPorProducto(ordenes);
 
                 const mapaProductoProveedor = {};
                 for (const proveedor of proveedores) {
@@ -56,10 +80,16 @@ export default function ModalReabastecimiento({ alertas, onClose, onGenerado }) 
 
                 const gruposPorProveedor = {};
                 const sinAsignar = [];
+                const cubiertos = [];
 
                 candidatos.forEach((alerta) => {
-                    const cantidadSugerida = calcularCantidadSugerida(alerta);
-                    if (cantidadSugerida <= 0) return;
+                    const yaPedido = yaPedidoPorProducto[alerta.product?.id] || 0;
+                    const cantidadSugerida = calcularCantidadSugerida(alerta, yaPedido);
+
+                    if (cantidadSugerida <= 0) {
+                        if (yaPedido > 0) cubiertos.push(alerta);
+                        return;
+                    }
 
                     const proveedor = mapaProductoProveedor[alerta.product?.id];
                     if (!proveedor) {
@@ -82,6 +112,7 @@ export default function ModalReabastecimiento({ alertas, onClose, onGenerado }) 
 
                 setGrupos(Object.values(gruposPorProveedor));
                 setSinProveedor(sinAsignar);
+                setYaCubiertos(cubiertos);
             } catch (err) {
                 console.error("Error al armar sugerencias de reabastecimiento:", err);
                 setErrorApi(
@@ -214,11 +245,46 @@ export default function ModalReabastecimiento({ alertas, onClose, onGenerado }) 
                     {!cargando &&
                         !resultado &&
                         grupos.length === 0 &&
-                        sinProveedor.length === 0 && (
+                        sinProveedor.length === 0 &&
+                        yaCubiertos.length === 0 && (
                             <div className="bg-gray-50 rounded-xl p-6 text-center">
                                 <p className="text-sm text-gray-500">
                                     No hay productos en riesgo que necesiten
                                     reabastecimiento ahora mismo.
+                                </p>
+                            </div>
+                        )}
+
+                    {!cargando &&
+                        !resultado &&
+                        grupos.length === 0 &&
+                        sinProveedor.length === 0 &&
+                        yaCubiertos.length > 0 && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                <p className="text-sm text-blue-700">
+                                    Los productos en riesgo ya tienen una orden de
+                                    compra pendiente que cubre lo necesario, no hace
+                                    falta generar otra todavia.
+                                </p>
+                            </div>
+                        )}
+
+                    {!cargando &&
+                        !resultado &&
+                        grupos.length > 0 &&
+                        yaCubiertos.length > 0 && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                                <p className="text-xs text-blue-700">
+                                    {yaCubiertos.length} producto
+                                    {yaCubiertos.length !== 1 ? "s" : ""} en riesgo
+                                    ya tiene{yaCubiertos.length === 1 ? "" : "n"} una
+                                    orden pendiente que cubre lo necesario, no se
+                                    incluye{yaCubiertos.length === 1 ? "" : "n"} de
+                                    nuevo (
+                                    {yaCubiertos
+                                        .map((a) => a.product?.name)
+                                        .join(", ")}
+                                    ).
                                 </p>
                             </div>
                         )}
