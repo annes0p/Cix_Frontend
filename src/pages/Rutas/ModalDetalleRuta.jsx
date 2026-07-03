@@ -306,7 +306,7 @@ Responde solo con el texto del resumen, nada mas.`;
                                                 />
                                             </div>
                                             {trip.sale && (
-                                                <div className="flex items-center justify-between gap-2 mb-1">
+                                                <div className="mb-2">
                                                     <p className="text-xs text-cixoil-red font-medium">
                                                         Entrega venta VEN-
                                                         {trip.sale.id
@@ -323,7 +323,7 @@ Responde solo con el texto del resumen, nada mas.`;
                                                                 trip,
                                                             )
                                                         }
-                                                        className="text-xs font-medium text-green-600 hover:opacity-75 shrink-0"
+                                                        className="text-xs font-medium text-green-600 hover:opacity-75 mt-0.5"
                                                     >
                                                         Enviar seguimiento
                                                     </button>
