@@ -34,7 +34,7 @@ export default function Rentabilidad({ ventas }) {
             ? totalFacturado / ventasCompletadas.length
             : 0;
 
-    const porMetodoPago = ventas.reduce((acc, v) => {
+    const porMetodoPago = ventasCompletadas.reduce((acc, v) => {
         const metodo = v.paymentMethod || "OTRO";
         const etiquetas = {
             CASH: "Efectivo",
@@ -68,7 +68,7 @@ export default function Rentabilidad({ ventas }) {
         {
             label: "IGV recaudado",
             value: `S/. ${totalIGV.toFixed(2)}`,
-            sub: "18% de las ventas",
+            sub: "Tasa de IGV: 18%",
             icon: <ShoppingBag size={20} className="text-white" />,
             bg: "bg-blue-600",
             positivo: true,

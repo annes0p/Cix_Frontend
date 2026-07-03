@@ -5,6 +5,8 @@ import {
     getInventario,
     getProductos,
 } from "../../services/inventarioService";
+import { getMovimientos } from "../../services/alertasService";
+import { getOrdenes } from "../../services/ordenesService";
 import InventarioFiltros from "./InventarioFiltros";
 import InventarioKPIs from "./InventarioKPIs";
 import InventarioTabla from "./InventarioTabla";
@@ -14,6 +16,34 @@ import ModalNuevoProducto from "./ModalNuevoProducto";
 import ModalVerProducto from "./ModalVerProducto";
 
 const PRODUCTOS_POR_PAGINA = 10;
+
+// Toma el precio unitario de la ultima compra RECIBIDA de cada producto,
+// para poder mostrar el valor del inventario a costo real (no a precio
+// de venta). Si un producto nunca tuvo una compra recibida, se queda
+// sin costo conocido y no entra en el calculo.
+const construirCostoPorProducto = (ordenes) => {
+    const costoPorProducto = {};
+    const fechaPorProducto = {};
+
+    (ordenes || []).forEach((orden) => {
+        const fecha = orden.deliveredAt || orden.purchasedAt;
+        if (!fecha) return;
+
+        (orden.details || []).forEach((detalle) => {
+            const recibido = detalle.receivedQuantity || 0;
+            const idProducto = detalle.product?.id;
+            if (recibido <= 0 || !idProducto) return;
+
+            const fechaGuardada = fechaPorProducto[idProducto];
+            if (!fechaGuardada || fecha >= fechaGuardada) {
+                fechaPorProducto[idProducto] = fecha;
+                costoPorProducto[idProducto] = Number(detalle.unitPrice) || 0;
+            }
+        });
+    });
+
+    return costoPorProducto;
+};
 
 const productosDemo = [
     {
@@ -31,6 +61,8 @@ const productosDemo = [
 
 export default function Inventarios() {
     const [productos, setProductos] = useState([]);
+    const [movimientosHoy, setMovimientosHoy] = useState(0);
+    const [costoPorProducto, setCostoPorProducto] = useState({});
     const [loading, setLoading] = useState(true);
     const [pagina, setPagina] = useState(1);
     const [showModal, setShowModal] = useState(false);
@@ -48,10 +80,24 @@ export default function Inventarios() {
     useEffect(() => {
         const cargar = async () => {
             try {
-                const [productosData, inventarioData] = await Promise.all([
+                const [
+                    productosData,
+                    inventarioData,
+                    movimientosData,
+                    ordenesData,
+                ] = await Promise.all([
                     getProductos(),
                     getInventario(),
+                    getMovimientos(),
+                    getOrdenes(),
                 ]);
+
+                const hoyISO = new Date().toLocaleDateString("sv-SE");
+                const contadorHoy = (movimientosData || []).filter((m) =>
+                    m.movementDate?.startsWith(hoyISO),
+                ).length;
+                setMovimientosHoy(contadorHoy);
+                setCostoPorProducto(construirCostoPorProducto(ordenesData));
 
                 const productosMapeados = inventarioData.map((inv) => {
                     const producto = productosData.find(
@@ -260,7 +306,13 @@ export default function Inventarios() {
                     </div>
                 </div>
 
-                {!loading && <InventarioKPIs productos={productos} />}
+                {!loading && (
+                    <InventarioKPIs
+                        productos={productos}
+                        movimientosHoy={movimientosHoy}
+                        costoPorProducto={costoPorProducto}
+                    />
+                )}
 
                 <InventarioFiltros
                     filtros={filtros}

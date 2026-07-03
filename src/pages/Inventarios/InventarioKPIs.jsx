@@ -3,15 +3,28 @@ import {
     ArrowLeftRight,
     DollarSign,
     Package,
+    Wallet,
     XCircle,
 } from "lucide-react";
 
-export default function InventarioKPIs({ productos }) {
+export default function InventarioKPIs({
+    productos,
+    movimientosHoy = 0,
+    costoPorProducto = {},
+}) {
     const total = productos.length;
     const valorTotal = productos.reduce(
         (acc, p) => acc + (p.precio || 0) * (p.stockActual || 0),
         0,
     );
+    const valorCosto = productos.reduce((acc, p) => {
+        const costoUnitario = costoPorProducto[p.idProducto];
+        if (costoUnitario == null) return acc;
+        return acc + costoUnitario * (p.stockActual || 0);
+    }, 0);
+    const productosSinCosto = productos.filter(
+        (p) => costoPorProducto[p.idProducto] == null,
+    ).length;
     const stockBajo = productos.filter(
         (p) => p.stockActual > 0 && p.stockActual < p.stockMinimo,
     ).length;
@@ -28,9 +41,19 @@ export default function InventarioKPIs({ productos }) {
         {
             label: "Valor total inventario",
             value: `S/. ${valorTotal.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
-            sub: "Valor de costo",
+            sub: "A precio de venta",
             icon: <DollarSign size={28} className="text-cixoil-green" />,
             bg: "bg-green-50",
+        },
+        {
+            label: "Valor de costo",
+            value: `S/. ${valorCosto.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
+            sub:
+                productosSinCosto > 0
+                    ? `${productosSinCosto} sin compras recibidas`
+                    : "Ultimo precio de compra",
+            icon: <Wallet size={28} className="text-teal-600" />,
+            bg: "bg-teal-50",
         },
         {
             label: "Stock bajo",
@@ -48,7 +71,7 @@ export default function InventarioKPIs({ productos }) {
         },
         {
             label: "Movimientos hoy",
-            value: 0,
+            value: movimientosHoy,
             sub: "Entradas y salidas",
             icon: <ArrowLeftRight size={28} className="text-blue-500" />,
             bg: "bg-blue-50",
@@ -56,7 +79,7 @@ export default function InventarioKPIs({ productos }) {
     ];
 
     return (
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
             {kpis.map((kpi, i) => (
                 <div
                     key={i}
