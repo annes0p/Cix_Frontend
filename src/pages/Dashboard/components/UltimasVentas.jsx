@@ -1,5 +1,9 @@
 export default function UltimasVentas({ ventas }) {
-    const ultimas = ventas?.slice(0, 5) || [];
+    // "Ultimas" = las mas recientes por fecha, no las primeras del arreglo
+    // (el backend las devuelve en orden de creacion, no de fecha de venta).
+    const ultimas = [...(ventas || [])]
+        .sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate))
+        .slice(0, 5);
 
     const getStatusClass = (status) => {
         switch (status) {

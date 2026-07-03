@@ -5,6 +5,12 @@ import {
     TrendingUp,
 } from "lucide-react";
 
+const formatSoles = (valor) =>
+    `S/. ${(valor || 0).toLocaleString("es-PE", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })}`;
+
 export default function Rentabilidad({ ventas }) {
     const ventasCompletadas = ventas.filter(
         (v) => v.transactionStatus === "COMPLETED",
@@ -51,7 +57,7 @@ export default function Rentabilidad({ ventas }) {
     const metricas = [
         {
             label: "Total facturado",
-            value: `S/. ${totalFacturado.toFixed(2)}`,
+            value: formatSoles(totalFacturado),
             sub: `${ventasCompletadas.length} ventas completadas`,
             icon: <DollarSign size={20} className="text-white" />,
             bg: "bg-cixoil-green",
@@ -59,7 +65,7 @@ export default function Rentabilidad({ ventas }) {
         },
         {
             label: "Subtotal neto",
-            value: `S/. ${totalSubtotal.toFixed(2)}`,
+            value: formatSoles(totalSubtotal),
             sub: "Sin IGV",
             icon: <TrendingUp size={20} className="text-white" />,
             bg: "bg-teal-600",
@@ -67,7 +73,7 @@ export default function Rentabilidad({ ventas }) {
         },
         {
             label: "IGV recaudado",
-            value: `S/. ${totalIGV.toFixed(2)}`,
+            value: formatSoles(totalIGV),
             sub: "Tasa de IGV: 18%",
             icon: <ShoppingBag size={20} className="text-white" />,
             bg: "bg-blue-600",
@@ -75,7 +81,7 @@ export default function Rentabilidad({ ventas }) {
         },
         {
             label: "Ticket promedio",
-            value: `S/. ${ticketPromedio.toFixed(2)}`,
+            value: formatSoles(ticketPromedio),
             sub: "Por venta completada",
             icon: <TrendingUp size={20} className="text-white" />,
             bg: "bg-purple-600",
@@ -83,7 +89,7 @@ export default function Rentabilidad({ ventas }) {
         },
         {
             label: "Ventas canceladas",
-            value: `S/. ${totalCancelado.toFixed(2)}`,
+            value: formatSoles(totalCancelado),
             sub: `${ventasCanceladas.length} ventas canceladas`,
             icon: <TrendingDown size={20} className="text-white" />,
             bg: "bg-red-600",
@@ -150,7 +156,7 @@ export default function Rentabilidad({ ventas }) {
                                         {metodo}
                                     </span>
                                     <span className="text-gray-500">
-                                        S/. {total.toFixed(2)} (
+                                        {formatSoles(total)} (
                                         {porcentaje.toFixed(1)}%)
                                     </span>
                                 </div>
