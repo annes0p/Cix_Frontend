@@ -14,6 +14,7 @@ import {
     getRutaById,
     iniciarViaje,
 } from "../../services/rutasService";
+import { generarResumenRutaPDF } from "../../utils/generarReportePDF";
 
 const ESTILOS_ESTADO = {
     PENDING: "bg-yellow-100 text-yellow-700",
@@ -27,6 +28,20 @@ const ETIQUETAS_ESTADO = {
     IN_PROGRESS: "En curso",
     COMPLETED: "Completado",
     CANCELED: "Cancelado",
+};
+
+const formatFechaHora = (routeDate, hora) => {
+    if (!routeDate || !hora) return null;
+    const fecha = new Date(`${routeDate}T${hora}`);
+    if (isNaN(fecha.getTime())) return hora;
+    return fecha.toLocaleString("es-PE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+    });
 };
 
 function EstadoBadge({ estado }) {
@@ -151,8 +166,11 @@ Responde solo con el texto del resumen, nada mas.`;
             return;
         }
         setErrorTelefono(null);
+
+        generarResumenRutaPDF(ruta, resumenIA);
+
         const texto = encodeURIComponent(
-            `*CIXOIL S.A.C. - Resumen de ruta*\n\n${resumenIA}`,
+            "Hola! Te comparto el resumen de la ruta de reparto de hoy. Adjunto el PDF con el detalle. - CIXOIL S.A.C.",
         );
         window.open(`https://wa.me/51${numero}?text=${texto}`, "_blank");
     };
@@ -274,10 +292,10 @@ Responde solo con el texto del resumen, nada mas.`;
                                             <div className="flex items-center justify-between">
                                                 <p className="text-xs text-gray-400">
                                                     {trip.startTime
-                                                        ? `Inicio: ${trip.startTime}`
+                                                        ? `Inicio: ${formatFechaHora(ruta.routeDate, trip.startTime)}`
                                                         : "Sin iniciar"}
                                                     {trip.endTime
-                                                        ? ` · Fin: ${trip.endTime}`
+                                                        ? ` · Fin: ${formatFechaHora(ruta.routeDate, trip.endTime)}`
                                                         : ""}
                                                 </p>
                                                 <div className="flex gap-2">
@@ -411,6 +429,12 @@ Responde solo con el texto del resumen, nada mas.`;
                                                 Enviar por WhatsApp
                                             </button>
                                         </div>
+                                        <p className="text-xs text-gray-400">
+                                            Se descarga un PDF con el
+                                            resumen y se abre WhatsApp:
+                                            adjunta el PDF descargado en el
+                                            chat.
+                                        </p>
                                         {errorTelefono && (
                                             <p className="text-xs text-red-500">
                                                 {errorTelefono}

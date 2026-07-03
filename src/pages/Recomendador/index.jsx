@@ -14,6 +14,7 @@ import {
     getVehicleModels,
     getVehicleUseTypes,
 } from "../../services/recomendadorService";
+import { generarReporteRecomendacionPDF } from "../../utils/generarReportePDF";
 
 function ComboBox({ opciones, valor, onChange, placeholder, disabled, error }) {
     const [inputVal, setInputVal] = useState(valor || "");
@@ -290,48 +291,6 @@ Proporciona un análisis más detallado en español. Responde ÚNICAMENTE con JS
         }
     };
 
-    const construirReporteWhatsApp = () => {
-        const tipoUsoLabel =
-            tiposUso.find((t) => t.value === Number(tipoUsoId))?.label || "-";
-
-        const lineas = [
-            "*CIXOIL S.A.C. - Reporte de recomendacion*",
-            "",
-            `Vehiculo: ${modeloSeleccionado?.vehicleBrand?.name} ${modeloSeleccionado?.model} ${modeloSeleccionado?.year}`,
-            `Tipo de uso: ${tipoUsoLabel}`,
-            "",
-            `Aceite recomendado: ${resultado?.product?.name}`,
-            `Prioridad: ${getPriorityLabel(resultado?.priority)}`,
-            `Motivo: ${resultado?.reason}`,
-        ];
-
-        if (analisisDetallado?.beneficios?.length) {
-            lineas.push("", "Beneficios:");
-            analisisDetallado.beneficios.forEach((b) =>
-                lineas.push(`- ${b}`),
-            );
-        }
-        if (analisisDetallado?.intervalosCambio) {
-            lineas.push(
-                "",
-                `Intervalo de cambio: ${analisisDetallado.intervalosCambio}`,
-            );
-        }
-        if (analisisDetallado?.consejo) {
-            lineas.push(`Consejo: ${analisisDetallado.consejo}`);
-        }
-        if (
-            analisisDetallado?.advertencia &&
-            analisisDetallado.advertencia !== "null"
-        ) {
-            lineas.push(`Advertencia: ${analisisDetallado.advertencia}`);
-        }
-
-        lineas.push("", "CIXOIL S.A.C. - Lubricantes y derivados");
-
-        return lineas.join("\n");
-    };
-
     const enviarPorWhatsApp = () => {
         const telefono = telefonoCliente.replace(/\D/g, "");
         if (telefono.length !== 9) {
@@ -341,7 +300,29 @@ Proporciona un análisis más detallado en español. Responde ÚNICAMENTE con JS
             return;
         }
         setErrorTelefono(null);
-        const texto = encodeURIComponent(construirReporteWhatsApp());
+
+        const tipoUsoLabel =
+            tiposUso.find((t) => t.value === Number(tipoUsoId))?.label || "-";
+
+        generarReporteRecomendacionPDF({
+            vehiculo: `${modeloSeleccionado?.vehicleBrand?.name} ${modeloSeleccionado?.model} ${modeloSeleccionado?.year}`,
+            tipoUso: tipoUsoLabel,
+            producto: resultado?.product?.name,
+            prioridad: getPriorityLabel(resultado?.priority),
+            motivo: resultado?.reason,
+            beneficios: analisisDetallado?.beneficios,
+            intervalosCambio: analisisDetallado?.intervalosCambio,
+            consejo: analisisDetallado?.consejo,
+            advertencia:
+                analisisDetallado?.advertencia &&
+                analisisDetallado.advertencia !== "null"
+                    ? analisisDetallado.advertencia
+                    : null,
+        });
+
+        const texto = encodeURIComponent(
+            "Hola! Te comparto la recomendacion de lubricante para tu vehiculo. Adjunto el PDF con el detalle. - CIXOIL S.A.C.",
+        );
         window.open(`https://wa.me/51${telefono}?text=${texto}`, "_blank");
     };
 
@@ -726,6 +707,11 @@ Proporciona un análisis más detallado en español. Responde ÚNICAMENTE con JS
                                         Enviar por WhatsApp
                                     </button>
                                 </div>
+                                <p className="text-xs text-gray-400 mt-2">
+                                    Se descarga un PDF con el reporte y se
+                                    abre WhatsApp: adjunta el PDF descargado
+                                    en el chat.
+                                </p>
                                 {errorTelefono && (
                                     <p className="text-xs text-red-500 mt-1">
                                         {errorTelefono}

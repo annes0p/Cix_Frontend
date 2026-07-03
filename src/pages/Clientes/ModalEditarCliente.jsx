@@ -97,7 +97,8 @@ export default function ModalEditarCliente({ cliente, onClose, onClienteActualiz
                         </div>
                         <div>
                             <label className={labelClass}>Numero de documento *</label>
-                            <input value={form.docNumber} onChange={(e) => cambiar("docNumber", e.target.value)} placeholder="12345678" className={inputClass} />
+                            <input value={form.docNumber} disabled placeholder="12345678" className={`${inputClass} bg-gray-100 text-gray-500 cursor-not-allowed`} />
+                            <p className="text-xs text-gray-400 mt-1">El documento no se puede editar, ya que identifica a un cliente distinto.</p>
                         </div>
                         <div>
                             <label className={labelClass}>Telefono</label>
