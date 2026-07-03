@@ -67,6 +67,12 @@ export default function ModalDetalleRuta({ rutaId, onClose, onActualizar }) {
     const [telefono, setTelefono] = useState("");
     const [errorTelefono, setErrorTelefono] = useState(null);
 
+    const [trackingTripId, setTrackingTripId] = useState(null);
+    const [trackingLink, setTrackingLink] = useState(null);
+    const [trackingTelefono, setTrackingTelefono] = useState("");
+    const [trackingCargando, setTrackingCargando] = useState(false);
+    const [trackingError, setTrackingError] = useState(null);
+
     const cargarRuta = async () => {
         try {
             setCargando(true);
@@ -158,43 +164,37 @@ Responde solo con el texto del resumen, nada mas.`;
         }
     };
 
-    const enviarSeguimientoCliente = async (trip) => {
-        const telefonoCliente = window.prompt(
-            "Celular del cliente para enviarle el seguimiento (9 digitos):",
-        );
-        if (!telefonoCliente) return;
-
-        const numero = telefonoCliente.replace(/\D/g, "");
-        if (numero.length !== 9) {
-            alert("Ingresa un numero de celular valido (9 digitos).");
-            return;
-        }
-
-        // Se abre la pestaña ANTES de esperar la respuesta del backend,
-        // porque si se abre despues del await, el navegador la bloquea
-        // como si fuera un popup no solicitado por el usuario.
-        const nuevaVentana = window.open("", "_blank");
-
+    // En vez de usar window.prompt + window.open (Brave y otros navegadores
+    // bloquean la pestaña porque se abre despues de esperar al backend),
+    // se genera el link primero y se muestra un boton <a> real para que
+    // el usuario mismo haga clic y abra WhatsApp. Un clic directo del
+    // usuario en un link nunca se bloquea.
+    const abrirSeguimiento = async (trip) => {
+        setTrackingTripId(trip.id);
+        setTrackingLink(null);
+        setTrackingTelefono("");
+        setTrackingError(null);
+        setTrackingCargando(true);
         try {
             const token = await getLinkSeguimiento(trip.id);
-            const link = `${window.location.origin}/seguimiento/${token}`;
-            const texto = encodeURIComponent(
-                `Hola! Puedes seguir el estado de tu pedido de CIXOIL S.A.C. aqui: ${link}`,
-            );
-            if (nuevaVentana) {
-                nuevaVentana.location.href = `https://wa.me/51${numero}?text=${texto}`;
-            } else {
-                window.open(
-                    `https://wa.me/51${numero}?text=${texto}`,
-                    "_blank",
-                );
-            }
+            setTrackingLink(`${window.location.origin}/seguimiento/${token}`);
         } catch (err) {
             console.error("Error al generar el link de seguimiento:", err);
-            if (nuevaVentana) nuevaVentana.close();
-            alert("No se pudo generar el link de seguimiento.");
+            setTrackingError("No se pudo generar el link de seguimiento.");
+        } finally {
+            setTrackingCargando(false);
         }
     };
+
+    const numeroTrackingValido = /^\d{9}$/.test(
+        trackingTelefono.replace(/\D/g, ""),
+    );
+
+    const linkWhatsAppSeguimiento = numeroTrackingValido
+        ? `https://wa.me/51${trackingTelefono.replace(/\D/g, "")}?text=${encodeURIComponent(
+              `Hola! Puedes seguir el estado de tu pedido de CIXOIL S.A.C. aqui: ${trackingLink}`,
+          )}`
+        : null;
 
     const enviarResumenWhatsApp = () => {
         const numero = telefono.replace(/\D/g, "");
@@ -329,17 +329,98 @@ Responde solo con el texto del resumen, nada mas.`;
                                                         {trip.sale.client?.name}{" "}
                                                         · S/. {trip.sale.total}
                                                     </p>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            enviarSeguimientoCliente(
-                                                                trip,
-                                                            )
-                                                        }
-                                                        className="text-xs font-medium text-green-600 hover:opacity-75 mt-0.5"
-                                                    >
-                                                        Enviar seguimiento
-                                                    </button>
+
+                                                    {trackingTripId !==
+                                                        trip.id && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                abrirSeguimiento(
+                                                                    trip,
+                                                                )
+                                                            }
+                                                            className="text-xs font-medium text-green-600 hover:opacity-75 mt-0.5"
+                                                        >
+                                                            Enviar seguimiento
+                                                        </button>
+                                                    )}
+
+                                                    {trackingTripId ===
+                                                        trip.id && (
+                                                        <div className="mt-1.5 bg-white border border-gray-200 rounded-lg p-2 space-y-1.5">
+                                                            {trackingCargando && (
+                                                                <p className="text-xs text-gray-400">
+                                                                    Generando
+                                                                    link...
+                                                                </p>
+                                                            )}
+                                                            {trackingError && (
+                                                                <p className="text-xs text-red-500">
+                                                                    {
+                                                                        trackingError
+                                                                    }
+                                                                </p>
+                                                            )}
+                                                            {trackingLink && (
+                                                                <>
+                                                                    <div className="flex gap-1.5">
+                                                                        <input
+                                                                            type="tel"
+                                                                            placeholder="Celular (9 digitos)"
+                                                                            value={
+                                                                                trackingTelefono
+                                                                            }
+                                                                            onChange={(
+                                                                                e,
+                                                                            ) =>
+                                                                                setTrackingTelefono(
+                                                                                    e
+                                                                                        .target
+                                                                                        .value,
+                                                                                )
+                                                                            }
+                                                                            className="flex-1 min-w-0 px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-cixoil-red"
+                                                                        />
+                                                                        <a
+                                                                            href={
+                                                                                linkWhatsAppSeguimiento ||
+                                                                                undefined
+                                                                            }
+                                                                            target="_blank"
+                                                                            rel="noreferrer"
+                                                                            onClick={(
+                                                                                e,
+                                                                            ) => {
+                                                                                if (
+                                                                                    !numeroTrackingValido
+                                                                                ) {
+                                                                                    e.preventDefault();
+                                                                                }
+                                                                            }}
+                                                                            className={`flex items-center justify-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg shrink-0 transition ${
+                                                                                numeroTrackingValido
+                                                                                    ? "bg-green-600 text-white hover:bg-green-700"
+                                                                                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                                                            }`}
+                                                                        >
+                                                                            Abrir
+                                                                            WhatsApp
+                                                                        </a>
+                                                                    </div>
+                                                                    <p className="text-[11px] text-gray-400">
+                                                                        Escribe
+                                                                        el
+                                                                        celular
+                                                                        y haz
+                                                                        clic
+                                                                        en
+                                                                        "Abrir
+                                                                        WhatsApp".
+                                                                    </p>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                             <div className="flex items-center justify-between">
