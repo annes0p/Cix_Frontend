@@ -170,15 +170,28 @@ Responde solo con el texto del resumen, nada mas.`;
             return;
         }
 
+        // Se abre la pestaña ANTES de esperar la respuesta del backend,
+        // porque si se abre despues del await, el navegador la bloquea
+        // como si fuera un popup no solicitado por el usuario.
+        const nuevaVentana = window.open("", "_blank");
+
         try {
             const token = await getLinkSeguimiento(trip.id);
             const link = `${window.location.origin}/seguimiento/${token}`;
             const texto = encodeURIComponent(
                 `Hola! Puedes seguir el estado de tu pedido de CIXOIL S.A.C. aqui: ${link}`,
             );
-            window.open(`https://wa.me/51${numero}?text=${texto}`, "_blank");
+            if (nuevaVentana) {
+                nuevaVentana.location.href = `https://wa.me/51${numero}?text=${texto}`;
+            } else {
+                window.open(
+                    `https://wa.me/51${numero}?text=${texto}`,
+                    "_blank",
+                );
+            }
         } catch (err) {
             console.error("Error al generar el link de seguimiento:", err);
+            if (nuevaVentana) nuevaVentana.close();
             alert("No se pudo generar el link de seguimiento.");
         }
     };
