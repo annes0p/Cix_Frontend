@@ -15,6 +15,7 @@ import {
     iniciarViaje,
 } from "../../services/rutasService";
 import { generarResumenRutaPDF } from "../../utils/generarReportePDF";
+import { getLinkSeguimiento } from "../../services/trackingService";
 
 const ESTILOS_ESTADO = {
     PENDING: "bg-yellow-100 text-yellow-700",
@@ -157,6 +158,31 @@ Responde solo con el texto del resumen, nada mas.`;
         }
     };
 
+    const enviarSeguimientoCliente = async (trip) => {
+        const telefonoCliente = window.prompt(
+            "Celular del cliente para enviarle el seguimiento (9 digitos):",
+        );
+        if (!telefonoCliente) return;
+
+        const numero = telefonoCliente.replace(/\D/g, "");
+        if (numero.length !== 9) {
+            alert("Ingresa un numero de celular valido (9 digitos).");
+            return;
+        }
+
+        try {
+            const token = await getLinkSeguimiento(trip.id);
+            const link = `${window.location.origin}/seguimiento/${token}`;
+            const texto = encodeURIComponent(
+                `Hola! Puedes seguir el estado de tu pedido de CIXOIL S.A.C. aqui: ${link}`,
+            );
+            window.open(`https://wa.me/51${numero}?text=${texto}`, "_blank");
+        } catch (err) {
+            console.error("Error al generar el link de seguimiento:", err);
+            alert("No se pudo generar el link de seguimiento.");
+        }
+    };
+
     const enviarResumenWhatsApp = () => {
         const numero = telefono.replace(/\D/g, "");
         if (numero.length !== 9) {
@@ -280,14 +306,28 @@ Responde solo con el texto del resumen, nada mas.`;
                                                 />
                                             </div>
                                             {trip.sale && (
-                                                <p className="text-xs text-cixoil-red font-medium mb-1">
-                                                    Entrega venta VEN-
-                                                    {trip.sale.id
-                                                        .toString()
-                                                        .padStart(4, "0")}{" "}
-                                                    · {trip.sale.client?.name}{" "}
-                                                    · S/. {trip.sale.total}
-                                                </p>
+                                                <div className="flex items-center justify-between gap-2 mb-1">
+                                                    <p className="text-xs text-cixoil-red font-medium">
+                                                        Entrega venta VEN-
+                                                        {trip.sale.id
+                                                            .toString()
+                                                            .padStart(4, "0")}{" "}
+                                                        ·{" "}
+                                                        {trip.sale.client?.name}{" "}
+                                                        · S/. {trip.sale.total}
+                                                    </p>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            enviarSeguimientoCliente(
+                                                                trip,
+                                                            )
+                                                        }
+                                                        className="text-xs font-medium text-green-600 hover:opacity-75 shrink-0"
+                                                    >
+                                                        Enviar seguimiento
+                                                    </button>
+                                                </div>
                                             )}
                                             <div className="flex items-center justify-between">
                                                 <p className="text-xs text-gray-400">

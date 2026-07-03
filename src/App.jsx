@@ -14,6 +14,7 @@ import Proveedores from "./pages/Proveedores";
 import Recomendador from "./pages/Recomendador";
 import Reportes from "./pages/Reportes";
 import Rutas from "./pages/Rutas";
+import Seguimiento from "./pages/Seguimiento";
 function App() {
     return (
         <BrowserRouter>
@@ -24,6 +25,7 @@ function App() {
                     path="/recomendador-publico"
                     element={<Recomendador />}
                 />
+                <Route path="/seguimiento/:token" element={<Seguimiento />} />
                 <Route element={<Layout />}>
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/inventarios" element={<Inventarios />} />
