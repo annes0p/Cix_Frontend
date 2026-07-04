@@ -82,8 +82,12 @@ export default function PortalClientePedidos() {
                 <form onSubmit={buscar} className="flex gap-2 mb-6">
                     <input
                         type="text"
+                        inputMode="numeric"
+                        maxLength={11}
                         value={docNumber}
-                        onChange={(e) => setDocNumber(e.target.value)}
+                        onChange={(e) =>
+                            setDocNumber(e.target.value.replace(/\D/g, ""))
+                        }
                         placeholder="N° de DNI o RUC"
                         className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red/30"
                     />

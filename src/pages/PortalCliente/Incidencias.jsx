@@ -7,12 +7,14 @@ import {
     Star,
     X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
+    buscarClienteExistente,
     getIncidenciasPorDocumento,
     reportarIncidenciaPublica,
 } from "../../services/clientPortalService";
+import { buscarDocumentoPublico } from "../../services/publicSaleService";
 
 const ESTADOS = {
     OPEN: { label: "Abierta", clase: "bg-yellow-100 text-yellow-700" },
@@ -56,6 +58,74 @@ export default function PortalClienteIncidencias() {
     const [errorEnvio, setErrorEnvio] = useState(null);
     const [reportada, setReportada] = useState(false);
 
+    const [verificandoDoc, setVerificandoDoc] = useState(false);
+    const [estadoDoc, setEstadoDoc] = useState(null);
+
+    // Mismo criterio que en la tienda: primero busca si ya es
+    // cliente nuestro (autocompleta todo), si no, consulta SUNAT
+    // solo para el nombre. Nunca bloquea el formulario.
+    useEffect(() => {
+        const maxLargo = form.documentType === "RUC" ? 11 : 8;
+        if (form.docNumber.length !== maxLargo) {
+            setEstadoDoc(null);
+            return;
+        }
+
+        let cancelado = false;
+
+        const verificar = async () => {
+            try {
+                setVerificandoDoc(true);
+                const cliente = await buscarClienteExistente(form.docNumber);
+                if (cancelado) return;
+
+                if (cliente.found) {
+                    setForm((prev) => ({
+                        ...prev,
+                        name: cliente.name || prev.name,
+                        fatherLastName: cliente.fatherLastName || prev.fatherLastName,
+                        motherLastName: cliente.motherLastName || prev.motherLastName,
+                        phoneNumber: cliente.phoneNumber || prev.phoneNumber,
+                        email: cliente.email || prev.email,
+                        address: cliente.address || prev.address,
+                    }));
+                    setEstadoDoc("cliente");
+                    return;
+                }
+
+                const doc = await buscarDocumentoPublico(
+                    form.documentType,
+                    form.docNumber,
+                );
+                if (cancelado) return;
+
+                if (doc.found) {
+                    setForm((prev) => ({
+                        ...prev,
+                        name: doc.name || prev.name,
+                        fatherLastName: doc.fatherLastName || prev.fatherLastName,
+                        motherLastName: doc.motherLastName || prev.motherLastName,
+                    }));
+                    setEstadoDoc("verificado");
+                } else {
+                    setEstadoDoc("no-verificado");
+                }
+            } catch (err) {
+                console.error("Error al verificar documento:", err);
+                if (!cancelado) setEstadoDoc(null);
+            } finally {
+                if (!cancelado) setVerificandoDoc(false);
+            }
+        };
+
+        verificar();
+
+        return () => {
+            cancelado = true;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [form.docNumber, form.documentType]);
+
     const buscar = async (doc) => {
         const documento = (doc ?? docNumber).trim();
 
@@ -89,6 +159,18 @@ export default function PortalClienteIncidencias() {
     const actualizarForm = (campo, valor) => {
         setForm((prev) => ({ ...prev, [campo]: valor }));
         setErroresForm((prev) => ({ ...prev, [campo]: null }));
+    };
+
+    // Documento y telefono solo aceptan digitos, recortados al largo real.
+    const actualizarDocNumber = (valor) => {
+        const soloDigitos = valor.replace(/\D/g, "");
+        const maxLargo = form.documentType === "RUC" ? 11 : 8;
+        actualizarForm("docNumber", soloDigitos.slice(0, maxLargo));
+    };
+
+    const actualizarTelefono = (valor) => {
+        const soloDigitos = valor.replace(/\D/g, "");
+        actualizarForm("phoneNumber", soloDigitos.slice(0, 9));
     };
 
     const validarFormulario = () => {
@@ -168,8 +250,12 @@ export default function PortalClienteIncidencias() {
                 >
                     <input
                         type="text"
+                        inputMode="numeric"
+                        maxLength={11}
                         value={docNumber}
-                        onChange={(e) => setDocNumber(e.target.value)}
+                        onChange={(e) =>
+                            setDocNumber(e.target.value.replace(/\D/g, ""))
+                        }
                         placeholder="N° de DNI o RUC"
                         className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red/30"
                     />
@@ -348,9 +434,15 @@ export default function PortalClienteIncidencias() {
                                     />
                                     <select
                                         value={form.documentType}
-                                        onChange={(e) =>
-                                            actualizarForm("documentType", e.target.value)
-                                        }
+                                        onChange={(e) => {
+                                            const nuevoTipo = e.target.value;
+                                            const maxLargo = nuevoTipo === "RUC" ? 11 : 8;
+                                            setForm((prev) => ({
+                                                ...prev,
+                                                documentType: nuevoTipo,
+                                                docNumber: prev.docNumber.slice(0, maxLargo),
+                                            }));
+                                        }}
                                         className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
                                     >
                                         <option value="DNI">DNI</option>
@@ -359,24 +451,55 @@ export default function PortalClienteIncidencias() {
                                     <div>
                                         <input
                                             type="text"
+                                            inputMode="numeric"
+                                            maxLength={form.documentType === "RUC" ? 11 : 8}
                                             placeholder="N° de documento *"
                                             value={form.docNumber}
                                             onChange={(e) =>
-                                                actualizarForm("docNumber", e.target.value)
+                                                actualizarDocNumber(e.target.value)
                                             }
                                             className={`w-full px-3 py-2 rounded-lg border text-sm ${erroresForm.docNumber ? "border-red-400" : "border-gray-200"}`}
                                         />
                                         {erroresForm.docNumber && (
                                             <p className="text-xs text-red-500 mt-0.5">{erroresForm.docNumber}</p>
                                         )}
+                                        {!erroresForm.docNumber && verificandoDoc && (
+                                            <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                                                <Loader2 size={11} className="animate-spin" />
+                                                Verificando...
+                                            </p>
+                                        )}
+                                        {!erroresForm.docNumber &&
+                                            !verificandoDoc &&
+                                            estadoDoc === "cliente" && (
+                                                <p className="text-xs text-cixoil-green mt-0.5">
+                                                    ✓ Te reconocimos, completamos tus datos
+                                                </p>
+                                            )}
+                                        {!erroresForm.docNumber &&
+                                            !verificandoDoc &&
+                                            estadoDoc === "verificado" && (
+                                                <p className="text-xs text-cixoil-green mt-0.5">
+                                                    ✓ Documento verificado
+                                                </p>
+                                            )}
+                                        {!erroresForm.docNumber &&
+                                            !verificandoDoc &&
+                                            estadoDoc === "no-verificado" && (
+                                                <p className="text-xs text-gray-400 mt-0.5">
+                                                    No pudimos verificarlo automáticamente
+                                                </p>
+                                            )}
                                     </div>
                                     <div>
                                         <input
                                             type="text"
+                                            inputMode="numeric"
+                                            maxLength={9}
                                             placeholder="Teléfono *"
                                             value={form.phoneNumber}
                                             onChange={(e) =>
-                                                actualizarForm("phoneNumber", e.target.value)
+                                                actualizarTelefono(e.target.value)
                                             }
                                             className={`w-full px-3 py-2 rounded-lg border text-sm ${erroresForm.phoneNumber ? "border-red-400" : "border-gray-200"}`}
                                         />

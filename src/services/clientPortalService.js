@@ -14,3 +14,8 @@ export const reportarIncidenciaPublica = async (payload) => {
     const response = await api.post("/public/clients/incidents", payload);
     return response.data.data || response.data;
 };
+
+export const buscarClienteExistente = async (docNumber) => {
+    const response = await api.get(`/public/clients/${docNumber}/lookup`);
+    return response.data.data || response.data;
+};
