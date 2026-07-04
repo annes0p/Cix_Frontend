@@ -5,10 +5,13 @@
     Loader2,
     MessageCircle,
     Search,
+    ShoppingCart,
     Sparkles,
+    Store,
     X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import {
     getRecomendacion,
     getVehicleModels,
@@ -602,6 +605,25 @@ Proporciona un análisis más detallado en español. Responde ÚNICAMENTE con JS
                                 {resultado.reason}
                             </p>
                         </div>
+
+                        {resultado.product?.id && (
+                            <div className="flex flex-col sm:flex-row gap-2 mb-4">
+                                <Link
+                                    to={`/tienda?add=${resultado.product.id}`}
+                                    className="flex-1 flex items-center justify-center gap-2 bg-cixoil-red text-white text-sm font-semibold py-2.5 rounded-xl hover:opacity-90 transition"
+                                >
+                                    <ShoppingCart size={16} />
+                                    Comprar este producto
+                                </Link>
+                                <Link
+                                    to="/portal-cliente"
+                                    className="flex-1 flex items-center justify-center gap-2 border border-gray-200 text-gray-600 text-sm font-semibold py-2.5 rounded-xl hover:bg-gray-50 transition"
+                                >
+                                    <Store size={16} />
+                                    Ver catálogo, pedidos e incidencias
+                                </Link>
+                            </div>
+                        )}
 
                         {/* Análisis detallado con Groq */}
                         {!analisisDetallado && !loadingAnalisis && (

@@ -8,6 +8,7 @@ import {
     X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
     crearVentaPublica,
     getCatalogoPublico,
@@ -22,6 +23,7 @@ const formatSoles = (valor) =>
     });
 
 export default function TiendaPublica() {
+    const [searchParams] = useSearchParams();
     const [productos, setProductos] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState(null);
@@ -60,6 +62,26 @@ export default function TiendaPublica() {
         };
         cargar();
     }, []);
+
+    // Si venimos desde el Recomendador con ?add=ID, agregamos ese
+    // producto al carrito automáticamente y abrimos el resumen.
+    useEffect(() => {
+        const idParaAgregar = searchParams.get("add");
+        if (!idParaAgregar || productos.length === 0) return;
+
+        const producto = productos.find(
+            (p) => String(p.id) === String(idParaAgregar),
+        );
+        if (producto) {
+            setCarrito((prev) => {
+                const yaExiste = prev.some((it) => it.producto.id === producto.id);
+                if (yaExiste) return prev;
+                return [...prev, { producto, cantidad: 1 }];
+            });
+            setMostrarCheckout(true);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [productos]);
 
     const productosFiltrados = productos.filter((p) => {
         const texto = busqueda.trim().toLowerCase();

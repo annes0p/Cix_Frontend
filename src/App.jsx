@@ -11,6 +11,9 @@ import Inventarios from "./pages/Inventarios";
 import Login from "./pages/Login";
 import Movimientos from "./pages/Movimientos";
 import OrdenesCompra from "./pages/OrdenesCompra";
+import PortalCliente from "./pages/PortalCliente";
+import PortalClienteIncidencias from "./pages/PortalCliente/Incidencias";
+import PortalClientePedidos from "./pages/PortalCliente/Pedidos";
 import Proveedores from "./pages/Proveedores";
 import Recomendador from "./pages/Recomendador";
 import Reportes from "./pages/Reportes";
@@ -33,6 +36,15 @@ function App() {
                     element={<CalificarIncidencia />}
                 />
                 <Route path="/tienda" element={<TiendaPublica />} />
+                <Route path="/portal-cliente" element={<PortalCliente />} />
+                <Route
+                    path="/portal-cliente/pedidos"
+                    element={<PortalClientePedidos />}
+                />
+                <Route
+                    path="/portal-cliente/incidencias"
+                    element={<PortalClienteIncidencias />}
+                />
                 <Route element={<Layout />}>
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/inventarios" element={<Inventarios />} />
