@@ -16,6 +16,7 @@ import Recomendador from "./pages/Recomendador";
 import Reportes from "./pages/Reportes";
 import Rutas from "./pages/Rutas";
 import Seguimiento from "./pages/Seguimiento";
+import TiendaPublica from "./pages/TiendaPublica";
 function App() {
     return (
         <BrowserRouter>
@@ -31,6 +32,7 @@ function App() {
                     path="/calificar-incidencia/:token"
                     element={<CalificarIncidencia />}
                 />
+                <Route path="/tienda" element={<TiendaPublica />} />
                 <Route element={<Layout />}>
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/inventarios" element={<Inventarios />} />
