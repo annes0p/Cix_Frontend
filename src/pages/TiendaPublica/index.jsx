@@ -20,7 +20,7 @@ import {
     Waves,
     X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { buscarClienteExistente } from "../../services/clientPortalService";
 import {
@@ -101,6 +101,10 @@ export default function TiendaPublica() {
     const [erroresPago, setErroresPago] = useState({});
     const [procesandoPago, setProcesandoPago] = useState(false);
     const [pagoAprobado, setPagoAprobado] = useState(false);
+    // Guarda sincrona (no depende de que React re-renderice) para que un
+    // doble clic en "Pagar" no dispare dos pedidos: asi se evitaron
+    // clientes duplicados con el mismo DNI en pruebas anteriores.
+    const pagoEnCursoRef = useRef(false);
 
     useEffect(() => {
         if (!yape.codigoGenerado || yape.segundosRestantes <= 0) return;
@@ -409,8 +413,10 @@ export default function TiendaPublica() {
     };
 
     const procesarPago = async () => {
+        if (pagoEnCursoRef.current) return;
         if (!validarPago()) return;
 
+        pagoEnCursoRef.current = true;
         setProcesandoPago(true);
         // Simula la demora de comunicarse con la pasarela (Culqi) mientras
         // se conecta de verdad; la experiencia se siente igual para probar
@@ -449,6 +455,7 @@ export default function TiendaPublica() {
                     "No se pudo registrar tu pedido. Intenta de nuevo.",
             );
             setPagoAprobado(false);
+            pagoEnCursoRef.current = false;
         } finally {
             setEnviando(false);
         }
@@ -496,6 +503,7 @@ export default function TiendaPublica() {
                                 cvv: "",
                                 nombre: "",
                             });
+                            pagoEnCursoRef.current = false;
                         }}
                         className="w-full py-2.5 rounded-xl bg-cixoil-red text-white font-semibold hover:opacity-90"
                     >
