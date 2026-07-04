@@ -3,11 +3,12 @@ import {
     Loader2,
     MapPin,
     MessageCircle,
+    Navigation,
     Sparkles,
     User,
     X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     cancelarViaje,
     completarViaje,
@@ -15,7 +16,10 @@ import {
     iniciarViaje,
 } from "../../services/rutasService";
 import { generarResumenRutaPDF } from "../../utils/generarReportePDF";
-import { getLinkSeguimiento } from "../../services/trackingService";
+import {
+    enviarUbicacion,
+    getLinkSeguimiento,
+} from "../../services/trackingService";
 
 const ESTILOS_ESTADO = {
     PENDING: "bg-yellow-100 text-yellow-700",
@@ -73,6 +77,11 @@ export default function ModalDetalleRuta({ rutaId, onClose, onActualizar }) {
     const [trackingCargando, setTrackingCargando] = useState(false);
     const [trackingError, setTrackingError] = useState(null);
 
+    const [compartiendoUbicacionId, setCompartiendoUbicacionId] =
+        useState(null);
+    const [errorUbicacion, setErrorUbicacion] = useState(null);
+    const watchIdRef = useRef(null);
+
     const cargarRuta = async () => {
         try {
             setCargando(true);
@@ -90,6 +99,55 @@ export default function ModalDetalleRuta({ rutaId, onClose, onActualizar }) {
         cargarRuta();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [rutaId]);
+
+    // Si se cierra el modal, deja de mandar ubicacion (no seguir gastando
+    // bateria/datos del vendedor en segundo plano sin que se de cuenta).
+    useEffect(() => {
+        return () => {
+            if (watchIdRef.current != null) {
+                navigator.geolocation?.clearWatch(watchIdRef.current);
+            }
+        };
+    }, []);
+
+    const iniciarCompartirUbicacion = (trip) => {
+        if (!navigator.geolocation) {
+            setErrorUbicacion("Tu navegador no soporta geolocalización.");
+            return;
+        }
+        setErrorUbicacion(null);
+
+        const watchId = navigator.geolocation.watchPosition(
+            (pos) => {
+                enviarUbicacion(
+                    trip.id,
+                    pos.coords.latitude,
+                    pos.coords.longitude,
+                ).catch((err) =>
+                    console.error("Error al enviar ubicación:", err),
+                );
+            },
+            (err) => {
+                console.error("Error de geolocalización:", err);
+                setErrorUbicacion(
+                    "No se pudo acceder a tu ubicación. Revisa los permisos del navegador.",
+                );
+                detenerCompartirUbicacion();
+            },
+            { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
+        );
+
+        watchIdRef.current = watchId;
+        setCompartiendoUbicacionId(trip.id);
+    };
+
+    const detenerCompartirUbicacion = () => {
+        if (watchIdRef.current != null) {
+            navigator.geolocation.clearWatch(watchIdRef.current);
+            watchIdRef.current = null;
+        }
+        setCompartiendoUbicacionId(null);
+    };
 
     const ejecutarAccion = async (accion, idTrip) => {
         try {
@@ -421,6 +479,52 @@ Responde solo con el texto del resumen, nada mas.`;
                                                             )}
                                                         </div>
                                                     )}
+                                                </div>
+                                            )}
+                                            {trip.progressStatus ===
+                                                "IN_PROGRESS" && (
+                                                <div className="mb-2">
+                                                    {compartiendoUbicacionId ===
+                                                    trip.id ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={
+                                                                detenerCompartirUbicacion
+                                                            }
+                                                            className="flex items-center gap-1.5 text-xs font-medium text-blue-600"
+                                                        >
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                                                            Compartiendo
+                                                            ubicación en
+                                                            vivo · Detener
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                iniciarCompartirUbicacion(
+                                                                    trip,
+                                                                )
+                                                            }
+                                                            className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-blue-600"
+                                                        >
+                                                            <Navigation
+                                                                size={12}
+                                                            />
+                                                            Compartir mi
+                                                            ubicación en
+                                                            vivo
+                                                        </button>
+                                                    )}
+                                                    {errorUbicacion &&
+                                                        compartiendoUbicacionId ===
+                                                            null && (
+                                                            <p className="text-[11px] text-red-500 mt-0.5">
+                                                                {
+                                                                    errorUbicacion
+                                                                }
+                                                            </p>
+                                                        )}
                                                 </div>
                                             )}
                                             <div className="flex items-center justify-between">

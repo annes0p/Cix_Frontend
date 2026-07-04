@@ -1,5 +1,5 @@
 import { CheckCircle2, Loader2, MapPin, Package, Truck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getSeguimientoPublico } from "../../services/trackingService";
 
@@ -24,28 +24,65 @@ const ICONOS_ESTADO = {
     CANCELED: Package,
 };
 
+const construirBbox = (lat, lng, delta = 0.006) =>
+    `${lng - delta},${lat - delta},${lng + delta},${lat + delta}`;
+
+const formatearHaceCuanto = (iso) => {
+    if (!iso) return null;
+    const segundos = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (segundos < 10) return "justo ahora";
+    if (segundos < 60) return `hace ${segundos} seg`;
+    const minutos = Math.floor(segundos / 60);
+    return `hace ${minutos} min`;
+};
+
 export default function Seguimiento() {
     const { token } = useParams();
     const [data, setData] = useState(null);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState(null);
+    const dataRef = useRef(null);
 
     useEffect(() => {
+        dataRef.current = data;
+    }, [data]);
+
+    useEffect(() => {
+        let activo = true;
+
         const cargar = async () => {
             try {
-                setCargando(true);
                 const res = await getSeguimientoPublico(token);
-                setData(res);
+                if (activo) setData(res);
             } catch (err) {
                 console.error("Error al cargar seguimiento:", err);
-                setError(
-                    "No se pudo encontrar este pedido. Verifica que el link sea correcto.",
-                );
+                if (activo) {
+                    setError(
+                        "No se pudo encontrar este pedido. Verifica que el link sea correcto.",
+                    );
+                }
             } finally {
-                setCargando(false);
+                if (activo) setCargando(false);
             }
         };
+
         cargar();
+
+        // Auto-refresco cada 8s mientras el pedido no ha terminado, para
+        // que el estado y la ubicacion se vean "en vivo" sin recargar.
+        // Usa una ref (no el estado) para no reiniciar el timer en cada
+        // actualizacion.
+        const intervalo = setInterval(() => {
+            const estado = dataRef.current?.progressStatus;
+            if (!estado || estado === "IN_PROGRESS" || estado === "PENDING") {
+                cargar();
+            }
+        }, 8000);
+
+        return () => {
+            activo = false;
+            clearInterval(intervalo);
+        };
     }, [token]);
 
     const Icono = data ? ICONOS_ESTADO[data.progressStatus] || Package : Package;
@@ -110,6 +147,30 @@ export default function Seguimiento() {
                                     </span>
                                 </p>
                             </div>
+
+                            {data.progressStatus === "IN_PROGRESS" &&
+                                data.latitude &&
+                                data.longitude && (
+                                    <div className="rounded-xl overflow-hidden border border-gray-200">
+                                        <iframe
+                                            title="Ubicacion en vivo del pedido"
+                                            width="100%"
+                                            height="220"
+                                            style={{ border: 0 }}
+                                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${construirBbox(
+                                                data.latitude,
+                                                data.longitude,
+                                            )}&layer=mapnik&marker=${data.latitude},${data.longitude}`}
+                                        />
+                                        <p className="text-[11px] text-gray-400 text-center py-1.5 bg-gray-50">
+                                            📍 Ubicación en vivo del reparto
+                                            {formatearHaceCuanto(
+                                                data.ubicacionActualizada,
+                                            ) &&
+                                                ` · actualizado ${formatearHaceCuanto(data.ubicacionActualizada)}`}
+                                        </p>
+                                    </div>
+                                )}
 
                             {data.clienteNombre && (
                                 <div className="text-center text-sm text-gray-500">

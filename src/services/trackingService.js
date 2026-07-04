@@ -10,3 +10,7 @@ export const getLinkSeguimiento = async (idTrip) => {
     const data = response.data.data || response.data;
     return data.token;
 };
+
+export const enviarUbicacion = async (idTrip, latitude, longitude) => {
+    await api.patch(`/tracking/${idTrip}/location`, { latitude, longitude });
+};

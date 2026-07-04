@@ -1,8 +1,9 @@
-import { CheckCircle, Circle, Sparkles, X } from "lucide-react";
+import { CheckCircle, Circle, MessageCircle, Sparkles, Star, X } from "lucide-react";
 import { useState } from "react";
 import {
     actualizarEstadoIncidencia,
     documentarResolucion,
+    getLinkCalificacion,
 } from "../../services/incidenciasService";
 
 const TIPO_LABELS = {
@@ -194,6 +195,12 @@ export default function ModalDetalleIncidencia({
     const [errorDoc, setErrorDoc] = useState(null);
     const [generandoIA, setGenerandoIA] = useState(false);
 
+    const [linkCalificacion, setLinkCalificacion] = useState(null);
+    const [cargandoLinkCalificacion, setCargandoLinkCalificacion] =
+        useState(false);
+    const [errorLinkCalificacion, setErrorLinkCalificacion] = useState(null);
+    const [telefonoCalificacion, setTelefonoCalificacion] = useState("");
+
     const requiereDocumentacion = ESTADOS_RESOLUCION.includes(estado);
     const yaEstabaResuelto = ESTADOS_RESOLUCION.includes(incidencia.estado);
 
@@ -248,6 +255,34 @@ export default function ModalDetalleIncidencia({
             setGuardando(false);
         }
     };
+
+    const handleGenerarLinkCalificacion = async () => {
+        try {
+            setCargandoLinkCalificacion(true);
+            setErrorLinkCalificacion(null);
+            const token = await getLinkCalificacion(incidencia.id);
+            setLinkCalificacion(
+                `${window.location.origin}/calificar-incidencia/${token}`,
+            );
+        } catch (error) {
+            console.error("Error al generar link de calificación:", error);
+            setErrorLinkCalificacion(
+                "No se pudo generar el link de calificación.",
+            );
+        } finally {
+            setCargandoLinkCalificacion(false);
+        }
+    };
+
+    const numeroCalificacionValido = /^\d{9}$/.test(
+        telefonoCalificacion.replace(/\D/g, ""),
+    );
+
+    const linkWhatsAppCalificacion = numeroCalificacionValido
+        ? `https://wa.me/51${telefonoCalificacion.replace(/\D/g, "")}?text=${encodeURIComponent(
+              `Hola! Gracias por tu paciencia. Nos ayudarias mucho si calificas como resolvimos tu caso: ${linkCalificacion}`,
+          )}`
+        : null;
 
     const handleCerrar = async () => {
         try {
@@ -374,6 +409,97 @@ export default function ModalDetalleIncidencia({
                             <p className="text-sm text-gray-700 leading-relaxed bg-green-50 rounded-lg p-3 border border-green-100">
                                 {incidencia.documentacionResolucion}
                             </p>
+                        </div>
+                    )}
+
+                    {ESTADOS_RESOLUCION.includes(estado) && (
+                        <div className="pt-2 border-t border-gray-100">
+                            {incidencia.calificacion ? (
+                                <div className="flex items-center gap-2">
+                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                        Calificación del cliente
+                                    </p>
+                                    <div className="flex items-center gap-0.5">
+                                        {[1, 2, 3, 4, 5].map((n) => (
+                                            <Star
+                                                key={n}
+                                                size={14}
+                                                className={
+                                                    n <= incidencia.calificacion
+                                                        ? "fill-yellow-400 text-yellow-400"
+                                                        : "text-gray-300"
+                                                }
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                                        Pedir calificación al cliente
+                                    </p>
+                                    {!linkCalificacion &&
+                                        !cargandoLinkCalificacion && (
+                                            <button
+                                                type="button"
+                                                onClick={
+                                                    handleGenerarLinkCalificacion
+                                                }
+                                                className="text-xs font-medium text-cixoil-red hover:opacity-75"
+                                            >
+                                                Generar link de calificación
+                                            </button>
+                                        )}
+                                    {cargandoLinkCalificacion && (
+                                        <p className="text-xs text-gray-400">
+                                            Generando link...
+                                        </p>
+                                    )}
+                                    {errorLinkCalificacion && (
+                                        <p className="text-xs text-red-500">
+                                            {errorLinkCalificacion}
+                                        </p>
+                                    )}
+                                    {linkCalificacion && (
+                                        <div className="flex gap-1.5">
+                                            <input
+                                                type="tel"
+                                                placeholder="Celular (9 digitos)"
+                                                value={telefonoCalificacion}
+                                                onChange={(e) =>
+                                                    setTelefonoCalificacion(
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="flex-1 min-w-0 px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-cixoil-red"
+                                            />
+                                            <a
+                                                href={
+                                                    linkWhatsAppCalificacion ||
+                                                    undefined
+                                                }
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                onClick={(e) => {
+                                                    if (
+                                                        !numeroCalificacionValido
+                                                    ) {
+                                                        e.preventDefault();
+                                                    }
+                                                }}
+                                                className={`flex items-center justify-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg shrink-0 transition ${
+                                                    numeroCalificacionValido
+                                                        ? "bg-green-600 text-white hover:bg-green-700"
+                                                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                                }`}
+                                            >
+                                                <MessageCircle size={13} />
+                                                Enviar
+                                            </a>
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </div>
                     )}
 

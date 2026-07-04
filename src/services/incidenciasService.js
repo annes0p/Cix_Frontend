@@ -103,11 +103,9 @@ const toFrontend = (inc) => ({
           }
         : { tipo: null, id: null, nombre: null },
     documentacionResolucion: inc.resolutionNote || null,
-    createdAt: new Date().toISOString(),
-    resolvedAt:
-        inc.incidentStatus === "RESOLVED" || inc.incidentStatus === "CLOSED"
-            ? new Date().toISOString()
-            : null,
+    createdAt: inc.createdAt || null,
+    resolvedAt: inc.resolvedAt || null,
+    calificacion: inc.rating || null,
 });
 
 const toBackend = (data) => ({
@@ -159,4 +157,22 @@ export const documentarResolucion = async (id, documentacion) => {
     });
     const data = response.data.data || response.data;
     return toFrontend(data);
+};
+
+export const getLinkCalificacion = async (id) => {
+    const response = await api.get(`/incidents/${id}/rating-link`);
+    const data = response.data.data || response.data;
+    return data.token;
+};
+
+export const getIncidenciaParaCalificar = async (token) => {
+    const response = await api.get(`/incidents/public/${token}/rating`);
+    return response.data.data || response.data;
+};
+
+export const calificarIncidencia = async (token, rating) => {
+    const response = await api.patch(`/incidents/public/${token}/rating`, {
+        rating,
+    });
+    return response.data.data || response.data;
 };

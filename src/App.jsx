@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import Alertas from "./pages/Alertas";
+import CalificarIncidencia from "./pages/CalificarIncidencia";
 import Clientes from "./pages/Clientes";
 import Configuracion from "./pages/Configuracion";
 import CRM from "./pages/CRM";
@@ -26,6 +27,10 @@ function App() {
                     element={<Recomendador />}
                 />
                 <Route path="/seguimiento/:token" element={<Seguimiento />} />
+                <Route
+                    path="/calificar-incidencia/:token"
+                    element={<CalificarIncidencia />}
+                />
                 <Route element={<Layout />}>
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/inventarios" element={<Inventarios />} />
