@@ -51,32 +51,71 @@ export default function PortalClienteIncidencias() {
 
     const [mostrarFormulario, setMostrarFormulario] = useState(false);
     const [form, setForm] = useState(FORM_VACIO);
+    const [erroresForm, setErroresForm] = useState({});
     const [enviando, setEnviando] = useState(false);
     const [errorEnvio, setErrorEnvio] = useState(null);
     const [reportada, setReportada] = useState(false);
 
     const buscar = async (doc) => {
-        const documento = doc ?? docNumber;
-        if (!documento.trim()) return;
+        const documento = (doc ?? docNumber).trim();
+
+        if (!documento) {
+            setError("Ingresa tu número de DNI o RUC.");
+            setIncidencias(null);
+            return;
+        }
+        if (!/^\d{8}$|^\d{11}$/.test(documento)) {
+            setError("El documento debe tener 8 dígitos (DNI) u 11 dígitos (RUC).");
+            setIncidencias(null);
+            return;
+        }
 
         try {
             setCargando(true);
             setError(null);
-            const data = await getIncidenciasPorDocumento(documento.trim());
+            const data = await getIncidenciasPorDocumento(documento);
             setIncidencias(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error("Error al buscar incidencias:", err);
-            setError("No se pudo buscar tus incidencias. Intenta de nuevo.");
+            setError(
+                err.response?.data?.message ||
+                    "No se pudo buscar tus incidencias. Intenta de nuevo.",
+            );
         } finally {
             setCargando(false);
         }
     };
 
-    const actualizarForm = (campo, valor) =>
+    const actualizarForm = (campo, valor) => {
         setForm((prev) => ({ ...prev, [campo]: valor }));
+        setErroresForm((prev) => ({ ...prev, [campo]: null }));
+    };
+
+    const validarFormulario = () => {
+        const nuevos = {};
+        if (!form.name.trim()) nuevos.name = "El nombre es obligatorio.";
+        if (!form.fatherLastName.trim())
+            nuevos.fatherLastName = "El apellido paterno es obligatorio.";
+        if (!/^\d{8}$|^\d{11}$/.test(form.docNumber))
+            nuevos.docNumber =
+                form.documentType === "RUC"
+                    ? "El RUC debe tener 11 dígitos."
+                    : "El DNI debe tener 8 dígitos.";
+        if (!/^\d{6,9}$/.test(form.phoneNumber))
+            nuevos.phoneNumber = "Ingresa un teléfono válido (6 a 9 dígitos).";
+        if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+            nuevos.email = "El correo no tiene un formato válido.";
+        if (!form.title.trim()) nuevos.title = "El título es obligatorio.";
+        if (!form.description.trim())
+            nuevos.description = "Cuéntanos qué pasó.";
+        setErroresForm(nuevos);
+        return Object.keys(nuevos).length === 0;
+    };
 
     const enviarReporte = async (e) => {
         e.preventDefault();
+        if (!validarFormulario()) return;
+
         try {
             setEnviando(true);
             setErrorEnvio(null);
@@ -272,24 +311,32 @@ export default function PortalClienteIncidencias() {
                                     Tus datos
                                 </p>
                                 <div className="grid grid-cols-2 gap-2">
-                                    <input
-                                        required
-                                        type="text"
-                                        placeholder="Nombres *"
-                                        value={form.name}
-                                        onChange={(e) => actualizarForm("name", e.target.value)}
-                                        className="col-span-2 w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
-                                    />
-                                    <input
-                                        required
-                                        type="text"
-                                        placeholder="Apellido paterno *"
-                                        value={form.fatherLastName}
-                                        onChange={(e) =>
-                                            actualizarForm("fatherLastName", e.target.value)
-                                        }
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
-                                    />
+                                    <div className="col-span-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Nombres *"
+                                            value={form.name}
+                                            onChange={(e) => actualizarForm("name", e.target.value)}
+                                            className={`w-full px-3 py-2 rounded-lg border text-sm ${erroresForm.name ? "border-red-400" : "border-gray-200"}`}
+                                        />
+                                        {erroresForm.name && (
+                                            <p className="text-xs text-red-500 mt-0.5">{erroresForm.name}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <input
+                                            type="text"
+                                            placeholder="Apellido paterno *"
+                                            value={form.fatherLastName}
+                                            onChange={(e) =>
+                                                actualizarForm("fatherLastName", e.target.value)
+                                            }
+                                            className={`w-full px-3 py-2 rounded-lg border text-sm ${erroresForm.fatherLastName ? "border-red-400" : "border-gray-200"}`}
+                                        />
+                                        {erroresForm.fatherLastName && (
+                                            <p className="text-xs text-red-500 mt-0.5">{erroresForm.fatherLastName}</p>
+                                        )}
+                                    </div>
                                     <input
                                         type="text"
                                         placeholder="Apellido materno"
@@ -309,33 +356,46 @@ export default function PortalClienteIncidencias() {
                                         <option value="DNI">DNI</option>
                                         <option value="RUC">RUC</option>
                                     </select>
-                                    <input
-                                        required
-                                        type="text"
-                                        placeholder="N° de documento *"
-                                        value={form.docNumber}
-                                        onChange={(e) =>
-                                            actualizarForm("docNumber", e.target.value)
-                                        }
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
-                                    />
-                                    <input
-                                        required
-                                        type="text"
-                                        placeholder="Teléfono *"
-                                        value={form.phoneNumber}
-                                        onChange={(e) =>
-                                            actualizarForm("phoneNumber", e.target.value)
-                                        }
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
-                                    />
-                                    <input
-                                        type="email"
-                                        placeholder="Correo (opcional)"
-                                        value={form.email}
-                                        onChange={(e) => actualizarForm("email", e.target.value)}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
-                                    />
+                                    <div>
+                                        <input
+                                            type="text"
+                                            placeholder="N° de documento *"
+                                            value={form.docNumber}
+                                            onChange={(e) =>
+                                                actualizarForm("docNumber", e.target.value)
+                                            }
+                                            className={`w-full px-3 py-2 rounded-lg border text-sm ${erroresForm.docNumber ? "border-red-400" : "border-gray-200"}`}
+                                        />
+                                        {erroresForm.docNumber && (
+                                            <p className="text-xs text-red-500 mt-0.5">{erroresForm.docNumber}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <input
+                                            type="text"
+                                            placeholder="Teléfono *"
+                                            value={form.phoneNumber}
+                                            onChange={(e) =>
+                                                actualizarForm("phoneNumber", e.target.value)
+                                            }
+                                            className={`w-full px-3 py-2 rounded-lg border text-sm ${erroresForm.phoneNumber ? "border-red-400" : "border-gray-200"}`}
+                                        />
+                                        {erroresForm.phoneNumber && (
+                                            <p className="text-xs text-red-500 mt-0.5">{erroresForm.phoneNumber}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <input
+                                            type="email"
+                                            placeholder="Correo (opcional)"
+                                            value={form.email}
+                                            onChange={(e) => actualizarForm("email", e.target.value)}
+                                            className={`w-full px-3 py-2 rounded-lg border text-sm ${erroresForm.email ? "border-red-400" : "border-gray-200"}`}
+                                        />
+                                        {erroresForm.email && (
+                                            <p className="text-xs text-red-500 mt-0.5">{erroresForm.email}</p>
+                                        )}
+                                    </div>
                                     <input
                                         type="text"
                                         placeholder="Dirección"
@@ -361,24 +421,32 @@ export default function PortalClienteIncidencias() {
                                         </option>
                                     ))}
                                 </select>
-                                <input
-                                    required
-                                    type="text"
-                                    placeholder="Título breve *"
-                                    value={form.title}
-                                    onChange={(e) => actualizarForm("title", e.target.value)}
-                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
-                                />
-                                <textarea
-                                    required
-                                    placeholder="Cuéntanos qué pasó *"
-                                    value={form.description}
-                                    onChange={(e) =>
-                                        actualizarForm("description", e.target.value)
-                                    }
-                                    rows={3}
-                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm resize-none"
-                                />
+                                <div>
+                                    <input
+                                        type="text"
+                                        placeholder="Título breve *"
+                                        value={form.title}
+                                        onChange={(e) => actualizarForm("title", e.target.value)}
+                                        className={`w-full px-3 py-2 rounded-lg border text-sm ${erroresForm.title ? "border-red-400" : "border-gray-200"}`}
+                                    />
+                                    {erroresForm.title && (
+                                        <p className="text-xs text-red-500 mt-0.5">{erroresForm.title}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <textarea
+                                        placeholder="Cuéntanos qué pasó *"
+                                        value={form.description}
+                                        onChange={(e) =>
+                                            actualizarForm("description", e.target.value)
+                                        }
+                                        rows={3}
+                                        className={`w-full px-3 py-2 rounded-lg border text-sm resize-none ${erroresForm.description ? "border-red-400" : "border-gray-200"}`}
+                                    />
+                                    {erroresForm.description && (
+                                        <p className="text-xs text-red-500 mt-0.5">{erroresForm.description}</p>
+                                    )}
+                                </div>
 
                                 {errorEnvio && (
                                     <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">

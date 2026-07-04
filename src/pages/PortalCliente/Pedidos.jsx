@@ -30,16 +30,30 @@ export default function PortalClientePedidos() {
 
     const buscar = async (e) => {
         e.preventDefault();
-        if (!docNumber.trim()) return;
+
+        const documento = docNumber.trim();
+        if (!documento) {
+            setError("Ingresa tu número de DNI o RUC.");
+            setPedidos(null);
+            return;
+        }
+        if (!/^\d{8}$|^\d{11}$/.test(documento)) {
+            setError("El documento debe tener 8 dígitos (DNI) u 11 dígitos (RUC).");
+            setPedidos(null);
+            return;
+        }
 
         try {
             setCargando(true);
             setError(null);
-            const data = await getPedidosPorDocumento(docNumber.trim());
+            const data = await getPedidosPorDocumento(documento);
             setPedidos(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error("Error al buscar pedidos:", err);
-            setError("No se pudo buscar tus pedidos. Intenta de nuevo.");
+            setError(
+                err.response?.data?.message ||
+                    "No se pudo buscar tus pedidos. Intenta de nuevo.",
+            );
         } finally {
             setCargando(false);
         }
