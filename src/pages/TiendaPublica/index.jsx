@@ -1,5 +1,7 @@
 import {
+    ArrowLeft,
     CheckCircle2,
+    CreditCard,
     Disc,
     Droplet,
     FlaskConical,
@@ -9,7 +11,9 @@ import {
     Plus,
     Search,
     Settings,
+    ShieldCheck,
     ShoppingCart,
+    Smartphone,
     Sparkles,
     SprayCan,
     Thermometer,
@@ -76,6 +80,38 @@ export default function TiendaPublica() {
 
     const [verificandoDoc, setVerificandoDoc] = useState(false);
     const [estadoDoc, setEstadoDoc] = useState(null); // "cliente" | "verificado" | "no-verificado" | null
+
+    // Paso de pago simulado (aun no hay pasarela real conectada, pero se
+    // simula el flujo casi tal cual seria con Culqi: tarjeta o Yape,
+    // validando formato y con una demora de "procesando" antes de aprobar).
+    const [pasoCheckout, setPasoCheckout] = useState("datos"); // "datos" | "pago"
+    const [metodoPago, setMetodoPago] = useState("CARD"); // "CARD" | "YAPE"
+    const [tarjeta, setTarjeta] = useState({
+        numero: "",
+        vencimiento: "",
+        cvv: "",
+        nombre: "",
+    });
+    const [yape, setYape] = useState({
+        telefono: "",
+        codigoGenerado: false,
+        segundosRestantes: 0,
+        codigo: "",
+    });
+    const [erroresPago, setErroresPago] = useState({});
+    const [procesandoPago, setProcesandoPago] = useState(false);
+    const [pagoAprobado, setPagoAprobado] = useState(false);
+
+    useEffect(() => {
+        if (!yape.codigoGenerado || yape.segundosRestantes <= 0) return;
+        const id = setTimeout(() => {
+            setYape((prev) => ({
+                ...prev,
+                segundosRestantes: prev.segundosRestantes - 1,
+            }));
+        }, 1000);
+        return () => clearTimeout(id);
+    }, [yape.codigoGenerado, yape.segundosRestantes]);
 
     // Al terminar de escribir el DNI/RUC (llega al largo exacto):
     // 1) primero busca si ya es cliente nuestro -> si si, autocompleta
@@ -276,9 +312,119 @@ export default function TiendaPublica() {
         return Object.keys(nuevosErrores).length === 0;
     };
 
+    const irAPago = () => {
+        if (!validarForm()) return;
+        setPasoCheckout("pago");
+    };
+
+    // Algoritmo de Luhn, para que la validacion de tarjeta se sienta real
+    // (rechaza numeros con digitos al azar) aunque el cobro sea simulado.
+    const luhnValido = (numero) => {
+        const digitos = numero.replace(/\D/g, "");
+        if (digitos.length !== 16) return false;
+        let suma = 0;
+        let duplicar = false;
+        for (let i = digitos.length - 1; i >= 0; i--) {
+            let d = parseInt(digitos[i], 10);
+            if (duplicar) {
+                d *= 2;
+                if (d > 9) d -= 9;
+            }
+            suma += d;
+            duplicar = !duplicar;
+        }
+        return suma % 10 === 0;
+    };
+
+    const actualizarNumeroTarjeta = (valor) => {
+        const digitos = valor.replace(/\D/g, "").slice(0, 16);
+        const conEspacios = digitos.replace(/(.{4})/g, "$1 ").trim();
+        setTarjeta((prev) => ({ ...prev, numero: conEspacios }));
+        setErroresPago((prev) => ({ ...prev, numero: null }));
+    };
+
+    const actualizarVencimiento = (valor) => {
+        let digitos = valor.replace(/\D/g, "").slice(0, 4);
+        if (digitos.length >= 3) {
+            digitos = `${digitos.slice(0, 2)}/${digitos.slice(2)}`;
+        }
+        setTarjeta((prev) => ({ ...prev, vencimiento: digitos }));
+        setErroresPago((prev) => ({ ...prev, vencimiento: null }));
+    };
+
+    const generarCodigoYape = () => {
+        if (!/^\d{9}$/.test(yape.telefono)) {
+            setErroresPago((prev) => ({
+                ...prev,
+                yapeTelefono: "Ingresa un celular Yape válido (9 dígitos).",
+            }));
+            return;
+        }
+        setYape((prev) => ({
+            ...prev,
+            codigoGenerado: true,
+            segundosRestantes: 120,
+            codigo: "",
+        }));
+        setErroresPago((prev) => ({ ...prev, yapeTelefono: null }));
+    };
+
+    const validarPago = () => {
+        const nuevosErrores = {};
+        if (metodoPago === "CARD") {
+            if (!luhnValido(tarjeta.numero))
+                nuevosErrores.numero = "Número de tarjeta inválido.";
+            const [mes, anio] = tarjeta.vencimiento.split("/");
+            const venceValido =
+                mes &&
+                anio &&
+                anio.length === 2 &&
+                Number(mes) >= 1 &&
+                Number(mes) <= 12;
+            if (!venceValido) {
+                nuevosErrores.vencimiento = "Vencimiento inválido (MM/AA).";
+            } else {
+                const ahora = new Date();
+                const anioCompleto = 2000 + Number(anio);
+                const vencida =
+                    anioCompleto < ahora.getFullYear() ||
+                    (anioCompleto === ahora.getFullYear() &&
+                        Number(mes) < ahora.getMonth() + 1);
+                if (vencida) nuevosErrores.vencimiento = "La tarjeta está vencida.";
+            }
+            if (!/^\d{3,4}$/.test(tarjeta.cvv))
+                nuevosErrores.cvv = "CVV inválido.";
+            if (!tarjeta.nombre.trim())
+                nuevosErrores.nombre = "Ingresa el nombre del titular.";
+        } else {
+            if (!yape.codigoGenerado)
+                nuevosErrores.yapeTelefono = "Primero genera el código.";
+            else if (!/^\d{6}$/.test(yape.codigo))
+                nuevosErrores.yapeCodigo = "Ingresa el código de aprobación (6 dígitos).";
+            else if (yape.segundosRestantes <= 0)
+                nuevosErrores.yapeCodigo = "El código venció, genera uno nuevo.";
+        }
+        setErroresPago(nuevosErrores);
+        return Object.keys(nuevosErrores).length === 0;
+    };
+
+    const procesarPago = async () => {
+        if (!validarPago()) return;
+
+        setProcesandoPago(true);
+        // Simula la demora de comunicarse con la pasarela (Culqi) mientras
+        // se conecta de verdad; la experiencia se siente igual para probar
+        // el flujo completo sin generar cobros reales.
+        await new Promise((resolve) => setTimeout(resolve, 1600));
+        setProcesandoPago(false);
+        setPagoAprobado(true);
+        await new Promise((resolve) => setTimeout(resolve, 900));
+
+        await enviarPedido();
+    };
+
     const enviarPedido = async () => {
         if (carrito.length === 0) return;
-        if (!validarForm()) return;
 
         try {
             setEnviando(true);
@@ -287,6 +433,7 @@ export default function TiendaPublica() {
                 ...form,
                 motherLastName: form.motherLastName || null,
                 email: form.email || null,
+                paymentMethod: metodoPago,
                 items: carrito.map((it) => ({
                     idProduct: it.producto.id,
                     quantity: it.cantidad,
@@ -301,6 +448,7 @@ export default function TiendaPublica() {
                 err.response?.data?.message ||
                     "No se pudo registrar tu pedido. Intenta de nuevo.",
             );
+            setPagoAprobado(false);
         } finally {
             setEnviando(false);
         }
@@ -334,6 +482,20 @@ export default function TiendaPublica() {
                         onClick={() => {
                             setConfirmacion(null);
                             setMostrarCheckout(false);
+                            setPasoCheckout("datos");
+                            setPagoAprobado(false);
+                            setYape({
+                                telefono: "",
+                                codigoGenerado: false,
+                                segundosRestantes: 0,
+                                codigo: "",
+                            });
+                            setTarjeta({
+                                numero: "",
+                                vencimiento: "",
+                                cvv: "",
+                                nombre: "",
+                            });
                         }}
                         className="w-full py-2.5 rounded-xl bg-cixoil-red text-white font-semibold hover:opacity-90"
                     >
@@ -457,7 +619,25 @@ export default function TiendaPublica() {
                 <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                            <h2 className="font-bold text-gray-900">Tu pedido</h2>
+                            <div className="flex items-center gap-2">
+                                {pasoCheckout === "pago" &&
+                                    !enviando &&
+                                    !procesandoPago &&
+                                    !pagoAprobado && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setPasoCheckout("datos")}
+                                        className="text-gray-400 hover:text-gray-600"
+                                    >
+                                        <ArrowLeft size={18} />
+                                    </button>
+                                )}
+                                <h2 className="font-bold text-gray-900">
+                                    {pasoCheckout === "pago"
+                                        ? "Pago"
+                                        : "Tu pedido"}
+                                </h2>
+                            </div>
                             <button
                                 type="button"
                                 onClick={() => setMostrarCheckout(false)}
@@ -466,6 +646,292 @@ export default function TiendaPublica() {
                             </button>
                         </div>
 
+                        {pasoCheckout === "pago" && (
+                            <div className="p-4 space-y-4">
+                                <div className="bg-gray-50 rounded-xl p-3 flex items-center justify-between">
+                                    <span className="text-sm text-gray-500">
+                                        Total a pagar
+                                    </span>
+                                    <span className="font-black text-lg text-cixoil-red">
+                                        S/. {formatSoles(totales.total)}
+                                    </span>
+                                </div>
+
+                                {pagoAprobado ? (
+                                    <div className="flex flex-col items-center gap-2 py-8">
+                                        <CheckCircle2
+                                            size={40}
+                                            className="text-cixoil-green"
+                                        />
+                                        <p className="font-semibold text-gray-800">
+                                            ¡Pago aprobado!
+                                        </p>
+                                        <p className="text-xs text-gray-400">
+                                            Registrando tu pedido...
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="flex gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setMetodoPago("CARD");
+                                                    setErroresPago({});
+                                                }}
+                                                disabled={procesandoPago}
+                                                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold border ${
+                                                    metodoPago === "CARD"
+                                                        ? "bg-cixoil-red text-white border-cixoil-red"
+                                                        : "bg-white text-gray-600 border-gray-200"
+                                                }`}
+                                            >
+                                                <CreditCard size={15} />
+                                                Tarjeta
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setMetodoPago("YAPE");
+                                                    setErroresPago({});
+                                                }}
+                                                disabled={procesandoPago}
+                                                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold border ${
+                                                    metodoPago === "YAPE"
+                                                        ? "bg-cixoil-red text-white border-cixoil-red"
+                                                        : "bg-white text-gray-600 border-gray-200"
+                                                }`}
+                                            >
+                                                <Smartphone size={15} />
+                                                Yape
+                                            </button>
+                                        </div>
+
+                                        {metodoPago === "CARD" && (
+                                            <div className="space-y-2">
+                                                <div>
+                                                    <input
+                                                        type="text"
+                                                        inputMode="numeric"
+                                                        placeholder="Número de tarjeta"
+                                                        value={tarjeta.numero}
+                                                        disabled={procesandoPago}
+                                                        onChange={(e) =>
+                                                            actualizarNumeroTarjeta(
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        className={`w-full px-3 py-2 rounded-lg border text-sm ${erroresPago.numero ? "border-red-400" : "border-gray-200"}`}
+                                                    />
+                                                    {erroresPago.numero && (
+                                                        <p className="text-xs text-red-500 mt-0.5">
+                                                            {erroresPago.numero}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div>
+                                                        <input
+                                                            type="text"
+                                                            inputMode="numeric"
+                                                            placeholder="MM/AA"
+                                                            value={
+                                                                tarjeta.vencimiento
+                                                            }
+                                                            disabled={
+                                                                procesandoPago
+                                                            }
+                                                            onChange={(e) =>
+                                                                actualizarVencimiento(
+                                                                    e.target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                            className={`w-full px-3 py-2 rounded-lg border text-sm ${erroresPago.vencimiento ? "border-red-400" : "border-gray-200"}`}
+                                                        />
+                                                        {erroresPago.vencimiento && (
+                                                            <p className="text-xs text-red-500 mt-0.5">
+                                                                {
+                                                                    erroresPago.vencimiento
+                                                                }
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <input
+                                                            type="text"
+                                                            inputMode="numeric"
+                                                            maxLength={4}
+                                                            placeholder="CVV"
+                                                            value={tarjeta.cvv}
+                                                            disabled={
+                                                                procesandoPago
+                                                            }
+                                                            onChange={(e) =>
+                                                                setTarjeta(
+                                                                    (prev) => ({
+                                                                        ...prev,
+                                                                        cvv: e.target.value.replace(
+                                                                            /\D/g,
+                                                                            "",
+                                                                        ).slice(0, 4),
+                                                                    }),
+                                                                )
+                                                            }
+                                                            className={`w-full px-3 py-2 rounded-lg border text-sm ${erroresPago.cvv ? "border-red-400" : "border-gray-200"}`}
+                                                        />
+                                                        {erroresPago.cvv && (
+                                                            <p className="text-xs text-red-500 mt-0.5">
+                                                                {erroresPago.cvv}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Nombre del titular"
+                                                        value={tarjeta.nombre}
+                                                        disabled={procesandoPago}
+                                                        onChange={(e) =>
+                                                            setTarjeta((prev) => ({
+                                                                ...prev,
+                                                                nombre: e.target
+                                                                    .value,
+                                                            }))
+                                                        }
+                                                        className={`w-full px-3 py-2 rounded-lg border text-sm ${erroresPago.nombre ? "border-red-400" : "border-gray-200"}`}
+                                                    />
+                                                    {erroresPago.nombre && (
+                                                        <p className="text-xs text-red-500 mt-0.5">
+                                                            {erroresPago.nombre}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {metodoPago === "YAPE" && (
+                                            <div className="space-y-2">
+                                                <div>
+                                                    <div className="flex gap-2">
+                                                        <input
+                                                            type="text"
+                                                            inputMode="numeric"
+                                                            maxLength={9}
+                                                            placeholder="Celular Yape"
+                                                            value={yape.telefono}
+                                                            disabled={
+                                                                yape.codigoGenerado ||
+                                                                procesandoPago
+                                                            }
+                                                            onChange={(e) =>
+                                                                setYape((prev) => ({
+                                                                    ...prev,
+                                                                    telefono: e.target.value
+                                                                        .replace(
+                                                                            /\D/g,
+                                                                            "",
+                                                                        )
+                                                                        .slice(0, 9),
+                                                                }))
+                                                            }
+                                                            className={`flex-1 px-3 py-2 rounded-lg border text-sm ${erroresPago.yapeTelefono ? "border-red-400" : "border-gray-200"}`}
+                                                        />
+                                                        {!yape.codigoGenerado && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={
+                                                                    generarCodigoYape
+                                                                }
+                                                                className="shrink-0 text-xs font-semibold bg-gray-800 text-white px-3 py-2 rounded-lg"
+                                                            >
+                                                                Generar código
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    {erroresPago.yapeTelefono && (
+                                                        <p className="text-xs text-red-500 mt-0.5">
+                                                            {
+                                                                erroresPago.yapeTelefono
+                                                            }
+                                                        </p>
+                                                    )}
+                                                </div>
+
+                                                {yape.codigoGenerado && (
+                                                    <div>
+                                                        <input
+                                                            type="text"
+                                                            inputMode="numeric"
+                                                            maxLength={6}
+                                                            placeholder="Código de aprobación (6 dígitos)"
+                                                            value={yape.codigo}
+                                                            disabled={
+                                                                procesandoPago
+                                                            }
+                                                            onChange={(e) =>
+                                                                setYape((prev) => ({
+                                                                    ...prev,
+                                                                    codigo: e.target.value
+                                                                        .replace(
+                                                                            /\D/g,
+                                                                            "",
+                                                                        )
+                                                                        .slice(0, 6),
+                                                                }))
+                                                            }
+                                                            className={`w-full px-3 py-2 rounded-lg border text-sm ${erroresPago.yapeCodigo ? "border-red-400" : "border-gray-200"}`}
+                                                        />
+                                                        {erroresPago.yapeCodigo && (
+                                                            <p className="text-xs text-red-500 mt-0.5">
+                                                                {
+                                                                    erroresPago.yapeCodigo
+                                                                }
+                                                            </p>
+                                                        )}
+                                                        <p
+                                                            className={`text-xs mt-1 ${yape.segundosRestantes > 0 ? "text-gray-400" : "text-red-500"}`}
+                                                        >
+                                                            {yape.segundosRestantes >
+                                                            0
+                                                                ? `Ingresa el código de tu app Yape · vence en ${Math.floor(yape.segundosRestantes / 60)}:${String(yape.segundosRestantes % 60).padStart(2, "0")}`
+                                                                : "El código venció, genera uno nuevo."}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        <button
+                                            type="button"
+                                            disabled={procesandoPago}
+                                            onClick={procesarPago}
+                                            className="w-full py-3 rounded-xl bg-cixoil-red text-white font-bold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                                        >
+                                            {procesandoPago && (
+                                                <Loader2
+                                                    size={16}
+                                                    className="animate-spin"
+                                                />
+                                            )}
+                                            {procesandoPago
+                                                ? "Procesando pago..."
+                                                : `Pagar S/. ${formatSoles(totales.total)}`}
+                                        </button>
+
+                                        <p className="flex items-center justify-center gap-1 text-[11px] text-gray-400">
+                                            <ShieldCheck size={12} />
+                                            Pago simulado para pruebas — no se
+                                            realiza ningún cobro real
+                                        </p>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
+                        {pasoCheckout === "datos" && (
+                        <>
                         <div className="p-4 space-y-3">
                             {carrito.length === 0 && (
                                 <p className="text-sm text-gray-400 text-center py-6">
@@ -718,16 +1184,14 @@ export default function TiendaPublica() {
 
                                 <button
                                     type="button"
-                                    disabled={enviando}
-                                    onClick={enviarPedido}
-                                    className="w-full py-3 rounded-xl bg-cixoil-red text-white font-bold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                                    onClick={irAPago}
+                                    className="w-full py-3 rounded-xl bg-cixoil-red text-white font-bold hover:opacity-90 flex items-center justify-center gap-2"
                                 >
-                                    {enviando && (
-                                        <Loader2 size={16} className="animate-spin" />
-                                    )}
-                                    Confirmar pedido
+                                    Continuar al pago
                                 </button>
                             </div>
+                        )}
+                        </>
                         )}
                     </div>
                 </div>

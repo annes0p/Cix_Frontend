@@ -5,6 +5,7 @@ import {
     MessageCircle,
     Navigation,
     Sparkles,
+    Star,
     User,
     X,
 } from "lucide-react";
@@ -479,6 +480,30 @@ Responde solo con el texto del resumen, nada mas.`;
                                                             )}
                                                         </div>
                                                     )}
+                                                </div>
+                                            )}
+                                            {trip.deliveryRating && (
+                                                <div className="mb-2 flex items-center gap-1.5 bg-yellow-50 border border-yellow-200 rounded-lg px-2 py-1.5">
+                                                    <p className="text-xs font-semibold text-yellow-700 shrink-0">
+                                                        Valoración del
+                                                        cliente:
+                                                    </p>
+                                                    <div className="flex gap-0.5">
+                                                        {[1, 2, 3, 4, 5].map(
+                                                            (n) => (
+                                                                <Star
+                                                                    key={n}
+                                                                    size={13}
+                                                                    className={
+                                                                        n <=
+                                                                        trip.deliveryRating
+                                                                            ? "fill-yellow-400 text-yellow-400"
+                                                                            : "text-gray-300"
+                                                                    }
+                                                                />
+                                                            ),
+                                                        )}
+                                                    </div>
                                                 </div>
                                             )}
                                             {trip.progressStatus ===
