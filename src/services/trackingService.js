@@ -14,3 +14,10 @@ export const getLinkSeguimiento = async (idTrip) => {
 export const enviarUbicacion = async (idTrip, latitude, longitude) => {
     await api.patch(`/tracking/${idTrip}/location`, { latitude, longitude });
 };
+
+export const calificarEntrega = async (token, rating) => {
+    const response = await api.patch(`/tracking/public/${token}/rating`, {
+        rating,
+    });
+    return response.data.data || response.data;
+};

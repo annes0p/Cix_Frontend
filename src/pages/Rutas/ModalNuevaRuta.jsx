@@ -36,7 +36,11 @@ export default function ModalNuevaRuta({ onClose, onGuardar }) {
                 ]);
                 setVendedores(vend);
                 setLugares(lug);
-                setVentas(vts);
+                // Solo se puede armar el envio de una venta ya pagada
+                // (Pendiente -> Pago confirmado -> Envio/Ruta creada).
+                setVentas(
+                    vts.filter((v) => v.transactionStatus === "COMPLETED"),
+                );
 
                 const almacen = lug.find((l) =>
                     l.label.toLowerCase().includes("almacen"),

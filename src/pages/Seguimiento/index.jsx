@@ -1,7 +1,17 @@
-import { CheckCircle2, Loader2, MapPin, Package, Truck } from "lucide-react";
+import {
+    CheckCircle2,
+    Loader2,
+    MapPin,
+    Package,
+    Star,
+    Truck,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getSeguimientoPublico } from "../../services/trackingService";
+import {
+    calificarEntrega,
+    getSeguimientoPublico,
+} from "../../services/trackingService";
 
 const ESTILOS_ESTADO = {
     PENDING: "bg-yellow-100 text-yellow-700",
@@ -42,6 +52,10 @@ export default function Seguimiento() {
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState(null);
     const dataRef = useRef(null);
+
+    const [hoverEstrella, setHoverEstrella] = useState(0);
+    const [calificando, setCalificando] = useState(false);
+    const [errorCalificacion, setErrorCalificacion] = useState(null);
 
     useEffect(() => {
         dataRef.current = data;
@@ -86,6 +100,22 @@ export default function Seguimiento() {
     }, [token]);
 
     const Icono = data ? ICONOS_ESTADO[data.progressStatus] || Package : Package;
+
+    const handleCalificar = async (valor) => {
+        try {
+            setCalificando(true);
+            setErrorCalificacion(null);
+            const actualizado = await calificarEntrega(token, valor);
+            setData(actualizado);
+        } catch (err) {
+            console.error("Error al calificar entrega:", err);
+            setErrorCalificacion(
+                "No se pudo enviar tu calificación. Intenta de nuevo.",
+            );
+        } finally {
+            setCalificando(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -188,6 +218,78 @@ export default function Seguimiento() {
                                     )}
                                     {data.endTime && (
                                         <span>Entrega: {data.endTime}</span>
+                                    )}
+                                </div>
+                            )}
+
+                            {data.progressStatus === "COMPLETED" && (
+                                <div className="pt-3 border-t border-gray-100 text-center">
+                                    {data.deliveryRating ? (
+                                        <div className="flex flex-col items-center gap-2 py-1">
+                                            <p className="text-sm font-semibold text-gray-700">
+                                                ¡Gracias por tu calificación!
+                                            </p>
+                                            <div className="flex gap-1">
+                                                {[1, 2, 3, 4, 5].map((n) => (
+                                                    <Star
+                                                        key={n}
+                                                        size={20}
+                                                        className={
+                                                            n <=
+                                                            data.deliveryRating
+                                                                ? "fill-yellow-400 text-yellow-400"
+                                                                : "text-gray-300"
+                                                        }
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <p className="text-sm font-medium text-gray-600 mb-3">
+                                                ¿Cómo llegó tu pedido?
+                                                Califica tu entrega
+                                            </p>
+                                            <div className="flex justify-center gap-2">
+                                                {[1, 2, 3, 4, 5].map((n) => (
+                                                    <button
+                                                        key={n}
+                                                        type="button"
+                                                        disabled={calificando}
+                                                        onMouseEnter={() =>
+                                                            setHoverEstrella(n)
+                                                        }
+                                                        onMouseLeave={() =>
+                                                            setHoverEstrella(0)
+                                                        }
+                                                        onClick={() =>
+                                                            handleCalificar(n)
+                                                        }
+                                                        className="disabled:opacity-50"
+                                                    >
+                                                        <Star
+                                                            size={28}
+                                                            className={
+                                                                n <=
+                                                                hoverEstrella
+                                                                    ? "fill-yellow-400 text-yellow-400"
+                                                                    : "text-gray-300"
+                                                            }
+                                                        />
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            {calificando && (
+                                                <p className="text-xs text-gray-400 mt-2">
+                                                    Enviando...
+                                                </p>
+                                            )}
+                                            {errorCalificacion && (
+                                                <p className="text-xs text-red-500 mt-2">
+                                                    {errorCalificacion}
+                                                </p>
+                                            )}
+                                        </>
                                     )}
                                 </div>
                             )}

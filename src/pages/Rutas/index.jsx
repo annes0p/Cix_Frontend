@@ -1,11 +1,14 @@
 import { Map, Plus, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getRutas } from "../../services/rutasService";
+import { getVentas } from "../../services/crmService";
 import ModalNuevaRuta from "./ModalNuevaRuta";
+import PedidosPendientesPago from "./PedidosPendientesPago";
 import RutasTabla from "./RutasTabla";
 
 export default function Rutas() {
     const [rutas, setRutas] = useState([]);
+    const [ventas, setVentas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filtroEstado, setFiltroEstado] = useState("todas");
     const [showModal, setShowModal] = useState(false);
@@ -13,8 +16,12 @@ export default function Rutas() {
     const cargarRutas = async () => {
         try {
             setLoading(true);
-            const data = await getRutas();
-            setRutas(data);
+            const [dataRutas, dataVentas] = await Promise.all([
+                getRutas(),
+                getVentas(),
+            ]);
+            setRutas(dataRutas);
+            setVentas(dataVentas);
         } catch (error) {
             console.error("Error al cargar rutas:", error);
         } finally {
@@ -127,6 +134,11 @@ export default function Rutas() {
                         </p>
                     </div>
                 </div>
+
+                <PedidosPendientesPago
+                    ventas={ventas}
+                    onActualizar={cargarRutas}
+                />
 
                 <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-6 py-4 mb-6 shadow-sm flex items-center gap-4">
                     <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center shrink-0">

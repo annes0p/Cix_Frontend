@@ -7,6 +7,13 @@ export const getVentas = async () => {
     const response = await api.get("/sales");
     return response.data.data || response.data;
 };
+
+export const confirmarPagoVenta = async (idSale, paymentMethod) => {
+    const response = await api.patch(`/sales/${idSale}/confirm-payment`, {
+        paymentMethod,
+    });
+    return response.data.data || response.data;
+};
 export const construirCRM = (clientes, ventas) => {
     return clientes.map((cliente) => {
         const ventasCliente = ventas.filter((v) => v.client?.id === cliente.id);
