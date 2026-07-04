@@ -1,10 +1,19 @@
 import {
     CheckCircle2,
+    Disc,
+    Droplet,
+    FlaskConical,
+    Layers,
     Loader2,
     Minus,
     Plus,
     Search,
+    Settings,
     ShoppingCart,
+    Sparkles,
+    SprayCan,
+    Thermometer,
+    Waves,
     X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -15,6 +24,22 @@ import {
 } from "../../services/publicSaleService";
 
 const IGV = 0.18;
+
+// En vez de depender de fotos de producto (varian mucho en calidad),
+// cada categoria tiene un icono y color propios para que las tarjetas
+// se vean prolijas y consistentes sin necesitar imagenes reales.
+const ESTILO_CATEGORIA = {
+    "Aceites de motor": { icono: Droplet, bg: "bg-red-50", color: "text-cixoil-red" },
+    "Aceites de transmisión": { icono: Settings, bg: "bg-blue-50", color: "text-blue-600" },
+    "Grasas lubricantes": { icono: Layers, bg: "bg-amber-50", color: "text-amber-600" },
+    "Refrigerantes y anticongelantes": { icono: Thermometer, bg: "bg-cyan-50", color: "text-cyan-600" },
+    "Líquidos de freno": { icono: Disc, bg: "bg-orange-50", color: "text-orange-600" },
+    "Aditivos automotrices": { icono: FlaskConical, bg: "bg-purple-50", color: "text-purple-600" },
+    "Limpieza y mantenimiento": { icono: Sparkles, bg: "bg-green-50", color: "text-green-600" },
+    "Lubricantes en aerosol": { icono: SprayCan, bg: "bg-pink-50", color: "text-pink-600" },
+    "Fluidos hidráulicos": { icono: Waves, bg: "bg-indigo-50", color: "text-indigo-600" },
+};
+const ESTILO_DEFAULT = { icono: Droplet, bg: "bg-gray-50", color: "text-gray-500" };
 
 const formatSoles = (valor) =>
     (valor || 0).toLocaleString("es-PE", {
@@ -272,51 +297,54 @@ export default function TiendaPublica() {
 
                 {!cargando && !error && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {productosFiltrados.map((p) => (
-                            <div
-                                key={p.id}
-                                className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-col gap-2"
-                            >
-                                {p.imageUrl && (
-                                    <img
-                                        src={p.imageUrl}
-                                        alt={p.name}
-                                        className="w-full h-32 object-cover rounded-xl bg-gray-100"
-                                    />
-                                )}
-                                <div className="flex items-start justify-between gap-2">
-                                    <p className="font-bold text-gray-900 text-sm">
-                                        {p.name}
-                                    </p>
-                                    {p.viscosity && (
-                                        <span className="text-[11px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full shrink-0">
-                                            {p.viscosity}
-                                        </span>
-                                    )}
-                                </div>
-                                <p className="text-xs text-gray-400">
-                                    {p.brandName}
-                                    {p.categoryName ? ` · ${p.categoryName}` : ""}
-                                </p>
-                                {p.description && (
-                                    <p className="text-xs text-gray-500 line-clamp-2">
-                                        {p.description}
-                                    </p>
-                                )}
-                                <div className="flex items-center justify-between mt-auto pt-2">
-                                    <span className="font-black text-cixoil-red">
-                                        S/. {formatSoles(p.price)}
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() => agregarAlCarrito(p)}
-                                        className="text-xs font-semibold bg-cixoil-red text-white px-3 py-1.5 rounded-lg hover:opacity-90"
+                        {productosFiltrados.map((p) => {
+                            const estilo =
+                                ESTILO_CATEGORIA[p.categoryName] || ESTILO_DEFAULT;
+                            const Icono = estilo.icono;
+                            return (
+                                <div
+                                    key={p.id}
+                                    className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-col gap-2"
+                                >
+                                    <div
+                                        className={`w-full h-20 rounded-xl flex items-center justify-center ${estilo.bg}`}
                                     >
-                                        Agregar
-                                    </button>
+                                        <Icono size={32} className={estilo.color} />
+                                    </div>
+                                    <div className="flex items-start justify-between gap-2">
+                                        <p className="font-bold text-gray-900 text-sm">
+                                            {p.name}
+                                        </p>
+                                        {p.viscosity && (
+                                            <span className="text-[11px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full shrink-0">
+                                                {p.viscosity}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-gray-400">
+                                        {p.brandName}
+                                        {p.categoryName ? ` · ${p.categoryName}` : ""}
+                                    </p>
+                                    {p.description && (
+                                        <p className="text-xs text-gray-500 line-clamp-2">
+                                            {p.description}
+                                        </p>
+                                    )}
+                                    <div className="flex items-center justify-between mt-auto pt-2">
+                                        <span className="font-black text-cixoil-red">
+                                            S/. {formatSoles(p.price)}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => agregarAlCarrito(p)}
+                                            className="text-xs font-semibold bg-cixoil-red text-white px-3 py-1.5 rounded-lg hover:opacity-90"
+                                        >
+                                            Agregar
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                         {productosFiltrados.length === 0 && (
                             <p className="text-sm text-gray-400 col-span-full text-center py-10">
                                 No se encontraron productos.
