@@ -7,7 +7,7 @@ import {
     Star,
     X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
     buscarClienteExistente,
@@ -60,6 +60,15 @@ export default function PortalClienteIncidencias() {
 
     const [verificandoDoc, setVerificandoDoc] = useState(false);
     const [estadoDoc, setEstadoDoc] = useState(null);
+
+    // Refs para el auto-refresco silencioso (no reinician el timer en
+    // cada busqueda ni muestran el spinner de carga de fondo).
+    const docNumberBuscadoRef = useRef(null);
+    const incidenciasRef = useRef(null);
+
+    useEffect(() => {
+        incidenciasRef.current = incidencias;
+    }, [incidencias]);
 
     // Mismo criterio que en la tienda: primero busca si ya es
     // cliente nuestro (autocompleta todo), si no, consulta SUNAT
@@ -126,35 +135,65 @@ export default function PortalClienteIncidencias() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [form.docNumber, form.documentType]);
 
-    const buscar = async (doc) => {
+    const buscar = async (doc, silencioso = false) => {
         const documento = (doc ?? docNumber).trim();
 
         if (!documento) {
-            setError("Ingresa tu número de DNI o RUC.");
-            setIncidencias(null);
+            if (!silencioso) {
+                setError("Ingresa tu número de DNI o RUC.");
+                setIncidencias(null);
+            }
             return;
         }
         if (!/^\d{8}$|^\d{11}$/.test(documento)) {
-            setError("El documento debe tener 8 dígitos (DNI) u 11 dígitos (RUC).");
-            setIncidencias(null);
+            if (!silencioso) {
+                setError("El documento debe tener 8 dígitos (DNI) u 11 dígitos (RUC).");
+                setIncidencias(null);
+            }
             return;
         }
 
         try {
-            setCargando(true);
-            setError(null);
+            if (!silencioso) setCargando(true);
+            if (!silencioso) setError(null);
             const data = await getIncidenciasPorDocumento(documento);
             setIncidencias(Array.isArray(data) ? data : []);
+            docNumberBuscadoRef.current = documento;
         } catch (err) {
             console.error("Error al buscar incidencias:", err);
-            setError(
-                err.response?.data?.message ||
-                    "No se pudo buscar tus incidencias. Intenta de nuevo.",
-            );
+            if (!silencioso) {
+                setError(
+                    err.response?.data?.message ||
+                        "No se pudo buscar tus incidencias. Intenta de nuevo.",
+                );
+            }
         } finally {
-            setCargando(false);
+            if (!silencioso) setCargando(false);
         }
     };
+
+    // Auto-refresco silencioso: mientras el cliente tenga la pantalla
+    // abierta y le quede al menos una incidencia sin resolver, se vuelve
+    // a consultar cada 8s para que vea el cambio de estado (ej. cuando
+    // el admin la resuelve) sin tener que recargar la pagina a mano.
+    useEffect(() => {
+        const intervalo = setInterval(() => {
+            const actuales = incidenciasRef.current;
+            const doc = docNumberBuscadoRef.current;
+            if (!actuales || !doc) return;
+
+            const hayPendientes = actuales.some(
+                (i) =>
+                    i.incidentStatus !== "RESOLVED" &&
+                    i.incidentStatus !== "CLOSED" &&
+                    i.incidentStatus !== "CANCELED",
+            );
+            if (hayPendientes) buscar(doc, true);
+        }, 8000);
+
+        return () => clearInterval(intervalo);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const actualizarForm = (campo, valor) => {
         setForm((prev) => ({ ...prev, [campo]: valor }));
