@@ -13,11 +13,11 @@ export default function Login() {
                     <LoginForm />
 
                     <Link
-                        to="/recomendador-publico"
+                        to="/portal-cliente"
                         className="mt-6 w-full flex items-center justify-center gap-2 border border-cixoil-green/30 bg-cixoil-green/5 text-cixoil-green font-semibold text-sm py-3 rounded-xl hover:bg-cixoil-green/10 transition-all"
                     >
                         <Sparkles size={16} />
-                        ¿Eres cliente? Encuentra tu aceite ideal aqui
+                        ¿Eres cliente? Entra aquí
                     </Link>
 
                     <div className="flex flex-col items-center text-center gap-2 text-xs text-gray-400 mt-10 pt-6 border-t border-gray-100">
