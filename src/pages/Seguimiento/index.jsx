@@ -37,6 +37,41 @@ const ICONOS_ESTADO = {
 const construirBbox = (lat, lng, delta = 0.006) =>
     `${lng - delta},${lat - delta},${lng + delta},${lat + delta}`;
 
+// Duracion del recorrido simulado: no depende de GPS real de ningun
+// celular, solo interpola una posicion entre origen y destino segun el
+// tiempo transcurrido desde que el vendedor le dio "Iniciar" al viaje.
+// Pensado para que sea confiable y vistoso en una demo/sustentacion.
+const DURACION_SIMULACION_SEGUNDOS = 120;
+
+const calcularPosicionSimulada = (data) => {
+    if (
+        !data?.startDateTime ||
+        data.originLatitude == null ||
+        data.originLongitude == null ||
+        data.destinationLatitude == null ||
+        data.destinationLongitude == null
+    ) {
+        return null;
+    }
+
+    const segundosTranscurridos =
+        (Date.now() - new Date(data.startDateTime).getTime()) / 1000;
+    const fraccion = Math.min(
+        1,
+        Math.max(0, segundosTranscurridos / DURACION_SIMULACION_SEGUNDOS),
+    );
+
+    return {
+        latitude:
+            data.originLatitude +
+            fraccion * (data.destinationLatitude - data.originLatitude),
+        longitude:
+            data.originLongitude +
+            fraccion * (data.destinationLongitude - data.originLongitude),
+        progreso: Math.round(fraccion * 100),
+    };
+};
+
 const formatearHaceCuanto = (iso) => {
     if (!iso) return null;
     const segundos = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -56,6 +91,7 @@ export default function Seguimiento() {
     const [hoverEstrella, setHoverEstrella] = useState(0);
     const [calificando, setCalificando] = useState(false);
     const [errorCalificacion, setErrorCalificacion] = useState(null);
+    const [, forzarTick] = useState(0);
 
     useEffect(() => {
         dataRef.current = data;
@@ -99,7 +135,22 @@ export default function Seguimiento() {
         };
     }, [token]);
 
+    // Repinta cada segundo mientras el viaje esta en camino, para que la
+    // posicion simulada avance suave en el mapa sin depender del
+    // auto-refresco de 8s (que solo trae datos nuevos del servidor).
+    useEffect(() => {
+        if (data?.progressStatus !== "IN_PROGRESS") return;
+        const id = setInterval(() => forzarTick((n) => n + 1), 1000);
+        return () => clearInterval(id);
+    }, [data?.progressStatus]);
+
     const Icono = data ? ICONOS_ESTADO[data.progressStatus] || Package : Package;
+
+    const posicionSimulada = calcularPosicionSimulada(data);
+    const posicionMapa =
+        data?.latitude && data?.longitude
+            ? { latitude: data.latitude, longitude: data.longitude, progreso: null }
+            : posicionSimulada;
 
     const handleCalificar = async (valor) => {
         try {
@@ -179,8 +230,7 @@ export default function Seguimiento() {
                             </div>
 
                             {data.progressStatus === "IN_PROGRESS" &&
-                                data.latitude &&
-                                data.longitude && (
+                                posicionMapa && (
                                     <div className="rounded-xl overflow-hidden border border-gray-200">
                                         <iframe
                                             title="Ubicacion en vivo del pedido"
@@ -188,17 +238,34 @@ export default function Seguimiento() {
                                             height="220"
                                             style={{ border: 0 }}
                                             src={`https://www.openstreetmap.org/export/embed.html?bbox=${construirBbox(
-                                                data.latitude,
-                                                data.longitude,
-                                            )}&layer=mapnik&marker=${data.latitude},${data.longitude}`}
+                                                posicionMapa.latitude,
+                                                posicionMapa.longitude,
+                                            )}&layer=mapnik&marker=${posicionMapa.latitude},${posicionMapa.longitude}`}
                                         />
-                                        <p className="text-[11px] text-gray-400 text-center py-1.5 bg-gray-50">
-                                            📍 Ubicación en vivo del reparto
-                                            {formatearHaceCuanto(
-                                                data.ubicacionActualizada,
-                                            ) &&
-                                                ` · actualizado ${formatearHaceCuanto(data.ubicacionActualizada)}`}
-                                        </p>
+                                        {posicionMapa.progreso != null ? (
+                                            <div className="bg-gray-50 px-3 py-2">
+                                                <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-cixoil-red transition-all duration-1000"
+                                                        style={{
+                                                            width: `${posicionMapa.progreso}%`,
+                                                        }}
+                                                    />
+                                                </div>
+                                                <p className="text-[11px] text-gray-400 text-center pt-1">
+                                                    🚚 {posicionMapa.progreso}%
+                                                    del camino
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <p className="text-[11px] text-gray-400 text-center py-1.5 bg-gray-50">
+                                                📍 Ubicación en vivo del reparto
+                                                {formatearHaceCuanto(
+                                                    data.ubicacionActualizada,
+                                                ) &&
+                                                    ` · actualizado ${formatearHaceCuanto(data.ubicacionActualizada)}`}
+                                            </p>
+                                        )}
                                     </div>
                                 )}
 
