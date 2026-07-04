@@ -77,6 +77,7 @@ export default function TiendaPublica() {
     const [enviando, setEnviando] = useState(false);
     const [errorEnvio, setErrorEnvio] = useState(null);
     const [confirmacion, setConfirmacion] = useState(null);
+    const [avisoStock, setAvisoStock] = useState(null);
 
     const [verificandoDoc, setVerificandoDoc] = useState(false);
     const [estadoDoc, setEstadoDoc] = useState(null); // "cliente" | "verificado" | "no-verificado" | null
@@ -231,9 +232,32 @@ export default function TiendaPublica() {
         );
     });
 
+    // El stock que llega del catalogo publico refleja el inventario real
+    // al momento de cargar la pagina; se usa para no dejar agregar al
+    // carrito mas unidades de las que hay disponibles (antes esto solo
+    // se validaba recien al final, en el backend, y la persona llegaba
+    // hasta el paso de pago sin enterarse de que iba a fallar).
+    const stockDisponible = (producto) =>
+        producto.stock === null || producto.stock === undefined
+            ? Infinity
+            : Number(producto.stock);
+
     const agregarAlCarrito = (producto) => {
+        const maxStock = stockDisponible(producto);
+        if (maxStock <= 0) {
+            setAvisoStock(`${producto.name} no tiene stock disponible.`);
+            return;
+        }
         setCarrito((prev) => {
             const existente = prev.find((it) => it.producto.id === producto.id);
+            const cantidadActual = existente ? existente.cantidad : 0;
+            if (cantidadActual + 1 > maxStock) {
+                setAvisoStock(
+                    `Solo hay ${maxStock} unidad(es) disponibles de ${producto.name}.`,
+                );
+                return prev;
+            }
+            setAvisoStock(null);
             if (existente) {
                 return prev.map((it) =>
                     it.producto.id === producto.id
@@ -246,15 +270,64 @@ export default function TiendaPublica() {
     };
 
     const cambiarCantidad = (idProducto, delta) => {
-        setCarrito((prev) =>
-            prev
+        setCarrito((prev) => {
+            const actual = prev.find((it) => it.producto.id === idProducto);
+            if (delta > 0 && actual) {
+                const maxStock = stockDisponible(actual.producto);
+                if (actual.cantidad + delta > maxStock) {
+                    setAvisoStock(
+                        `Solo hay ${maxStock} unidad(es) disponibles de ${actual.producto.name}.`,
+                    );
+                    return prev;
+                }
+            }
+            setAvisoStock(null);
+            return prev
                 .map((it) =>
                     it.producto.id === idProducto
                         ? { ...it, cantidad: it.cantidad + delta }
                         : it,
                 )
-                .filter((it) => it.cantidad > 0),
+                .filter((it) => it.cantidad > 0);
+        });
+    };
+
+    // Permite escribir la cantidad directamente (ademas de las flechitas).
+    // Se deja escribir libremente mientras el campo esta enfocado (incluso
+    // vacio momentaneamente) y recien se recorta entre 1 y el stock
+    // disponible cuando el usuario termina de editar (onBlur), para no
+    // pelear con el usuario mientras borra el numero para escribir uno
+    // nuevo.
+    const escribirCantidad = (idProducto, valor) => {
+        const soloDigitos = valor.replace(/\D/g, "");
+        setCarrito((prev) =>
+            prev.map((it) =>
+                it.producto.id === idProducto
+                    ? { ...it, cantidad: soloDigitos === "" ? "" : Number(soloDigitos) }
+                    : it,
+            ),
         );
+    };
+
+    const confirmarCantidadEscrita = (idProducto) => {
+        setCarrito((prev) => {
+            const actual = prev.find((it) => it.producto.id === idProducto);
+            if (!actual) return prev;
+            const maxStock = stockDisponible(actual.producto);
+            let cantidadFinal = Number(actual.cantidad) || 0;
+            if (cantidadFinal < 1) cantidadFinal = 1;
+            if (cantidadFinal > maxStock) {
+                cantidadFinal = maxStock;
+                setAvisoStock(
+                    `Solo hay ${maxStock} unidad(es) disponibles de ${actual.producto.name}.`,
+                );
+            }
+            return prev.map((it) =>
+                it.producto.id === idProducto
+                    ? { ...it, cantidad: cantidadFinal }
+                    : it,
+            );
+        });
     };
 
     const quitarDelCarrito = (idProducto) => {
@@ -262,13 +335,14 @@ export default function TiendaPublica() {
     };
 
     const totalItems = useMemo(
-        () => carrito.reduce((acc, it) => acc + it.cantidad, 0),
+        () => carrito.reduce((acc, it) => acc + (Number(it.cantidad) || 0), 0),
         [carrito],
     );
 
     const totales = useMemo(() => {
         const total = carrito.reduce(
-            (acc, it) => acc + Number(it.producto.price || 0) * it.cantidad,
+            (acc, it) =>
+                acc + Number(it.producto.price || 0) * (Number(it.cantidad) || 0),
             0,
         );
         const subtotal = total / (1 + IGV);
@@ -416,6 +490,7 @@ export default function TiendaPublica() {
         if (pagoEnCursoRef.current) return;
         if (!validarPago()) return;
 
+        setErrorEnvio(null);
         pagoEnCursoRef.current = true;
         setProcesandoPago(true);
         // Simula la demora de comunicarse con la pasarela (Culqi) mientras
@@ -442,7 +517,7 @@ export default function TiendaPublica() {
                 paymentMethod: metodoPago,
                 items: carrito.map((it) => ({
                     idProduct: it.producto.id,
-                    quantity: it.cantidad,
+                    quantity: Number(it.cantidad) || 1,
                 })),
             };
             const resultado = await crearVentaPublica(payload);
@@ -595,9 +670,12 @@ export default function TiendaPublica() {
                                         <button
                                             type="button"
                                             onClick={() => agregarAlCarrito(p)}
-                                            className="text-xs font-semibold bg-cixoil-red text-white px-3 py-1.5 rounded-lg hover:opacity-90"
+                                            disabled={stockDisponible(p) <= 0}
+                                            className="text-xs font-semibold bg-cixoil-red text-white px-3 py-1.5 rounded-lg hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                                         >
-                                            Agregar
+                                            {stockDisponible(p) <= 0
+                                                ? "Sin stock"
+                                                : "Agregar"}
                                         </button>
                                     </div>
                                 </div>
@@ -680,6 +758,11 @@ export default function TiendaPublica() {
                                     </div>
                                 ) : (
                                     <>
+                                        {errorEnvio && (
+                                            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                                                {errorEnvio}
+                                            </p>
+                                        )}
                                         <div className="flex gap-2">
                                             <button
                                                 type="button"
@@ -941,6 +1024,11 @@ export default function TiendaPublica() {
                         {pasoCheckout === "datos" && (
                         <>
                         <div className="p-4 space-y-3">
+                            {avisoStock && (
+                                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                                    {avisoStock}
+                                </p>
+                            )}
                             {carrito.length === 0 && (
                                 <p className="text-sm text-gray-400 text-center py-6">
                                     Tu carrito está vacío.
@@ -969,9 +1057,23 @@ export default function TiendaPublica() {
                                         >
                                             <Minus size={14} />
                                         </button>
-                                        <span className="text-sm font-semibold w-5 text-center">
-                                            {it.cantidad}
-                                        </span>
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            value={it.cantidad}
+                                            onChange={(e) =>
+                                                escribirCantidad(
+                                                    it.producto.id,
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                confirmarCantidadEscrita(
+                                                    it.producto.id,
+                                                )
+                                            }
+                                            className="text-sm font-semibold w-10 text-center border border-gray-200 rounded-lg py-1 bg-white"
+                                        />
                                         <button
                                             type="button"
                                             onClick={() =>
