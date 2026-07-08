@@ -98,6 +98,7 @@ export default function TiendaPublica() {
         codigoGenerado: false,
         segundosRestantes: 0,
         codigo: "",
+        codigoReal: "",
     });
     const [erroresPago, setErroresPago] = useState({});
     const [procesandoPago, setProcesandoPago] = useState(false);
@@ -430,6 +431,12 @@ export default function TiendaPublica() {
         setErroresPago((prev) => ({ ...prev, vencimiento: null }));
     };
 
+    // El codigo "real" se genera aca mismo (no hay integracion real con
+    // Yape que lo mande por SMS/app), y se valida que lo que el usuario
+    // escriba coincida exacto: un codigo inventado debe rechazarse, igual
+    // que en el flujo real. Se muestra en pantalla como "codigo de prueba"
+    // porque, al no llegar de verdad a ningun celular, no hay otra forma
+    // de que quien esta probando lo sepa.
     const generarCodigoYape = () => {
         if (!/^\d{9}$/.test(yape.telefono)) {
             setErroresPago((prev) => ({
@@ -438,11 +445,13 @@ export default function TiendaPublica() {
             }));
             return;
         }
+        const nuevoCodigo = String(Math.floor(100000 + Math.random() * 900000));
         setYape((prev) => ({
             ...prev,
             codigoGenerado: true,
             segundosRestantes: 120,
             codigo: "",
+            codigoReal: nuevoCodigo,
         }));
         setErroresPago((prev) => ({ ...prev, yapeTelefono: null }));
     };
@@ -481,6 +490,8 @@ export default function TiendaPublica() {
                 nuevosErrores.yapeCodigo = "Ingresa el código de aprobación (6 dígitos).";
             else if (yape.segundosRestantes <= 0)
                 nuevosErrores.yapeCodigo = "El código venció, genera uno nuevo.";
+            else if (yape.codigo !== yape.codigoReal)
+                nuevosErrores.yapeCodigo = "Código incorrecto.";
         }
         setErroresPago(nuevosErrores);
         return Object.keys(nuevosErrores).length === 0;
@@ -571,6 +582,7 @@ export default function TiendaPublica() {
                                 codigoGenerado: false,
                                 segundosRestantes: 0,
                                 codigo: "",
+                                codigoReal: "",
                             });
                             setTarjeta({
                                 numero: "",
@@ -988,6 +1000,19 @@ export default function TiendaPublica() {
                                                             0
                                                                 ? `Ingresa el código de tu app Yape · vence en ${Math.floor(yape.segundosRestantes / 60)}:${String(yape.segundosRestantes % 60).padStart(2, "0")}`
                                                                 : "El código venció, genera uno nuevo."}
+                                                        </p>
+                                                        <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5 mt-1.5">
+                                                            Modo prueba: como
+                                                            no se envía un
+                                                            código real a tu
+                                                            Yape, tu código es{" "}
+                                                            <span className="font-bold">
+                                                                {
+                                                                    yape.codigoReal
+                                                                }
+                                                            </span>
+                                                            . Escribe otro y
+                                                            se rechazará.
                                                         </p>
                                                     </div>
                                                 )}
