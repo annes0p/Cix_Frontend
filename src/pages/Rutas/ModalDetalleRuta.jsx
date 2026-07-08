@@ -4,6 +4,7 @@ import {
     MapPin,
     MessageCircle,
     Navigation,
+    Send,
     Sparkles,
     Star,
     User,
@@ -18,8 +19,10 @@ import {
 } from "../../services/rutasService";
 import { generarResumenRutaPDF } from "../../utils/generarReportePDF";
 import {
+    enviarMensajeRuta,
     enviarUbicacion,
     getLinkSeguimiento,
+    getMensajesRuta,
 } from "../../services/trackingService";
 
 const ESTILOS_ESTADO = {
@@ -83,6 +86,15 @@ export default function ModalDetalleRuta({ rutaId, onClose, onActualizar }) {
     const [errorUbicacion, setErrorUbicacion] = useState(null);
     const watchIdRef = useRef(null);
 
+    // Chat (no chatbot) con el cliente, por parada/envio. Solo un chat
+    // abierto a la vez para no tener que sondear varios en simultaneo.
+    const [chatAbiertoId, setChatAbiertoId] = useState(null);
+    const [mensajesChat, setMensajesChat] = useState([]);
+    const [textoChat, setTextoChat] = useState("");
+    const [enviandoChat, setEnviandoChat] = useState(false);
+    const [errorChat, setErrorChat] = useState(null);
+    const mensajesChatFinRef = useRef(null);
+
     const cargarRuta = async () => {
         try {
             setCargando(true);
@@ -110,6 +122,64 @@ export default function ModalDetalleRuta({ rutaId, onClose, onActualizar }) {
             }
         };
     }, []);
+
+    useEffect(() => {
+        if (!chatAbiertoId) return;
+        let activo = true;
+
+        const cargarMensajes = async () => {
+            try {
+                const res = await getMensajesRuta(chatAbiertoId);
+                if (activo) setMensajesChat(Array.isArray(res) ? res : []);
+            } catch (err) {
+                console.error("Error al cargar mensajes:", err);
+            }
+        };
+
+        cargarMensajes();
+        const intervalo = setInterval(cargarMensajes, 5000);
+        return () => {
+            activo = false;
+            clearInterval(intervalo);
+        };
+    }, [chatAbiertoId]);
+
+    useEffect(() => {
+        mensajesChatFinRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [mensajesChat.length]);
+
+    const alternarChat = (tripId) => {
+        if (chatAbiertoId === tripId) {
+            setChatAbiertoId(null);
+            setMensajesChat([]);
+            setTextoChat("");
+            setErrorChat(null);
+            return;
+        }
+        setChatAbiertoId(tripId);
+        setMensajesChat([]);
+        setTextoChat("");
+        setErrorChat(null);
+    };
+
+    const handleEnviarChat = async (e) => {
+        e.preventDefault();
+        const texto = textoChat.trim();
+        if (!texto || enviandoChat || !chatAbiertoId) return;
+
+        try {
+            setEnviandoChat(true);
+            setErrorChat(null);
+            const nuevo = await enviarMensajeRuta(chatAbiertoId, texto);
+            setMensajesChat((prev) => [...prev, nuevo]);
+            setTextoChat("");
+        } catch (err) {
+            console.error("Error al enviar mensaje:", err);
+            setErrorChat("No se pudo enviar el mensaje.");
+        } finally {
+            setEnviandoChat(false);
+        }
+    };
 
     const iniciarCompartirUbicacion = (trip) => {
         if (!navigator.geolocation) {
@@ -478,6 +548,137 @@ Responde solo con el texto del resumen, nada mas.`;
                                                                     </p>
                                                                 </>
                                                             )}
+                                                        </div>
+                                                    )}
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            alternarChat(
+                                                                trip.id,
+                                                            )
+                                                        }
+                                                        className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:opacity-75 mt-1.5"
+                                                    >
+                                                        <MessageCircle
+                                                            size={12}
+                                                        />
+                                                        {chatAbiertoId ===
+                                                        trip.id
+                                                            ? "Cerrar chat"
+                                                            : "Chat con cliente"}
+                                                    </button>
+
+                                                    {chatAbiertoId ===
+                                                        trip.id && (
+                                                        <div className="mt-1.5 bg-white border border-gray-200 rounded-lg flex flex-col overflow-hidden">
+                                                            <div className="max-h-48 overflow-y-auto p-2 space-y-1.5">
+                                                                {mensajesChat.length ===
+                                                                    0 && (
+                                                                    <p className="text-[11px] text-gray-400 text-center py-3">
+                                                                        Sin
+                                                                        mensajes
+                                                                        todavía.
+                                                                    </p>
+                                                                )}
+                                                                {mensajesChat.map(
+                                                                    (m) => (
+                                                                        <div
+                                                                            key={
+                                                                                m.id
+                                                                            }
+                                                                            className={`flex ${m.sender === "STAFF" ? "justify-end" : "justify-start"}`}
+                                                                        >
+                                                                            <div
+                                                                                className={`max-w-[80%] rounded-lg px-2 py-1 text-xs ${
+                                                                                    m.sender ===
+                                                                                    "STAFF"
+                                                                                        ? "bg-cixoil-red text-white"
+                                                                                        : "bg-gray-100 text-gray-700"
+                                                                                }`}
+                                                                            >
+                                                                                {m.sender !==
+                                                                                    "STAFF" && (
+                                                                                    <p className="text-[9px] font-semibold text-gray-400 mb-0.5">
+                                                                                        {m.senderName ||
+                                                                                            "Cliente"}
+                                                                                    </p>
+                                                                                )}
+                                                                                <p className="whitespace-pre-wrap break-words">
+                                                                                    {
+                                                                                        m.content
+                                                                                    }
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                    ),
+                                                                )}
+                                                                <div
+                                                                    ref={
+                                                                        mensajesChatFinRef
+                                                                    }
+                                                                />
+                                                            </div>
+                                                            {errorChat && (
+                                                                <p className="text-[11px] text-red-500 px-2 pb-1">
+                                                                    {
+                                                                        errorChat
+                                                                    }
+                                                                </p>
+                                                            )}
+                                                            <form
+                                                                onSubmit={
+                                                                    handleEnviarChat
+                                                                }
+                                                                className="flex items-center gap-1.5 border-t border-gray-100 p-1.5"
+                                                            >
+                                                                <input
+                                                                    type="text"
+                                                                    value={
+                                                                        textoChat
+                                                                    }
+                                                                    onChange={(
+                                                                        e,
+                                                                    ) =>
+                                                                        setTextoChat(
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                        )
+                                                                    }
+                                                                    maxLength={
+                                                                        500
+                                                                    }
+                                                                    placeholder="Responder al cliente..."
+                                                                    disabled={
+                                                                        enviandoChat
+                                                                    }
+                                                                    className="flex-1 min-w-0 px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-cixoil-red"
+                                                                />
+                                                                <button
+                                                                    type="submit"
+                                                                    disabled={
+                                                                        enviandoChat ||
+                                                                        !textoChat.trim()
+                                                                    }
+                                                                    className="shrink-0 w-7 h-7 rounded-lg bg-cixoil-red text-white flex items-center justify-center disabled:opacity-50"
+                                                                >
+                                                                    {enviandoChat ? (
+                                                                        <Loader2
+                                                                            size={
+                                                                                12
+                                                                            }
+                                                                            className="animate-spin"
+                                                                        />
+                                                                    ) : (
+                                                                        <Send
+                                                                            size={
+                                                                                12
+                                                                            }
+                                                                        />
+                                                                    )}
+                                                                </button>
+                                                            </form>
                                                         </div>
                                                     )}
                                                 </div>

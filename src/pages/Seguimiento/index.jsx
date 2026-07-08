@@ -2,7 +2,9 @@ import {
     CheckCircle2,
     Loader2,
     MapPin,
+    MessageCircle,
     Package,
+    Send,
     Star,
     Truck,
 } from "lucide-react";
@@ -10,6 +12,8 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
     calificarEntrega,
+    enviarMensajePublico,
+    getMensajesPublico,
     getSeguimientoPublico,
 } from "../../services/trackingService";
 
@@ -93,6 +97,13 @@ export default function Seguimiento() {
     const [errorCalificacion, setErrorCalificacion] = useState(null);
     const [, forzarTick] = useState(0);
 
+    // Chat (no chatbot) con el personal de CIXOIL sobre este pedido.
+    const [mensajes, setMensajes] = useState([]);
+    const [textoMensaje, setTextoMensaje] = useState("");
+    const [enviandoMensaje, setEnviandoMensaje] = useState(false);
+    const [errorMensaje, setErrorMensaje] = useState(null);
+    const mensajesFinRef = useRef(null);
+
     useEffect(() => {
         dataRef.current = data;
     }, [data]);
@@ -143,6 +154,54 @@ export default function Seguimiento() {
         const id = setInterval(() => forzarTick((n) => n + 1), 1000);
         return () => clearInterval(id);
     }, [data?.progressStatus]);
+
+    // Chat: se consulta aparte del resto de datos del pedido (cada 5s, mas
+    // seguido que el auto-refresco general) para que se sienta como un
+    // chat real y no como un formulario que hay que recargar.
+    useEffect(() => {
+        if (!data) return;
+        let activo = true;
+
+        const cargarMensajes = async () => {
+            try {
+                const res = await getMensajesPublico(token);
+                if (activo) setMensajes(Array.isArray(res) ? res : []);
+            } catch (err) {
+                console.error("Error al cargar mensajes:", err);
+            }
+        };
+
+        cargarMensajes();
+        const intervalo = setInterval(cargarMensajes, 5000);
+        return () => {
+            activo = false;
+            clearInterval(intervalo);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [token, !!data]);
+
+    useEffect(() => {
+        mensajesFinRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [mensajes.length]);
+
+    const handleEnviarMensaje = async (e) => {
+        e.preventDefault();
+        const texto = textoMensaje.trim();
+        if (!texto || enviandoMensaje) return;
+
+        try {
+            setEnviandoMensaje(true);
+            setErrorMensaje(null);
+            const nuevo = await enviarMensajePublico(token, texto);
+            setMensajes((prev) => [...prev, nuevo]);
+            setTextoMensaje("");
+        } catch (err) {
+            console.error("Error al enviar mensaje:", err);
+            setErrorMensaje("No se pudo enviar tu mensaje. Intenta de nuevo.");
+        } finally {
+            setEnviandoMensaje(false);
+        }
+    };
 
     const Icono = data ? ICONOS_ESTADO[data.progressStatus] || Package : Package;
 
@@ -363,6 +422,84 @@ export default function Seguimiento() {
                         </div>
                     )}
                 </div>
+
+                {!cargando && data && (
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mt-4 flex flex-col overflow-hidden">
+                        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+                            <MessageCircle size={16} className="text-cixoil-red" />
+                            <p className="text-sm font-bold text-gray-800">
+                                Chat con CIXOIL
+                            </p>
+                        </div>
+
+                        <div className="max-h-64 overflow-y-auto px-4 py-3 space-y-2">
+                            {mensajes.length === 0 && (
+                                <p className="text-xs text-gray-400 text-center py-4">
+                                    Escríbenos si tienes alguna consulta sobre
+                                    tu pedido.
+                                </p>
+                            )}
+                            {mensajes.map((m) => (
+                                <div
+                                    key={m.id}
+                                    className={`flex ${m.sender === "CLIENT" ? "justify-end" : "justify-start"}`}
+                                >
+                                    <div
+                                        className={`max-w-[75%] rounded-xl px-3 py-2 text-sm ${
+                                            m.sender === "CLIENT"
+                                                ? "bg-cixoil-red text-white"
+                                                : "bg-gray-100 text-gray-700"
+                                        }`}
+                                    >
+                                        {m.sender !== "CLIENT" && (
+                                            <p className="text-[10px] font-semibold text-gray-400 mb-0.5">
+                                                {m.senderName || "CIXOIL"}
+                                            </p>
+                                        )}
+                                        <p className="whitespace-pre-wrap break-words">
+                                            {m.content}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                            <div ref={mensajesFinRef} />
+                        </div>
+
+                        {errorMensaje && (
+                            <p className="text-xs text-red-500 px-4 pb-1">
+                                {errorMensaje}
+                            </p>
+                        )}
+
+                        <form
+                            onSubmit={handleEnviarMensaje}
+                            className="flex items-center gap-2 border-t border-gray-100 p-2"
+                        >
+                            <input
+                                type="text"
+                                value={textoMensaje}
+                                onChange={(e) =>
+                                    setTextoMensaje(e.target.value)
+                                }
+                                maxLength={500}
+                                placeholder="Escribe un mensaje..."
+                                disabled={enviandoMensaje}
+                                className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red/30"
+                            />
+                            <button
+                                type="submit"
+                                disabled={enviandoMensaje || !textoMensaje.trim()}
+                                className="shrink-0 w-9 h-9 rounded-lg bg-cixoil-red text-white flex items-center justify-center disabled:opacity-50"
+                            >
+                                {enviandoMensaje ? (
+                                    <Loader2 size={16} className="animate-spin" />
+                                ) : (
+                                    <Send size={16} />
+                                )}
+                            </button>
+                        </form>
+                    </div>
+                )}
 
                 <p className="text-center text-xs text-gray-400 mt-4">
                     CIXOIL S.A.C. - Lubricantes y derivados
