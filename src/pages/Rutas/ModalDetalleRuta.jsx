@@ -626,59 +626,70 @@ Responde solo con el texto del resumen, nada mas.`;
                                                                     }
                                                                 </p>
                                                             )}
-                                                            <form
-                                                                onSubmit={
-                                                                    handleEnviarChat
-                                                                }
-                                                                className="flex items-center gap-1.5 border-t border-gray-100 p-1.5"
-                                                            >
-                                                                <input
-                                                                    type="text"
-                                                                    value={
-                                                                        textoChat
+                                                            {trip.deliveryRating ? (
+                                                                <p className="text-[11px] text-gray-400 text-center border-t border-gray-100 py-2">
+                                                                    Conversación
+                                                                    cerrada
+                                                                    tras la
+                                                                    calificación
+                                                                    del
+                                                                    cliente.
+                                                                </p>
+                                                            ) : (
+                                                                <form
+                                                                    onSubmit={
+                                                                        handleEnviarChat
                                                                     }
-                                                                    onChange={(
-                                                                        e,
-                                                                    ) =>
-                                                                        setTextoChat(
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                        )
-                                                                    }
-                                                                    maxLength={
-                                                                        500
-                                                                    }
-                                                                    placeholder="Responder al cliente..."
-                                                                    disabled={
-                                                                        enviandoChat
-                                                                    }
-                                                                    className="flex-1 min-w-0 px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-cixoil-red"
-                                                                />
-                                                                <button
-                                                                    type="submit"
-                                                                    disabled={
-                                                                        enviandoChat ||
-                                                                        !textoChat.trim()
-                                                                    }
-                                                                    className="shrink-0 w-7 h-7 rounded-lg bg-cixoil-red text-white flex items-center justify-center disabled:opacity-50"
+                                                                    className="flex items-center gap-1.5 border-t border-gray-100 p-1.5"
                                                                 >
-                                                                    {enviandoChat ? (
-                                                                        <Loader2
-                                                                            size={
-                                                                                12
-                                                                            }
-                                                                            className="animate-spin"
-                                                                        />
-                                                                    ) : (
-                                                                        <Send
-                                                                            size={
-                                                                                12
-                                                                            }
-                                                                        />
-                                                                    )}
-                                                                </button>
-                                                            </form>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={
+                                                                            textoChat
+                                                                        }
+                                                                        onChange={(
+                                                                            e,
+                                                                        ) =>
+                                                                            setTextoChat(
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                            )
+                                                                        }
+                                                                        maxLength={
+                                                                            500
+                                                                        }
+                                                                        placeholder="Responder al cliente..."
+                                                                        disabled={
+                                                                            enviandoChat
+                                                                        }
+                                                                        className="flex-1 min-w-0 px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-cixoil-red"
+                                                                    />
+                                                                    <button
+                                                                        type="submit"
+                                                                        disabled={
+                                                                            enviandoChat ||
+                                                                            !textoChat.trim()
+                                                                        }
+                                                                        className="shrink-0 w-7 h-7 rounded-lg bg-cixoil-red text-white flex items-center justify-center disabled:opacity-50"
+                                                                    >
+                                                                        {enviandoChat ? (
+                                                                            <Loader2
+                                                                                size={
+                                                                                    12
+                                                                                }
+                                                                                className="animate-spin"
+                                                                            />
+                                                                        ) : (
+                                                                            <Send
+                                                                                size={
+                                                                                    12
+                                                                                }
+                                                                            />
+                                                                        )}
+                                                                    </button>
+                                                                </form>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </div>

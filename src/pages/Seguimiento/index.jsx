@@ -471,33 +471,45 @@ export default function Seguimiento() {
                             </p>
                         )}
 
-                        <form
-                            onSubmit={handleEnviarMensaje}
-                            className="flex items-center gap-2 border-t border-gray-100 p-2"
-                        >
-                            <input
-                                type="text"
-                                value={textoMensaje}
-                                onChange={(e) =>
-                                    setTextoMensaje(e.target.value)
-                                }
-                                maxLength={500}
-                                placeholder="Escribe un mensaje..."
-                                disabled={enviandoMensaje}
-                                className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red/30"
-                            />
-                            <button
-                                type="submit"
-                                disabled={enviandoMensaje || !textoMensaje.trim()}
-                                className="shrink-0 w-9 h-9 rounded-lg bg-cixoil-red text-white flex items-center justify-center disabled:opacity-50"
+                        {data.deliveryRating ? (
+                            <p className="text-xs text-gray-400 text-center border-t border-gray-100 py-3">
+                                Esta conversación quedó cerrada tras tu
+                                calificación.
+                            </p>
+                        ) : (
+                            <form
+                                onSubmit={handleEnviarMensaje}
+                                className="flex items-center gap-2 border-t border-gray-100 p-2"
                             >
-                                {enviandoMensaje ? (
-                                    <Loader2 size={16} className="animate-spin" />
-                                ) : (
-                                    <Send size={16} />
-                                )}
-                            </button>
-                        </form>
+                                <input
+                                    type="text"
+                                    value={textoMensaje}
+                                    onChange={(e) =>
+                                        setTextoMensaje(e.target.value)
+                                    }
+                                    maxLength={500}
+                                    placeholder="Escribe un mensaje..."
+                                    disabled={enviandoMensaje}
+                                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-cixoil-red/30"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={
+                                        enviandoMensaje || !textoMensaje.trim()
+                                    }
+                                    className="shrink-0 w-9 h-9 rounded-lg bg-cixoil-red text-white flex items-center justify-center disabled:opacity-50"
+                                >
+                                    {enviandoMensaje ? (
+                                        <Loader2
+                                            size={16}
+                                            className="animate-spin"
+                                        />
+                                    ) : (
+                                        <Send size={16} />
+                                    )}
+                                </button>
+                            </form>
+                        )}
                     </div>
                 )}
 
