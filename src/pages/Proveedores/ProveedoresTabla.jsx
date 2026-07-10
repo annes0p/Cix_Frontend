@@ -1,6 +1,11 @@
-import { Pencil, Trash2 } from "lucide-react";
+import { Package, Pencil, Trash2 } from "lucide-react";
 
-export default function ProveedoresTabla({ proveedores, loading, onRecargar }) {
+export default function ProveedoresTabla({
+    proveedores,
+    loading,
+    onRecargar,
+    onGestionarProductos,
+}) {
     if (loading) {
         return (
             <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
@@ -36,6 +41,15 @@ export default function ProveedoresTabla({ proveedores, loading, onRecargar }) {
                                 </p>
                             </div>
                             <div className="flex gap-3 shrink-0">
+                                <button
+                                    onClick={() =>
+                                        onGestionarProductos?.(proveedor)
+                                    }
+                                    className="text-blue-500 hover:text-blue-700"
+                                    title="Productos que abastece"
+                                >
+                                    <Package size={16} />
+                                </button>
                                 <button className="text-yellow-500 hover:text-yellow-700">
                                     <Pencil size={16} />
                                 </button>
@@ -108,6 +122,15 @@ export default function ProveedoresTabla({ proveedores, loading, onRecargar }) {
                             <td className="px-4 py-3">{proveedor.address}</td>
                             <td className="px-4 py-3">
                                 <div className="flex justify-center gap-3">
+                                    <button
+                                        onClick={() =>
+                                            onGestionarProductos?.(proveedor)
+                                        }
+                                        className="text-blue-500 hover:text-blue-700"
+                                        title="Productos que abastece"
+                                    >
+                                        <Package size={16} />
+                                    </button>
                                     <button className="text-yellow-500 hover:text-yellow-700">
                                         <Pencil size={16} />
                                     </button>

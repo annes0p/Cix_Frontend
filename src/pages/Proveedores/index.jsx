@@ -1,6 +1,7 @@
 ﻿import { Plus, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getProveedores } from "../../services/proveedoresService";
+import ModalProductosProveedor from "./ModalProductosProveedor";
 import ModalProveedor from "./ModalProveedor";
 import ProveedoresTabla from "./ProveedoresTabla";
 
@@ -8,6 +9,7 @@ export default function Proveedores() {
     const [proveedores, setProveedores] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [proveedorProductos, setProveedorProductos] = useState(null);
 
     const cargarProveedores = async () => {
         try {
@@ -64,6 +66,7 @@ export default function Proveedores() {
                     proveedores={proveedores}
                     loading={loading}
                     onRecargar={cargarProveedores}
+                    onGestionarProductos={setProveedorProductos}
                 />
             </div>
 
@@ -71,6 +74,14 @@ export default function Proveedores() {
                 <ModalProveedor
                     onClose={() => setShowModal(false)}
                     onGuardar={cargarProveedores}
+                />
+            )}
+
+            {proveedorProductos && (
+                <ModalProductosProveedor
+                    proveedor={proveedorProductos}
+                    onClose={() => setProveedorProductos(null)}
+                    onGuardado={cargarProveedores}
                 />
             )}
         </div>

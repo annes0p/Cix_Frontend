@@ -24,3 +24,10 @@ export const getProductosDeProveedor = async (id) => {
     const response = await api.get(`/suppliers/${id}/products`);
     return response.data.data || response.data;
 };
+
+export const actualizarProductosDeProveedor = async (id, productIds) => {
+    const response = await api.put(`/suppliers/${id}/products`, {
+        productIds,
+    });
+    return response.data.data || response.data;
+};
